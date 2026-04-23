@@ -1,26 +1,60 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --app-cream: #f6f0e7;
+  --app-paper: #f9f7f1;
+  --app-ink: #231f1b;
+  --app-muted: #6d655b;
+  --app-wine: #5a1f2d;
+  --app-gold: #c8b48d;
+  --app-line: rgba(35, 31, 27, 0.12);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--app-cream);
+  --color-foreground: var(--app-ink);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  font-family: var(--font-sans), sans-serif;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.paper-panel {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.88)),
+    var(--app-paper);
+  box-shadow:
+    0 20px 60px rgba(46, 32, 20, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.section-label {
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  color: var(--app-muted);
 }

@@ -12,6 +12,12 @@
 
 # testing
 /coverage
+/playwright-report
+/test-results
+/tests/.artifacts
+
+# local data
+/.data
 
 # next.js
 /.next/
