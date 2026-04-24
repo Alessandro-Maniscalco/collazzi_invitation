@@ -418,10 +418,11 @@ export function emptyAccommodationCard(): AccommodationCard {
     title: "",
     city: "",
     address: "",
+    addressLines: [],
     phone: "",
     ctaLabel: "",
     ctaUrl: "",
-    imageSrc: "/assets/seed/accommodation-horto.jpg",
+    imageSrc: "/assets/collazzi/horto-convento.jpeg",
     notes: "",
   };
 }

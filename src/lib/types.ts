@@ -27,6 +27,7 @@ export interface EventRecord {
   subtitle: string;
   heroMonogram: string;
   heroImageSrc: string;
+  heroBackImageSrc: string;
   heroBackdropSrc: string;
   paperTextureSrc: string;
   summaryName: string;
@@ -89,6 +90,15 @@ export interface Question {
   type: QuestionType;
 }
 
+export interface ItinerarySubItem {
+  id: string;
+  label?: string;
+  venueName?: string;
+  address?: string;
+  mapUrl?: string;
+  note?: string;
+}
+
 export interface ItineraryItem {
   id: string;
   dayLabel: string;
@@ -100,6 +110,8 @@ export interface ItineraryItem {
   dressCode: string;
   description: string;
   imageSrc: string;
+  note?: string;
+  subItems?: ItinerarySubItem[];
 }
 
 export interface AccommodationCard {
@@ -107,6 +119,7 @@ export interface AccommodationCard {
   title: string;
   city: string;
   address: string;
+  addressLines?: string[];
   phone: string;
   ctaLabel: string;
   ctaUrl: string;

@@ -400,10 +400,11 @@ export function HostDashboard({
                           title: "New accommodation",
                           city: "City",
                           address: "",
+                          addressLines: [],
                           phone: "",
                           ctaLabel: "Book",
                           ctaUrl: "https://example.com",
-                          imageSrc: "/assets/seed/accommodation-horto.jpg",
+                          imageSrc: "/assets/collazzi/horto-convento.jpeg",
                           notes: "",
                         },
                       ])

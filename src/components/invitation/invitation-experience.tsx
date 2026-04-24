@@ -1,70 +1,181 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
 import Image from "next/image";
 import { Play, RefreshCw } from "lucide-react";
 
 import { AccommodationCarousel } from "@/components/invitation/accommodation-carousel";
 import { RsvpModal } from "@/components/invitation/rsvp-modal";
-import { cn, formatDeadline, formatTimestamp, partyAttendanceSummary } from "@/lib/formatters";
-import type { AttendanceStatus, InvitationView, PartyResponse } from "@/lib/types";
+import { cn } from "@/lib/formatters";
+import type {
+  AttendanceStatus,
+  InvitationView,
+  ItineraryItem,
+  ItinerarySubItem,
+  PartyResponse,
+} from "@/lib/types";
 
 import styles from "./invitation-experience.module.css";
 
+function MultilineText({ text, className }: { text: string; className?: string }) {
+  return (
+    <p className={className}>
+      {text.split("\n").map((line, index, lines) => (
+        <Fragment key={`${line}-${index}`}>
+          {line}
+          {index < lines.length - 1 ? <br /> : null}
+        </Fragment>
+      ))}
+    </p>
+  );
+}
+
+function LocationLink({
+  venueName,
+  address,
+  mapUrl,
+  compact = false,
+}: {
+  venueName: string;
+  address: string;
+  mapUrl: string;
+  compact?: boolean;
+}) {
+  return (
+    <address className={styles.locationBlock}>
+      <hr className={styles.locationRule} />
+      <a
+        href={mapUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={styles.locationLink}
+      >
+        <span className={cn(styles.locationVenue, compact && styles.locationVenueCompact)}>
+          {venueName}
+        </span>
+        <span className={styles.locationAddress}>{address}</span>
+      </a>
+    </address>
+  );
+}
+
+function TravelSubItem({ item }: { item: ItinerarySubItem }) {
+  return (
+    <div className={styles.travelTextItem}>
+      {item.label ? <h4 className={styles.itemLabel}>{item.label}</h4> : null}
+      {item.venueName && item.address && item.mapUrl ? (
+        <LocationLink
+          venueName={item.venueName}
+          address={item.address}
+          mapUrl={item.mapUrl}
+          compact
+        />
+      ) : null}
+      {item.note ? <MultilineText text={item.note} className={styles.itemNote} /> : null}
+    </div>
+  );
+}
+
+function TravelBlock({ item }: { item: ItineraryItem }) {
+  const note =
+    item.note ?? `${item.title}\n${item.datetimeLabel}\n${item.dressCode}`;
+
+  return (
+    <section data-block-type="templated_block" className={styles.block}>
+      <div className={styles.blockContainer}>
+        <div className={styles.blockInnerStack}>
+          <header className={styles.blockHeader}>
+            <h2 className={styles.blockTitle}>{item.dayLabel}</h2>
+          </header>
+
+          <div className={styles.travelItems}>
+            <div className={styles.travelImageItem}>
+              <figure className={styles.travelImageFrame}>
+                <Image
+                  src={item.imageSrc}
+                  alt={item.venueName}
+                  fill
+                  className={styles.travelImage}
+                  sizes="(min-width: 900px) 820px, calc(100vw - 64px)"
+                />
+              </figure>
+              <LocationLink
+                venueName={item.venueName}
+                address={item.address}
+                mapUrl={item.mapUrl}
+              />
+            </div>
+
+            <div className={styles.travelTextItem}>
+              <MultilineText text={note} className={styles.itemNote} />
+            </div>
+
+            {item.subItems?.map((subItem) => (
+              <TravelSubItem key={subItem.id} item={subItem} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function InvitationExperience({ invitation }: { invitation: InvitationView }) {
-  const [stage, setStage] = useState(2);
+  const [stage, setStage] = useState(0);
+  const [sequenceKey, setSequenceKey] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [preferredStatus, setPreferredStatus] = useState<AttendanceStatus | undefined>(undefined);
   const [response, setResponse] = useState<PartyResponse | undefined>(invitation.party.response);
-  const detailsRef = useRef<HTMLDivElement | null>(null);
+  const party = { ...invitation.party, response };
+  const stageClass =
+    stage === 0
+      ? styles.stageClosed
+      : stage === 1
+        ? styles.stageOpen
+        : stage === 2
+          ? styles.stageExtracted
+          : stage === 3
+            ? styles.stageFront
+            : styles.stageBack;
 
-  const party = useMemo(
-    () => ({
-      ...invitation.party,
-      response,
-    }),
-    [invitation.party, response],
-  );
+  useEffect(() => {
+    setStage(0);
+    const timers = [
+      window.setTimeout(() => setStage(1), 400),
+      window.setTimeout(() => setStage(2), 1150),
+      window.setTimeout(() => setStage(3), 2050),
+      window.setTimeout(() => setStage(4), 3800),
+    ];
 
-  const summary = partyAttendanceSummary(party, invitation.guests);
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [sequenceKey]);
 
   function openRsvp(status?: AttendanceStatus) {
     setPreferredStatus(status);
     setModalOpen(true);
   }
 
-  function advanceScene() {
-    setStage((current) => {
-      if (current === 1) return 2;
-      if (current === 2) return 1;
-      if (current === 3) return 1;
-      return 1;
-    });
+  function replayScene() {
+    setSequenceKey((current) => current + 1);
   }
 
   function flipCard() {
-    setStage((current) => (current === 3 ? 2 : 3));
+    setStage((current) => (current === 4 ? 3 : 4));
   }
 
   return (
     <main className={styles.shell}>
-      <section
-        className={styles.hero}
-        style={{ backgroundImage: `url(${invitation.event.heroBackdropSrc})` }}
-      >
-        <div className="relative z-10 mx-auto flex max-w-7xl items-center justify-end gap-4 px-6 py-6 text-sm text-stone-900">
-          <button
-            type="button"
-            onClick={() => openRsvp()}
-            className="rounded-full bg-white px-4 py-2 font-semibold text-[var(--app-wine)] shadow-sm"
-          >
-            RSVP
-          </button>
-        </div>
+      <div className={styles.headerLogo} data-testid="custom-header-logo" aria-hidden="true">
+        <div className={styles.logoBorder}>BA</div>
+      </div>
 
-        <div className={styles.scene}>
-          <div className={styles.previewFrame}>
+      <section data-block-type="primary_media" className={styles.primaryMedia}>
+        <div className={styles.mediaContainer}>
+          <figure
+            data-test="editor-media-modify-button"
+            className={cn(styles.mediaInner, stageClass)}
+          >
             <div className={styles.controlRail}>
               <button
                 type="button"
@@ -72,172 +183,135 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
                 aria-label="Flip invitation card"
                 className={styles.controlButton}
               >
-                <RefreshCw size={18} strokeWidth={1.9} />
+                <RefreshCw size={20} strokeWidth={1.8} />
               </button>
               <button
                 type="button"
-                onClick={advanceScene}
-                aria-label="Advance invitation preview"
+                onClick={replayScene}
+                aria-label="Replay invitation preview"
                 className={styles.controlButton}
               >
-                <Play size={18} fill="currentColor" strokeWidth={1.9} />
+                <Play size={20} fill="currentColor" strokeWidth={1.8} />
               </button>
             </div>
+
             <div className={styles.stack}>
-              <div className={cn(styles.flap, stage > 0 && styles.flapOpen)} />
-              <div
-                className={cn(
-                  styles.card,
-                  stage >= 1 && styles.cardPeek,
-                  stage >= 2 && styles.cardFrontStage,
-                  stage >= 3 && styles.cardBackStage,
-                )}
-              >
-                <div className={cn(styles.cardFace, styles.cardFrontFace)}>
-                  <div
-                    className={styles.cardBackdrop}
-                    style={{ backgroundImage: `url(${invitation.event.heroImageSrc})` }}
-                  />
-                  <div className="absolute inset-x-0 top-0 h-28 bg-white/72 backdrop-blur-[1px]" />
-                  <div className="absolute inset-x-0 top-7 flex items-center justify-center gap-5 text-[rgba(90,31,45,0.68)]">
-                    <span className="font-display text-6xl">{invitation.event.heroMonogram.split(" ")[0]}</span>
-                    <h1 className="font-display text-3xl tracking-[0.08em] text-stone-900 sm:text-4xl">
-                      {invitation.event.summaryName}
-                    </h1>
-                    <span className="font-display text-6xl">{invitation.event.heroMonogram.split(" ")[1]}</span>
+              <div className={styles.envelopeBack}>
+                <div className={styles.envelopeBackFlap} />
+                <div className={styles.envelopeBase} />
+                <div className={styles.envelopeLiner} />
+              </div>
+
+              <div className={styles.card}>
+                <div className={styles.cardRotator}>
+                  <div className={cn(styles.cardFace, styles.cardFrontFace)}>
+                    <Image
+                      src={invitation.event.heroImageSrc}
+                      alt={`${invitation.event.summaryName} invitation front`}
+                      fill
+                      priority
+                      className={styles.cardImage}
+                      sizes="(min-width: 768px) 560px, 82vw"
+                    />
                   </div>
-                </div>
-                <div className={cn(styles.cardFace, styles.cardBackFace)}>
-                  <div className={styles.cardPaper} />
-                  <div className="absolute inset-4 border-[5px] border-[rgba(90,31,45,0.78)]" />
-                  <div className="relative flex h-full flex-col items-center justify-center px-10 py-16 text-center text-[rgba(78,41,38,0.96)]">
-                    <div className="font-display text-4xl tracking-[0.08em]">
-                      {invitation.event.summaryName}
-                    </div>
-                    <div className="mt-10 font-display text-5xl italic">Walking Dinner</div>
-                    <div className="mt-2 text-xl">Thursday 27th</div>
-                    <div className="mt-4 font-display text-4xl">
-                      Ristorante Frescobaldi Firenze
-                    </div>
-                    <div className="mt-2 text-xl">19h30</div>
-                    <div className="mt-1 text-lg">Casual Chic</div>
-                    <div className="mt-8 h-px w-56 bg-[rgba(90,31,45,0.64)]" />
-                    <div className="mt-8 font-display text-5xl italic">Party</div>
-                    <div className="mt-2 text-xl">Friday 28th</div>
-                    <div className="mt-4 font-display text-4xl">Villa I Collazzi</div>
-                    <div className="mt-2 text-xl">19h30</div>
-                    <div className="mt-1 text-lg">{invitation.event.dressCode}</div>
+                  <div className={cn(styles.cardFace, styles.cardBackFace)}>
+                    <Image
+                      src={invitation.event.heroBackImageSrc}
+                      alt={`${invitation.event.summaryName} invitation details`}
+                      fill
+                      className={styles.cardImage}
+                      sizes="(min-width: 768px) 560px, 82vw"
+                    />
                   </div>
                 </div>
               </div>
-              <div className={styles.envelope} />
+
+              <div className={styles.envelopeFront}>
+                <div className={styles.envelopeCover} />
+                <div className={styles.envelopeFrontFlap} />
+              </div>
+            </div>
+          </figure>
+        </div>
+      </section>
+
+      <section data-block-type="basic_info" className={styles.block}>
+        <div className={styles.blockContainer}>
+          <div className={styles.basicInner}>
+            <div className={styles.eventBlock}>
+              <div className={styles.gridTitle}>
+                <h1 data-test="event-title" className={styles.eventTitle}>
+                  {invitation.event.summaryName}
+                </h1>
+                <div className={styles.rsvpButtons}>
+                  <button
+                    type="button"
+                    data-test="rsvp-button"
+                    onClick={() => openRsvp("attending")}
+                    className={cn(
+                      styles.rsvpButton,
+                      response?.status === "attending" && styles.rsvpButtonActive,
+                    )}
+                  >
+                    Will attend
+                  </button>
+                  <button
+                    type="button"
+                    data-test="rsvp-button"
+                    onClick={() => openRsvp("not_attending")}
+                    className={cn(
+                      styles.rsvpButton,
+                      response?.status === "not_attending" && styles.rsvpButtonActive,
+                    )}
+                  >
+                    Will not attend
+                  </button>
+                </div>
+              </div>
+
+              <div className={styles.gridDate}>
+                <div className={styles.infoColumn}>
+                  <hr className={styles.infoRule} />
+                  <span className={styles.infoLabel}>Date</span>
+                  <span className={styles.infoLine}>Friday, March 27, 7:30PM - </span>
+                  <span className={styles.infoLine}>Saturday, March 28, 7:30PM CET</span>
+                </div>
+              </div>
+
+              <div className={styles.gridLocation}>
+                <address className={styles.infoColumn}>
+                  <hr className={styles.infoRule} />
+                  <span className={styles.infoLabel}>Address</span>
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=Villa+I+Collazzi"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.mainAddressLink}
+                  >
+                    <span data-test="event-location" className={styles.infoLineStrong}>
+                      {invitation.event.summaryAddressName}
+                    </span>
+                    <span className={styles.infoLine}>
+                      {invitation.event.summaryAddressLabel}
+                    </span>
+                  </a>
+                </address>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section ref={detailsRef} className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12">
-        <div className="paper-panel rounded-[2rem] border border-[var(--app-line)] px-8 py-12 sm:px-10 sm:py-16">
-          <div className="mx-auto max-w-4xl text-center">
-            <h2 className="font-display text-5xl text-stone-950 sm:text-6xl">
-              {invitation.event.summaryName}
-            </h2>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-              <button
-                type="button"
-                onClick={() => openRsvp("attending")}
-                className={`rounded-[0.2rem] border px-8 py-4 text-sm font-semibold tracking-[0.24em] uppercase ${
-                  response?.status === "attending"
-                    ? "border-stone-900 bg-stone-900 text-white"
-                    : "border-stone-700 bg-transparent text-stone-900"
-                }`}
-              >
-                Will Attend
-              </button>
-              <button
-                type="button"
-                onClick={() => openRsvp("not_attending")}
-                className={`rounded-[0.2rem] border px-8 py-4 text-sm font-semibold tracking-[0.24em] uppercase ${
-                  response?.status === "not_attending"
-                    ? "border-stone-900 bg-stone-900 text-white"
-                    : "border-stone-700 bg-transparent text-stone-900"
-                }`}
-              >
-                Will Not Attend
-              </button>
-            </div>
+      <hr className={styles.blockHr} />
 
-            <div className="mt-8 text-sm text-stone-600">
-              {party.label} · {summary}
-              <span className="mx-2">·</span>
-              Deadline {formatDeadline(invitation.event.rsvpDeadline)}
-              {response ? (
-                <>
-                  <span className="mx-2">·</span>
-                  Updated {formatTimestamp(response.updatedAt)}
-                </>
-              ) : null}
-            </div>
-          </div>
+      {invitation.itinerary.map((item) => (
+        <Fragment key={item.id}>
+          <TravelBlock item={item} />
+          <hr className={styles.blockHr} />
+        </Fragment>
+      ))}
 
-          <div className="mx-auto mt-14 grid max-w-5xl gap-10 text-center lg:grid-cols-2">
-            <div>
-              <div className="section-label">Date</div>
-              <div className="mt-4 text-2xl leading-10 text-stone-900">
-                {invitation.event.summaryDateLabel}
-              </div>
-            </div>
-            <div>
-              <div className="section-label">Address</div>
-              <div className="mt-4 font-display text-4xl text-stone-900">
-                {invitation.event.summaryAddressName}
-              </div>
-              <div className="mt-2 text-lg text-stone-700">{invitation.event.summaryAddressLabel}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-8">
-          {invitation.itinerary.map((item) => (
-            <article
-              key={item.id}
-              className="paper-panel overflow-hidden rounded-[2rem] border border-[var(--app-line)] px-6 py-10 sm:px-8 sm:py-12"
-            >
-              <div className="section-label text-center">{item.dayLabel}</div>
-              <div className="relative mx-auto mt-8 min-h-[18rem] w-full max-w-5xl overflow-hidden rounded-[0.2rem]">
-                <div className="relative min-h-[18rem]">
-                  <Image
-                    src={item.imageSrc}
-                    alt={item.venueName}
-                    fill
-                    className="object-cover"
-                    sizes="(min-width: 1024px) 55vw, 100vw"
-                  />
-                </div>
-              </div>
-              <div className="mx-auto mt-8 max-w-3xl text-center">
-                <a
-                  href={item.mapUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-display text-4xl text-stone-900 underline underline-offset-4"
-                >
-                  {item.venueName}
-                </a>
-                <div className="mt-2 text-lg text-stone-700 underline decoration-stone-300 underline-offset-4">
-                  {item.address}
-                </div>
-                <div className="mt-10 text-2xl text-stone-900">{item.title}</div>
-                <div className="mt-3 text-lg text-stone-700">{item.datetimeLabel}</div>
-                <div className="mt-2 text-lg text-stone-700">{item.dressCode}</div>
-                <p className="mt-5 text-base leading-8 text-stone-700">{item.description}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-
-        <AccommodationCarousel cards={invitation.accommodations} />
-      </section>
+      <AccommodationCarousel cards={invitation.accommodations} />
 
       <RsvpModal
         open={modalOpen}

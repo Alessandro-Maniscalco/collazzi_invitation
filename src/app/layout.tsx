@@ -5,13 +5,13 @@ import "./globals.css";
 
 const displayFont = Cormorant_Garamond({
   subsets: ["latin"],
-  variable: "--font-display",
+  variable: "--font-collazzi-display",
   weight: ["400", "500", "600", "700"],
 });
 
 const sansFont = Manrope({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--font-collazzi-sans",
   weight: ["400", "500", "600", "700"],
 });
 

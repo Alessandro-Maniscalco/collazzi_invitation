@@ -8,15 +8,15 @@
   --app-wine: #5a1f2d;
   --app-gold: #c8b48d;
   --app-line: rgba(35, 31, 27, 0.12);
-  --font-sans: var(--font-sans);
-  --font-display: var(--font-display);
+  --font-sans: var(--font-collazzi-sans);
+  --font-display: var(--font-collazzi-display);
 }
 
 @theme inline {
   --color-background: var(--app-cream);
   --color-foreground: var(--app-ink);
-  --font-sans: var(--font-sans);
-  --font-display: var(--font-display);
+  --font-sans: var(--font-collazzi-sans);
+  --font-display: var(--font-collazzi-display);
 }
 
 * {

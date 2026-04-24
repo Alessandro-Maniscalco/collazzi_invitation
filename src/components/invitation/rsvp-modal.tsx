@@ -51,7 +51,7 @@ export function RsvpModal({
   onSubmitted,
 }: RsvpModalProps) {
   const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatus>(
-    initialResponse?.status ?? preferredStatus ?? "attending",
+    preferredStatus ?? initialResponse?.status ?? "attending",
   );
   const [selections, setSelections] = useState<Record<string, boolean>>({});
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
@@ -63,7 +63,7 @@ export function RsvpModal({
 
   useEffect(() => {
     if (!open) return;
-    const status = initialResponse?.status ?? preferredStatus ?? "attending";
+    const status = preferredStatus ?? initialResponse?.status ?? "attending";
     setAttendanceStatus(status);
     setSelections(buildGuestSelections(guests, initialResponse, status));
     setAnswers(buildAnswers(questions, initialResponse));

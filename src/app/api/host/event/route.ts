@@ -11,6 +11,7 @@ const eventSchema = z.object({
   subtitle: z.string(),
   heroMonogram: z.string(),
   heroImageSrc: z.string(),
+  heroBackImageSrc: z.string(),
   heroBackdropSrc: z.string(),
   paperTextureSrc: z.string(),
   summaryName: z.string(),
@@ -45,6 +46,19 @@ const payloadSchema = z.object({
       dressCode: z.string(),
       description: z.string(),
       imageSrc: z.string(),
+      note: z.string().optional(),
+      subItems: z
+        .array(
+          z.object({
+            id: z.string(),
+            label: z.string().optional(),
+            venueName: z.string().optional(),
+            address: z.string().optional(),
+            mapUrl: z.string().optional(),
+            note: z.string().optional(),
+          }),
+        )
+        .optional(),
     }),
   ),
   accommodations: z.array(
@@ -53,6 +67,7 @@ const payloadSchema = z.object({
       title: z.string(),
       city: z.string(),
       address: z.string(),
+      addressLines: z.array(z.string()).optional(),
       phone: z.string(),
       ctaLabel: z.string(),
       ctaUrl: z.string(),
