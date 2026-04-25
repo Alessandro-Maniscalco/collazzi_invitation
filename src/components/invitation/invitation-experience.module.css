@@ -139,24 +139,30 @@
   width: 100%;
   aspect-ratio: 1 / 1;
   opacity: 0;
-  transform: translate(-50%, 42%) scale(0.68);
+  transform: translate(-50%, 54%) scale(0.62);
   transform-style: preserve-3d;
   filter: drop-shadow(0 28px 38px rgba(41, 29, 20, 0.25));
   transition:
-    opacity 130ms ease,
-    transform 650ms cubic-bezier(0.77, 0, 0.175, 1);
+    opacity 240ms ease,
+    transform 700ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .stageOpen .card {
-  z-index: 2;
-  opacity: 0;
-  transform: translate(-50%, 56%) scale(0.68);
+  z-index: 3;
+  opacity: 1;
+  transform: translate(-50%, 49%) scale(0.62);
+}
+
+.stagePeeking .card {
+  z-index: 3;
+  opacity: 1;
+  transform: translate(-50%, 29%) scale(0.62);
 }
 
 .stageExtracted .card {
   z-index: 6;
   opacity: 1;
-  transform: translate(-50%, -18%) scale(0.68);
+  transform: translate(-50%, 7%) scale(0.68);
 }
 
 .stageFront .card,
@@ -170,7 +176,8 @@
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  transition: transform 700ms cubic-bezier(0.77, 0, 0.175, 1);
+  transition: transform 760ms cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
 }
 
 .stageBack .cardRotator {
@@ -201,6 +208,11 @@
   object-fit: cover;
 }
 
+.cardBackImage {
+  object-fit: contain;
+  background: #fdf9f0;
+}
+
 .envelopeBack,
 .envelopeFront {
   position: absolute;
@@ -208,11 +220,11 @@
   top: 0;
   width: 59.6%;
   height: 100%;
-  transform: translate(-50%, 22%) scale(0.92);
+  transform: translate(-50%, 36%) scale(0.84);
   transform-style: preserve-3d;
   transition:
     opacity 130ms ease,
-    transform 850ms 110ms cubic-bezier(0.77, 0, 0.175, 1);
+    transform 720ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .envelopeBack {
@@ -239,17 +251,31 @@
 }
 
 .envelopeBackFlap {
-  z-index: 0;
+  z-index: 3;
+  overflow: hidden;
   transform-origin: 50% 40%;
-  clip-path: polygon(50% 0, 100% 32%, 0 32%);
+  clip-path: polygon(50% 0, 100% 44%, 0 44%);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.52), rgba(233, 226, 211, 0.94)),
-    var(--envelope-paper);
+    linear-gradient(145deg, rgba(255, 255, 255, 0.035), transparent 38%),
+    var(--envelope-burgundy);
   opacity: 0;
-  transform: translateY(12%) translateZ(-0.4px) scaleY(0.32);
+  transform: translateY(15%) translateZ(-0.4px) scaleY(0.18);
   transition:
-    opacity 170ms ease,
-    transform 450ms 80ms cubic-bezier(0.77, 0, 0.175, 1);
+    opacity 190ms ease,
+    transform 720ms 60ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.envelopeBackFlap::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  left: 16px;
+  height: calc(44% - 14px);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(232, 226, 213, 0.99)),
+    var(--envelope-paper);
 }
 
 .envelopeBase {
@@ -261,68 +287,75 @@
 
 .envelopeLiner {
   z-index: 2;
-  clip-path: polygon(50% 16%, 100% 45%, 50% 72%, 0 45%);
+  clip-path: polygon(50% 17%, 100% 45%, 50% 72%, 0 45%);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(232, 226, 213, 0.96)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(232, 226, 213, 0.94)),
     var(--envelope-paper);
   opacity: 0;
-  transition: opacity 210ms 130ms ease;
+  transition: opacity 260ms 110ms ease;
 }
 
 .envelopeCover {
   z-index: 4;
   background:
+    linear-gradient(43deg, transparent 49.4%, rgba(255, 255, 255, 0.06) 50%, transparent 50.8%) 0 36% / 50% 64% no-repeat,
+    linear-gradient(-43deg, transparent 49.4%, rgba(255, 255, 255, 0.06) 50%, transparent 50.8%) 100% 36% / 50% 64% no-repeat,
     linear-gradient(120deg, rgba(255, 255, 255, 0.035), transparent 34%),
     linear-gradient(240deg, rgba(0, 0, 0, 0.075), transparent 38%),
     var(--envelope-burgundy);
   clip-path: polygon(0 36%, 50% 64%, 100% 36%, 100% 100%, 0 100%);
   opacity: 1;
-  transition: opacity 180ms ease;
+  transition: opacity 220ms ease;
 }
 
 .envelopeFrontFlap {
   z-index: 5;
   background:
+    linear-gradient(34deg, transparent 49.4%, rgba(255, 255, 255, 0.055) 50%, transparent 50.8%),
+    linear-gradient(-34deg, transparent 49.4%, rgba(0, 0, 0, 0.09) 50%, transparent 50.8%),
     linear-gradient(145deg, rgba(255, 255, 255, 0.035), transparent 38%),
     var(--envelope-burgundy);
   clip-path: polygon(0 20%, 100% 20%, 50% 54%);
   transform: translateY(0%) translateZ(0.4px) rotateX(0deg);
   transform-origin: 50% 40%;
   transition:
-    opacity 180ms ease,
-    transform 450ms 70ms cubic-bezier(0.77, 0, 0.175, 1);
-}
-
-.stageClosed .envelopeCover {
-  clip-path: polygon(0 36%, 100% 36%, 100% 100%, 0 100%);
-}
-
-.stageOpen .envelopeBase,
-.stageOpen .envelopeCover {
-  opacity: 0;
+    opacity 220ms ease,
+    transform 720ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .stageOpen .envelopeBack,
 .stageOpen .envelopeFront,
+.stagePeeking .envelopeBack,
+.stagePeeking .envelopeFront,
 .stageExtracted .envelopeBack,
 .stageExtracted .envelopeFront,
 .stageFront .envelopeBack,
 .stageBack .envelopeBack,
 .stageFront .envelopeFront,
 .stageBack .envelopeFront {
-  transform: translate(-50%, 60%) scale(1.08);
+  transform: translate(-50%, 56%) scale(1.04);
 }
 
 .stageOpen .envelopeBackFlap {
   opacity: 1;
-  transform: translateY(8%) translateZ(-0.4px) scaleY(0.82);
+  transform: translateY(-9%) translateZ(-0.4px) scaleY(1.18);
+}
+
+.stagePeeking .envelopeBackFlap {
+  opacity: 1;
+  transform: translateY(-9%) translateZ(-0.4px) scaleY(1.18);
+}
+
+.stageOpen .envelopeLiner,
+.stagePeeking .envelopeLiner {
+  opacity: 1;
 }
 
 .stageExtracted .envelopeBackFlap,
 .stageFront .envelopeBackFlap,
 .stageBack .envelopeBackFlap {
   opacity: 0;
-  transform: translateY(-30%) translateZ(-0.4px) scaleY(0.35);
+  transform: translateY(-8%) translateZ(-0.4px) scaleY(0.72);
 }
 
 .stageExtracted .envelopeLiner,
@@ -332,9 +365,10 @@
 }
 
 .stageOpen .envelopeFrontFlap,
+.stagePeeking .envelopeFrontFlap,
 .stageExtracted .envelopeFrontFlap {
   opacity: 0;
-  transform: translateY(-22%) translateZ(0.4px) rotateX(74deg) scaleY(0.36);
+  transform: translateY(-20%) translateZ(0.4px) rotateX(78deg) scaleY(0.32);
 }
 
 .stageFront .envelopeFrontFlap,

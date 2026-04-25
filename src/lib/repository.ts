@@ -4,10 +4,20 @@ import { join } from "node:path";
 import { nanoid } from "nanoid";
 
 import { parsePartyCsv } from "@/lib/csv";
-import { env } from "@/lib/env";
+import { env, hasGoogleSheetsConfig } from "@/lib/env";
 import { isReadOnly } from "@/lib/formatters";
 import { dispatchDelivery } from "@/lib/providers/delivery";
-import { createSeedState, createToken } from "@/lib/seed-data";
+import { SEED_HOSTS, createSeedState, createToken } from "@/lib/seed-data";
+import {
+  getSheetDashboardSnapshot,
+  getSheetInvitationByToken,
+  importSheetPartiesFromCsv,
+  recordSheetInviteOpen,
+  regenerateSheetPartyToken,
+  saveSheetRsvp,
+  sendSheetBatch,
+  updateSheetDeliveryStatusFromWebhook,
+} from "@/lib/sheets/google-store";
 import type {
   AccommodationCard,
   ActivityEvent,
@@ -33,13 +43,33 @@ declare global {
 async function readState() {
   try {
     const contents = await readFile(DATA_FILE, "utf8");
-    return JSON.parse(contents) as AppState;
+    return normalizeState(JSON.parse(contents) as AppState);
   } catch {
     const seed = createSeedState();
     await mkdir(DATA_DIR, { recursive: true });
     await writeFile(DATA_FILE, JSON.stringify(seed, null, 2), "utf8");
     return seed;
   }
+}
+
+function normalizeState(state: AppState) {
+  const primaryHost = SEED_HOSTS[0];
+  const primaryEmail = primaryHost.email.toLowerCase();
+  const hostIndex = state.hosts.findIndex(
+    (host) => host.email.toLowerCase() === primaryEmail || host.role === "owner",
+  );
+
+  if (hostIndex >= 0) {
+    state.hosts[hostIndex] = { ...primaryHost };
+  } else {
+    state.hosts.push({ ...primaryHost });
+  }
+
+  state.hosts = state.hosts.filter(
+    (host) => host.id === primaryHost.id || host.email.toLowerCase() !== primaryEmail,
+  );
+
+  return state;
 }
 
 async function writeState(state: AppState) {
@@ -116,6 +146,10 @@ function filterParties(state: AppState, input: SendBatchInput) {
 }
 
 export async function recordInviteOpen(tokenValue: string) {
+  if (hasGoogleSheetsConfig()) {
+    return recordSheetInviteOpen(tokenValue);
+  }
+
   return updateState((state) => {
     const party = state.parties.find((candidate) => candidate.token.value === tokenValue);
     if (!party) return null;
@@ -139,6 +173,10 @@ export async function recordInviteOpen(tokenValue: string) {
 }
 
 export async function getInvitationByToken(tokenValue: string): Promise<InvitationView | null> {
+  if (hasGoogleSheetsConfig()) {
+    return getSheetInvitationByToken(tokenValue, await readState());
+  }
+
   const state = await readState();
   const party = state.parties.find((candidate) => candidate.token.value === tokenValue);
 
@@ -167,6 +205,10 @@ export async function getInvitationByToken(tokenValue: string): Promise<Invitati
 }
 
 export async function saveRsvp(input: SaveRsvpInput) {
+  if (hasGoogleSheetsConfig()) {
+    return saveSheetRsvp(input, await readState());
+  }
+
   return updateState((state) => {
     const party = state.parties.find((candidate) => candidate.token.value === input.token);
 
@@ -193,6 +235,10 @@ export async function saveRsvp(input: SaveRsvpInput) {
 }
 
 export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
+  if (hasGoogleSheetsConfig()) {
+    return getSheetDashboardSnapshot(await readState());
+  }
+
   const state = await readState();
   const hydratedParties = state.parties.map((party) => ({
     ...party,
@@ -247,6 +293,10 @@ export async function updateContent(input: HostContentUpdate, actor: string) {
 }
 
 export async function importPartiesFromCsv(csv: string, actor: string) {
+  if (hasGoogleSheetsConfig()) {
+    return importSheetPartiesFromCsv(csv, actor);
+  }
+
   const rows = parsePartyCsv(csv);
 
   return updateState((state) => {
@@ -289,6 +339,10 @@ export async function importPartiesFromCsv(csv: string, actor: string) {
 }
 
 export async function regeneratePartyToken(partyId: string, actor: string) {
+  if (hasGoogleSheetsConfig()) {
+    return regenerateSheetPartyToken(partyId, actor);
+  }
+
   return updateState((state) => {
     const party = state.parties.find((candidate) => candidate.id === partyId);
     if (!party) {
@@ -306,6 +360,10 @@ export async function regeneratePartyToken(partyId: string, actor: string) {
 }
 
 export async function sendBatch(input: SendBatchInput, actor: string) {
+  if (hasGoogleSheetsConfig()) {
+    return sendSheetBatch(input, actor, await readState());
+  }
+
   const deliveries = await updateState(async (state) => {
     const parties = filterParties(state, input);
     const created: DeliveryRecord[] = [];
@@ -364,6 +422,10 @@ export async function updateDeliveryStatusFromWebhook(
   providerMessageId: string,
   status: DeliveryStatus,
 ) {
+  if (hasGoogleSheetsConfig()) {
+    return updateSheetDeliveryStatusFromWebhook(providerMessageId, status);
+  }
+
   return updateState((state) => {
     const delivery = state.deliveries.find(
       (candidate) => candidate.providerMessageId === providerMessageId,

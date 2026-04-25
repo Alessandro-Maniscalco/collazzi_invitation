@@ -1,7 +1,3 @@
-import Link from "next/link";
-
-import { getDashboardSnapshot } from "@/lib/repository";
-
 export const dynamic = "force-dynamic";
 
 export default async function HostLoginPage({
@@ -10,12 +6,11 @@ export default async function HostLoginPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const snapshot = await getDashboardSnapshot();
   const message =
-    params.sent === "1"
-      ? "Magic link sent. Check your inbox."
+    params.error === "config"
+      ? "Host password is not configured."
       : params.error === "1"
-        ? "That email does not have host access."
+        ? "The email or password is incorrect."
         : null;
 
   return (
@@ -24,23 +19,12 @@ export default async function HostLoginPage({
         <section className="overflow-hidden rounded-[2rem] bg-stone-950 px-8 py-10 text-white shadow-[0_30px_80px_rgba(27,18,11,0.28)]">
           <div className="section-label text-[var(--app-gold)]">Host Login</div>
           <h1 className="mt-5 font-display text-5xl leading-none">
-            Private dashboard access for you and your sister.
+            Private dashboard access.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-stone-300">
-            In mock mode this page signs in one of the seeded host accounts directly. If Supabase
-            keys are configured, the same form sends a magic link instead.
+            Sign in with the host email and password to manage guest links, invitations, and RSVP
+            responses.
           </p>
-          <div className="mt-8 grid gap-3">
-            {snapshot.hosts.map((host) => (
-              <div
-                key={host.id}
-                className="rounded-[1.25rem] border border-white/10 bg-white/5 px-4 py-4"
-              >
-                <div className="font-semibold">{host.name}</div>
-                <div className="text-sm text-stone-300">{host.email}</div>
-              </div>
-            ))}
-          </div>
         </section>
 
         <section className="paper-panel rounded-[2rem] border border-[var(--app-line)] p-8">
@@ -58,7 +42,17 @@ export default async function HostLoginPage({
                 type="email"
                 name="email"
                 required
-                placeholder={snapshot.hosts[0]?.email}
+                autoComplete="email"
+                className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3 outline-none transition focus:border-[var(--app-wine)]"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-stone-700">Password</span>
+              <input
+                type="password"
+                name="password"
+                required
+                autoComplete="current-password"
                 className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3 outline-none transition focus:border-[var(--app-wine)]"
               />
             </label>
@@ -69,9 +63,6 @@ export default async function HostLoginPage({
               Continue
             </button>
           </form>
-          <Link href="/" className="mt-6 inline-flex text-sm text-stone-600 underline underline-offset-4">
-            Back to previews
-          </Link>
         </section>
       </div>
     </main>

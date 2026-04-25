@@ -5,9 +5,17 @@ import type { AppState } from "@/lib/types";
 const now = new Date().toISOString();
 
 export const SEED_HOST_EMAILS = [
-  "alessandro@collazzi.host",
-  "sister@collazzi.host",
+  "bona18ale20@gmail.com",
 ];
+
+export const SEED_HOSTS = [
+  {
+    id: "host_bona_ale",
+    name: "Bona e Alessandro",
+    email: SEED_HOST_EMAILS[0],
+    role: "owner",
+  },
+] satisfies AppState["hosts"];
 
 export function createToken(prefix = "invite") {
   return `${prefix}_${nanoid(18)}`;
@@ -30,7 +38,7 @@ export function createSeedState(): AppState {
       heroBackdropSrc: "/assets/textures/kraft-paper.jpg",
       paperTextureSrc: "/assets/textures/card-paper.jpg",
       summaryName: "Bona Alessandro Maniscalco",
-      summaryDateLabel: "Friday, March 27, 7:30PM – Saturday, March 28, 7:30PM CET",
+      summaryDateLabel: "Thursday, August 27, 7:30PM – Friday, August 28, 7:30PM CET",
       summaryAddressName: "Villa I Collazzi",
       summaryAddressLabel: "Via Volterrana, 4A, 50018 Scandicci FI",
       introduction: "",
@@ -38,29 +46,16 @@ export function createSeedState(): AppState {
       rsvpDeadline: "2026-06-15T18:00:00.000Z",
       footerNote: "",
     },
-    hosts: [
-      {
-        id: "host_alessandro",
-        name: "Alessandro",
-        email: SEED_HOST_EMAILS[0],
-        role: "owner",
-      },
-      {
-        id: "host_sister",
-        name: "Sister",
-        email: SEED_HOST_EMAILS[1],
-        role: "editor",
-      },
-    ],
+    hosts: SEED_HOSTS.map((host) => ({ ...host })),
     questions: [
       {
         id: "question_walking_dinner",
-        label: "Walking Dinner - Thursday March 27th",
+        label: "Walking Dinner - Thursday August 27th",
         type: "checkbox",
       },
       {
         id: "question_party",
-        label: "The Party - Friday March 28th",
+        label: "The Party - Friday August 28th",
         type: "checkbox",
       },
       {
@@ -78,11 +73,11 @@ export function createSeedState(): AppState {
         mapUrl:
           "https://www.google.com/maps/search/?api=1&query=Ristorante+Frescobaldi+Firenze",
         title: "Walking Dinner",
-        datetimeLabel: "Thursday the 27th at 19h30",
+        datetimeLabel: "Thursday August 27th at 19h30",
         dressCode: "Dress code - Casual Chic",
         description: "",
         imageSrc: "/assets/collazzi/thursday-restaurant.jpeg",
-        note: "Walking Dinner\nThursday the 27th at 19h30\nDress code - Casual Chic",
+        note: "Walking Dinner\nThursday August 27th at 19h30\nDress code - Casual Chic",
       },
       {
         id: "itinerary_party",
@@ -92,11 +87,11 @@ export function createSeedState(): AppState {
         mapUrl:
           "https://www.google.com/maps/search/?api=1&query=Villa+I+Collazzi+Impruneta",
         title: "The Party",
-        datetimeLabel: "Friday the 28th at 19h30",
+        datetimeLabel: "Friday August 28th at 19h30",
         dressCode: "Dress code - Black Tie and Long Dress",
         description: "",
         imageSrc: "/assets/collazzi/friday-villa.jpeg",
-        note: "The Party \nFriday the 28th at 19h30\nDress code - Black Tie and Long Dress",
+        note: "The Party \nFriday August 28th at 19h30\nDress code - Black Tie and Long Dress",
         subItems: [
           {
             id: "itinerary_party_shuttle",

@@ -121,6 +121,11 @@ function TravelBlock({ item }: { item: ItineraryItem }) {
   );
 }
 
+function splitDateLabel(label: string) {
+  const parts = label.split(/\s+[–-]\s+/).map((part) => part.trim()).filter(Boolean);
+  return parts.length > 0 ? parts : [label];
+}
+
 export function InvitationExperience({ invitation }: { invitation: InvitationView }) {
   const [stage, setStage] = useState(0);
   const [sequenceKey, setSequenceKey] = useState(0);
@@ -128,24 +133,28 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
   const [preferredStatus, setPreferredStatus] = useState<AttendanceStatus | undefined>(undefined);
   const [response, setResponse] = useState<PartyResponse | undefined>(invitation.party.response);
   const party = { ...invitation.party, response };
+  const dateLines = splitDateLabel(invitation.event.summaryDateLabel);
   const stageClass =
     stage === 0
       ? styles.stageClosed
       : stage === 1
         ? styles.stageOpen
         : stage === 2
-          ? styles.stageExtracted
+          ? styles.stagePeeking
           : stage === 3
-            ? styles.stageFront
-            : styles.stageBack;
+            ? styles.stageExtracted
+            : stage === 4
+              ? styles.stageFront
+              : styles.stageBack;
 
   useEffect(() => {
     setStage(0);
     const timers = [
-      window.setTimeout(() => setStage(1), 400),
-      window.setTimeout(() => setStage(2), 1150),
-      window.setTimeout(() => setStage(3), 2050),
-      window.setTimeout(() => setStage(4), 3800),
+      window.setTimeout(() => setStage(1), 360),
+      window.setTimeout(() => setStage(2), 1120),
+      window.setTimeout(() => setStage(3), 1820),
+      window.setTimeout(() => setStage(4), 2520),
+      window.setTimeout(() => setStage(5), 4400),
     ];
 
     return () => timers.forEach((timer) => window.clearTimeout(timer));
@@ -161,7 +170,7 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
   }
 
   function flipCard() {
-    setStage((current) => (current === 4 ? 3 : 4));
+    setStage((current) => (current === 5 ? 4 : 5));
   }
 
   return (
@@ -174,6 +183,7 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
         <div className={styles.mediaContainer}>
           <figure
             data-test="editor-media-modify-button"
+            data-stage={stage}
             className={cn(styles.mediaInner, stageClass)}
           >
             <div className={styles.controlRail}>
@@ -219,7 +229,7 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
                       src={invitation.event.heroBackImageSrc}
                       alt={`${invitation.event.summaryName} invitation details`}
                       fill
-                      className={styles.cardImage}
+                      className={cn(styles.cardImage, styles.cardBackImage)}
                       sizes="(min-width: 768px) 560px, 82vw"
                     />
                   </div>
@@ -273,8 +283,12 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
                 <div className={styles.infoColumn}>
                   <hr className={styles.infoRule} />
                   <span className={styles.infoLabel}>Date</span>
-                  <span className={styles.infoLine}>Friday, March 27, 7:30PM - </span>
-                  <span className={styles.infoLine}>Saturday, March 28, 7:30PM CET</span>
+                  {dateLines.map((line, index) => (
+                    <span key={line} className={styles.infoLine}>
+                      {line}
+                      {index < dateLines.length - 1 ? " -" : ""}
+                    </span>
+                  ))}
                 </div>
               </div>
 

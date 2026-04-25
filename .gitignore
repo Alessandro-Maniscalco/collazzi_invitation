@@ -29,6 +29,9 @@
 # misc
 .DS_Store
 *.pem
+.secrets/
+*service-account*.json
+*private-key*.json
 
 # debug
 npm-debug.log*
@@ -38,6 +41,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
