@@ -16,9 +16,9 @@ const sansFont = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Collazzi Invitation",
+  title: "Bona_and_Alessandro_Party",
   description:
-    "A private invitation site inspired by the supplied Paperless Post flow, with guest delivery, RSVP tracking, and host management.",
+    "A private invitation site for Bona and Alessandro's party, with guest delivery, RSVP tracking, and host management.",
 };
 
 export default function RootLayout({
