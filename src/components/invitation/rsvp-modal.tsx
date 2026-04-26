@@ -6,6 +6,7 @@ import type { AttendanceStatus, Guest, PartyResponse, Question } from "@/lib/typ
 
 interface RsvpModalProps {
   open: boolean;
+  partyLabel: string;
   guests: Guest[];
   questions: Question[];
   token: string;
@@ -17,6 +18,7 @@ interface RsvpModalProps {
 }
 
 const PARTY_QUESTION_ID = "question_party";
+const WALKING_DINNER_QUESTION_ID = "question_walking_dinner";
 
 function isImpliedPartyQuestion(question: Question) {
   return question.id === PARTY_QUESTION_ID;
@@ -60,6 +62,7 @@ function normalizeAnswers(
 
 export function RsvpModal({
   open,
+  partyLabel,
   guests,
   questions,
   token,
@@ -77,6 +80,10 @@ export function RsvpModal({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const visibleQuestions = questions.filter((question) => !isImpliedPartyQuestion(question));
+  const hasWalkingDinnerOption = questions.some(
+    (question) => question.id === WALKING_DINNER_QUESTION_ID,
+  );
+  const attendingLabel = hasWalkingDinnerOption ? "Will attend the party" : "Will attend";
 
   useEffect(() => {
     if (!open) return;
@@ -109,7 +116,9 @@ export function RsvpModal({
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="section-label">RSVP</div>
-            <h2 className="mt-3 font-display text-4xl text-stone-950">Will you attend</h2>
+            <h2 className="mt-3 font-display text-4xl text-stone-950">
+              Will you attend, {partyLabel}?
+            </h2>
             <p className="mt-2 text-base text-stone-700">Bona and Alessandro Maniscalco</p>
           </div>
           <button
@@ -143,7 +152,7 @@ export function RsvpModal({
                   : "text-stone-600"
               }`}
             >
-              {status === "attending" ? "Will attend" : "Will not attend"}
+              {status === "attending" ? attendingLabel : "Will not attend"}
             </button>
           ))}
         </div>

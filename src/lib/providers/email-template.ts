@@ -26,7 +26,7 @@ const DEFAULT_MAP_URL =
   "https://www.google.com/maps/search/?api=1&query=Villa+I+Collazzi+Scandicci";
 
 export function renderInvitationEmail(input: InvitationEmailInput): InvitationEmail {
-  const coupleName = "Bona & Alessandro";
+  const coupleName = "Bona and Alessandro";
   const cardUrl = absoluteUrl(input.appUrl, input.heroImageSrc || DEFAULT_CARD_IMAGE);
   const dateParts = splitDateLabel(input.summaryDateLabel);
   const addressName = input.summaryAddressName || "Villa I Collazzi";

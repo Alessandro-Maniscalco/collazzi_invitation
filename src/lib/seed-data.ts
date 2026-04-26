@@ -30,14 +30,14 @@ export function createSeedState(): AppState {
     event: {
       id: "event_collazzi",
       slug: "collazzi",
-      title: "Bona Alessandro Maniscalco",
+      title: "Bona and Alessandro Maniscalco",
       subtitle: "",
       heroMonogram: "18 20",
       heroImageSrc: "/assets/collazzi/invitation-front.png",
       heroBackImageSrc: "/assets/collazzi/invitation-back.png",
       heroBackdropSrc: "/assets/textures/kraft-paper.jpg",
       paperTextureSrc: "/assets/textures/card-paper.jpg",
-      summaryName: "Bona Alessandro Maniscalco",
+      summaryName: "Bona and Alessandro Maniscalco",
       summaryDateLabel: "Thursday, August 27, 7:30PM – Friday, August 28, 7:30PM CET",
       summaryAddressName: "Villa I Collazzi",
       summaryAddressLabel: "Via Volterrana, 4A, 50018 Scandicci FI",
@@ -67,7 +67,7 @@ export function createSeedState(): AppState {
     itinerary: [
       {
         id: "itinerary_dinner",
-        dayLabel: "Thursday 27th",
+        dayLabel: "Thursday August 27th",
         venueName: "Ristorante Frescobaldi Firenze",
         address: "31 Piazza della Signoria Firenze",
         mapUrl:
@@ -81,7 +81,7 @@ export function createSeedState(): AppState {
       },
       {
         id: "itinerary_party",
-        dayLabel: "Friday 28th",
+        dayLabel: "Friday August 28th",
         venueName: "Villa I Collazzi",
         address: "4A Via Volterrana, Impruneta",
         mapUrl:
