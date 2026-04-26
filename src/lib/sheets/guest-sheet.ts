@@ -99,6 +99,7 @@ export interface AddGuestInput {
   invitedByBona: boolean;
   invitedByMum: boolean;
   source?: string;
+  willInviteToWalkingDinner: boolean;
   sentWhatsappSaveTheDate: boolean;
   sentInstagramSaveTheDate: boolean;
 }

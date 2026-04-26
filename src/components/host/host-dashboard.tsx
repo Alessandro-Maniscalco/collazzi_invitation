@@ -34,6 +34,7 @@ const emptyNewGuestForm = {
   invited_by_bona: false,
   invited_by_mum: false,
   source: "",
+  will_invite_to_walking_dinner: false,
   sent_whatsapp_save_the_date: false,
   sent_instagram_save_the_date: false,
 };
@@ -550,6 +551,17 @@ export function HostDashboard({
                     placeholder="Examples: AleAI, Bona list, Mum table, Instagram DM"
                     className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3"
                   />
+                </label>
+                <label className="flex items-center gap-3 text-sm font-semibold text-stone-700">
+                  <input
+                    type="checkbox"
+                    checked={newGuest.will_invite_to_walking_dinner}
+                    onChange={(event) =>
+                      updateNewGuest("will_invite_to_walking_dinner", event.target.checked)
+                    }
+                    className="h-4 w-4"
+                  />
+                  Will invite to walking dinner
                 </label>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>

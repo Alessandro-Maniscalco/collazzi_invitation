@@ -307,6 +307,7 @@ export async function addSheetGuest(input: AddGuestInput, actor: string) {
       invited_by_mum: toSheetBoolean(input.invitedByMum),
       counted: "TRUE",
       source: input.source ?? "",
+      will_invite_to_walking_dinner: toSheetBoolean(input.willInviteToWalkingDinner),
       sent_whatsapp_save_the_date: toSheetBoolean(input.sentWhatsappSaveTheDate),
       sent_instagram_save_the_date: toSheetBoolean(input.sentInstagramSaveTheDate),
       guest_id: guestId,

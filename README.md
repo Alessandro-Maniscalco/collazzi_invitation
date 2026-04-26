@@ -59,7 +59,7 @@ Recommended guest column order keeps host-editable fields on the left:
 8. `source` - free-text provenance, for example `AleAI`, `Bona list`, `Mum table`, or
    `Instagram DM`.
 9. `will_invite_to_walking_dinner` - boolean; controls whether the guest sees the Thursday dinner
-   section and walking dinner RSVP question.
+   section and walking dinner RSVP question. The host dashboard add-person form writes this field.
 10. `sent_whatsapp_save_the_date` - boolean tracking marker only; it does not send WhatsApp messages.
 11. `sent_instagram_save_the_date` - boolean tracking marker only; it does not send Instagram
     messages.

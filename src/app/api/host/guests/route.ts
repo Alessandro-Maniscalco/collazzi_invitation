@@ -30,6 +30,7 @@ const payloadSchema = z.object({
   invited_by_bona: z.boolean().default(false),
   invited_by_mum: z.boolean().default(false),
   source: optionalText,
+  will_invite_to_walking_dinner: z.boolean().default(false),
   sent_whatsapp_save_the_date: z.boolean().default(false),
   sent_instagram_save_the_date: z.boolean().default(false),
 });
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
         invitedByBona: payload.invited_by_bona,
         invitedByMum: payload.invited_by_mum,
         source: payload.source,
+        willInviteToWalkingDinner: payload.will_invite_to_walking_dinner,
         sentWhatsappSaveTheDate: payload.sent_whatsapp_save_the_date,
         sentInstagramSaveTheDate: payload.sent_instagram_save_the_date,
       },

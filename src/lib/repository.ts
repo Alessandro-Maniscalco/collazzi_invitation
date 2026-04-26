@@ -353,6 +353,7 @@ export async function addGuest(input: AddGuestInput, actor: string) {
       input.invitedByAle ? "invited_by_ale" : "",
       input.invitedByBona ? "invited_by_bona" : "",
       input.invitedByMum ? "invited_by_mum" : "",
+      input.willInviteToWalkingDinner ? "walking_dinner_invited" : "",
       input.sentWhatsappSaveTheDate ? "sent_whatsapp_save_the_date" : "",
       input.sentInstagramSaveTheDate ? "sent_instagram_save_the_date" : "",
       input.source ?? "",
