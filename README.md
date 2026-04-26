@@ -98,7 +98,9 @@ checkbox formatting is recommended because it is easier for humans to edit the s
    - `GOOGLE_SHEETS_GID=1950973940` or `GOOGLE_SHEETS_TAB=<tab name>`
    - `GOOGLE_SERVICE_ACCOUNT_EMAIL=<client_email from JSON key>`
    - `GOOGLE_PRIVATE_KEY=<private_key from JSON key, preserving newline escapes>`
-   - Optional delivery variables: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`
+   - Optional delivery variables: `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (for example
+     `Bona and Alessandro <invites@your-verified-domain.com>`), and
+     `RESEND_REPLY_TO_EMAIL=bona18ale20@gmail.com`
 5. Deploy, then set `APP_URL` to the final production URL or custom domain and redeploy.
 6. Open `/host/login`, confirm the guest list loads from Sheets, then open one `/i/<token>` link and
    submit a test RSVP before sending real invitations.

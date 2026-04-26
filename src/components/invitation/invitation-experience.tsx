@@ -121,11 +121,6 @@ function TravelBlock({ item }: { item: ItineraryItem }) {
   );
 }
 
-function splitDateLabel(label: string) {
-  const parts = label.split(/\s+[–-]\s+/).map((part) => part.trim()).filter(Boolean);
-  return parts.length > 0 ? parts : [label];
-}
-
 export function InvitationExperience({ invitation }: { invitation: InvitationView }) {
   const [stage, setStage] = useState(0);
   const [sequenceKey, setSequenceKey] = useState(0);
@@ -133,7 +128,6 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
   const [preferredStatus, setPreferredStatus] = useState<AttendanceStatus | undefined>(undefined);
   const [response, setResponse] = useState<PartyResponse | undefined>(invitation.party.response);
   const party = { ...invitation.party, response };
-  const dateLines = splitDateLabel(invitation.event.summaryDateLabel);
   const stageClass =
     stage === 0
       ? styles.stageClosed
@@ -278,39 +272,6 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
                   </button>
                 </div>
               </div>
-
-              <div className={styles.gridDate}>
-                <div className={styles.infoColumn}>
-                  <hr className={styles.infoRule} />
-                  <span className={styles.infoLabel}>Date</span>
-                  {dateLines.map((line, index) => (
-                    <span key={line} className={styles.infoLine}>
-                      {line}
-                      {index < dateLines.length - 1 ? " -" : ""}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className={styles.gridLocation}>
-                <address className={styles.infoColumn}>
-                  <hr className={styles.infoRule} />
-                  <span className={styles.infoLabel}>Address</span>
-                  <a
-                    href="https://www.google.com/maps/search/?api=1&query=Villa+I+Collazzi"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.mainAddressLink}
-                  >
-                    <span data-test="event-location" className={styles.infoLineStrong}>
-                      {invitation.event.summaryAddressName}
-                    </span>
-                    <span className={styles.infoLine}>
-                      {invitation.event.summaryAddressLabel}
-                    </span>
-                  </a>
-                </address>
-              </div>
             </div>
           </div>
         </div>
@@ -329,7 +290,6 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
 
       <RsvpModal
         open={modalOpen}
-        partyLabel={party.label}
         guests={invitation.guests}
         questions={invitation.questions}
         token={party.token.value}
