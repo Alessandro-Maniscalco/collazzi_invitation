@@ -67,7 +67,7 @@ export function createSeedState(): AppState {
     itinerary: [
       {
         id: "itinerary_dinner",
-        dayLabel: "Thursday, August 27th, 19h30",
+        dayLabel: "Thursday, August 27th",
         venueName: "Ristorante Frescobaldi Firenze",
         address: "31 Piazza della Signoria Firenze",
         mapUrl:
@@ -81,7 +81,7 @@ export function createSeedState(): AppState {
       },
       {
         id: "itinerary_party",
-        dayLabel: "Friday, August 28th, 19h30",
+        dayLabel: "Friday, August 28th",
         venueName: "Villa I Collazzi",
         address: "4A Via Volterrana, Impruneta",
         mapUrl:
