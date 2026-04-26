@@ -4,18 +4,20 @@ test.setTimeout(60_000);
 
 test("guest preview invitation renders and accepts RSVP edits", async ({ page }) => {
   await page.goto("/i/preview-couple");
-  await expect(page.getByRole("button", { name: "Will attend the party" }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Will attend" }).first()).toBeVisible();
   await expect(page.getByText("Bona and Alessandro Maniscalco").first()).toBeVisible();
-  await expect(page.getByText("Thursday August 27th").first()).toBeVisible();
-  await expect(page.getByText("Friday August 28th").first()).toBeVisible();
+  await expect(page.getByText("Thursday, August 27th, 19h30").first()).toBeVisible();
+  await expect(page.getByText("Friday, August 28th, 19h30").first()).toBeVisible();
 
-  await page.getByRole("button", { name: "Will attend the party" }).first().click();
+  await page.getByRole("button", { name: "Will attend" }).first().click();
   await expect(
     page.getByRole("heading", { name: "Will you attend, Taylor & Jordan Russo?" }),
   ).toBeVisible();
   await expect(page.getByText("Bona and Alessandro Maniscalco").nth(1)).toBeVisible();
   await expect(page.getByText("Guest attendance")).toHaveCount(0);
-  await expect(page.getByLabel("The Party - Friday August 28th")).toHaveCount(0);
+  await page.getByLabel("Walking Dinner - Thursday, August 27th, 19h30").check();
+  await page.getByLabel("The Party - Friday, August 28th, 19h30").check();
+  await expect(page.getByLabel("Transfer needed for the party")).toBeVisible();
   await page.getByPlaceholder("Private message to host (optional)").fill("See you there.");
   const rsvpResponse = page.waitForResponse(
     (response) =>
@@ -30,6 +32,7 @@ test("guest preview invitation renders and accepts RSVP edits", async ({ page })
       guest_jordan: true,
     },
     answers: {
+      question_walking_dinner: true,
       question_party: true,
     },
   });
@@ -37,7 +40,7 @@ test("guest preview invitation renders and accepts RSVP edits", async ({ page })
   await expect(
     page.getByRole("heading", { name: "Will you attend, Taylor & Jordan Russo?" }),
   ).toBeHidden({ timeout: 15_000 });
-  await expect(page.getByRole("button", { name: "Will attend the party" }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Will attend" }).first()).toBeVisible();
 
   await page.getByRole("button", { name: "Will not attend" }).first().click();
   await expect(
@@ -46,7 +49,7 @@ test("guest preview invitation renders and accepts RSVP edits", async ({ page })
   await expect(page.getByText("Before you leave, kindly select your preferences below")).toHaveCount(
     0,
   );
-  await expect(page.getByLabel("The Party - Friday August 28th")).toHaveCount(0);
+  await expect(page.getByLabel("The Party - Friday, August 28th, 19h30")).toHaveCount(0);
   await page.getByPlaceholder("Private message to host (optional)").fill("Sorry to miss it.");
   const declineResponsePromise = page.waitForResponse(
     (response) =>
@@ -61,6 +64,7 @@ test("guest preview invitation renders and accepts RSVP edits", async ({ page })
       guest_jordan: false,
     },
     answers: {
+      question_walking_dinner: false,
       question_party: false,
     },
   });

@@ -38,7 +38,7 @@ export function createSeedState(): AppState {
       heroBackdropSrc: "/assets/textures/kraft-paper.jpg",
       paperTextureSrc: "/assets/textures/card-paper.jpg",
       summaryName: "Bona and Alessandro Maniscalco",
-      summaryDateLabel: "Thursday, August 27, 7:30PM – Friday, August 28, 7:30PM CET",
+      summaryDateLabel: "Thursday, August 27th, 19h30 – Friday, August 28th, 19h30",
       summaryAddressName: "Villa I Collazzi",
       summaryAddressLabel: "Via Volterrana, 4A, 50018 Scandicci FI",
       introduction: "",
@@ -50,12 +50,12 @@ export function createSeedState(): AppState {
     questions: [
       {
         id: "question_walking_dinner",
-        label: "Walking Dinner - Thursday August 27th",
+        label: "Walking Dinner - Thursday, August 27th, 19h30",
         type: "checkbox",
       },
       {
         id: "question_party",
-        label: "The Party - Friday August 28th",
+        label: "The Party - Friday, August 28th, 19h30",
         type: "checkbox",
       },
       {
@@ -67,31 +67,31 @@ export function createSeedState(): AppState {
     itinerary: [
       {
         id: "itinerary_dinner",
-        dayLabel: "Thursday August 27th",
+        dayLabel: "Thursday, August 27th, 19h30",
         venueName: "Ristorante Frescobaldi Firenze",
         address: "31 Piazza della Signoria Firenze",
         mapUrl:
           "https://www.google.com/maps/search/?api=1&query=Ristorante+Frescobaldi+Firenze",
         title: "Walking Dinner",
-        datetimeLabel: "Thursday August 27th at 19h30",
+        datetimeLabel: "Thursday, August 27th, 19h30",
         dressCode: "Dress code - Casual Chic",
         description: "",
         imageSrc: "/assets/collazzi/thursday-restaurant.jpeg",
-        note: "Walking Dinner\nThursday August 27th at 19h30\nDress code - Casual Chic",
+        note: "Walking Dinner\nThursday, August 27th, 19h30\nDress code - Casual Chic",
       },
       {
         id: "itinerary_party",
-        dayLabel: "Friday August 28th",
+        dayLabel: "Friday, August 28th, 19h30",
         venueName: "Villa I Collazzi",
         address: "4A Via Volterrana, Impruneta",
         mapUrl:
           "https://www.google.com/maps/search/?api=1&query=Villa+I+Collazzi+Impruneta",
         title: "The Party",
-        datetimeLabel: "Friday August 28th at 19h30",
+        datetimeLabel: "Friday, August 28th, 19h30",
         dressCode: "Dress code - Black Tie and Long Dress",
         description: "",
         imageSrc: "/assets/collazzi/friday-villa.jpeg",
-        note: "The Party \nFriday August 28th at 19h30\nDress code - Black Tie and Long Dress",
+        note: "The Party \nFriday, August 28th, 19h30\nDress code - Black Tie and Long Dress",
         subItems: [
           {
             id: "itinerary_party_shuttle",

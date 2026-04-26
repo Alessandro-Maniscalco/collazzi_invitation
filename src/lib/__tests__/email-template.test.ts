@@ -7,7 +7,7 @@ const baseInput = {
   inviteUrl: "https://project-9pfy4.vercel.app/i/guest_example",
   partyLabel: "Alessandro Maniscalco",
   eventTitle: "Bona and Alessandro Maniscalco",
-  summaryDateLabel: "Thursday, August 27, 7:30PM – Friday, August 28, 7:30PM CET",
+  summaryDateLabel: "Thursday, August 27th, 19h30 – Friday, August 28th, 19h30",
   summaryAddressName: "Villa I Collazzi",
   summaryAddressLabel: "Via Volterrana, 4A, 50018 Scandicci FI",
   rsvpDeadline: "2026-06-15T18:00:00.000Z",
@@ -24,7 +24,7 @@ describe("renderInvitationEmail", () => {
     expect(email.subjectLine).toBe("Bona and Alessandro Maniscalco invitation");
     expect(email.bodyPreview).toContain("Open your private invitation");
     expect(email.text).toContain("For: Alessandro Maniscalco");
-    expect(email.text).toContain("Friday, August 28");
+    expect(email.text).toContain("Friday, August 28th, 19h30");
     expect(email.text).toContain("Please RSVP before June 15th");
     expect(email.html).toContain("VIEW THE CARD");
     expect(email.html).toContain("For: Alessandro Maniscalco");

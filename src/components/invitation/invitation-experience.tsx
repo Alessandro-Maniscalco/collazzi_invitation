@@ -18,8 +18,6 @@ import type {
 
 import styles from "./invitation-experience.module.css";
 
-const WALKING_DINNER_QUESTION_ID = "question_walking_dinner";
-
 function MultilineText({ text, className }: { text: string; className?: string }) {
   return (
     <p className={className}>
@@ -130,10 +128,6 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
   const [preferredStatus, setPreferredStatus] = useState<AttendanceStatus | undefined>(undefined);
   const [response, setResponse] = useState<PartyResponse | undefined>(invitation.party.response);
   const party = { ...invitation.party, response };
-  const hasWalkingDinnerOption = invitation.questions.some(
-    (question) => question.id === WALKING_DINNER_QUESTION_ID,
-  );
-  const attendingLabel = hasWalkingDinnerOption ? "Will attend the party" : "Will attend";
   const stageClass =
     stage === 0
       ? styles.stageClosed
@@ -263,7 +257,7 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
                       response?.status === "attending" && styles.rsvpButtonActive,
                     )}
                   >
-                    {attendingLabel}
+                    Will attend
                   </button>
                   <button
                     type="button"

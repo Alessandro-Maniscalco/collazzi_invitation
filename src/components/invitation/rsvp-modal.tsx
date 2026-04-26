@@ -24,6 +24,10 @@ function isImpliedPartyQuestion(question: Question) {
   return question.id === PARTY_QUESTION_ID;
 }
 
+function hasWalkingDinnerQuestion(questions: Question[]) {
+  return questions.some((question) => question.id === WALKING_DINNER_QUESTION_ID);
+}
+
 function buildGuestSelections(guests: Guest[], status: AttendanceStatus) {
   return Object.fromEntries(
     guests.map((guest) => [guest.id, status === "attending"]),
@@ -34,12 +38,13 @@ function buildAnswers(
   questions: Question[],
   response: PartyResponse | undefined,
   status: AttendanceStatus,
+  implyParty: boolean,
 ) {
   return Object.fromEntries(
     questions.map((question) => [
       question.id,
       status === "attending"
-        ? isImpliedPartyQuestion(question) || response?.answers[question.id] || false
+        ? (implyParty && isImpliedPartyQuestion(question)) || response?.answers[question.id] || false
         : false,
     ]),
   );
@@ -49,12 +54,13 @@ function normalizeAnswers(
   questions: Question[],
   answers: Record<string, boolean>,
   status: AttendanceStatus,
+  implyParty: boolean,
 ) {
   return Object.fromEntries(
     questions.map((question) => [
       question.id,
       status === "attending"
-        ? isImpliedPartyQuestion(question) || Boolean(answers[question.id])
+        ? (implyParty && isImpliedPartyQuestion(question)) || Boolean(answers[question.id])
         : false,
     ]),
   );
@@ -79,20 +85,20 @@ export function RsvpModal({
   const [note, setNote] = useState(initialResponse?.note ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const visibleQuestions = questions.filter((question) => !isImpliedPartyQuestion(question));
-  const hasWalkingDinnerOption = questions.some(
-    (question) => question.id === WALKING_DINNER_QUESTION_ID,
+  const hasWalkingDinnerOption = hasWalkingDinnerQuestion(questions);
+  const implyParty = !hasWalkingDinnerOption;
+  const visibleQuestions = questions.filter(
+    (question) => hasWalkingDinnerOption || !isImpliedPartyQuestion(question),
   );
-  const attendingLabel = hasWalkingDinnerOption ? "Will attend the party" : "Will attend";
 
   useEffect(() => {
     if (!open) return;
     const status = preferredStatus ?? initialResponse?.status ?? "attending";
     setAttendanceStatus(status);
-    setAnswers(buildAnswers(questions, initialResponse, status));
+    setAnswers(buildAnswers(questions, initialResponse, status, implyParty));
     setNote(initialResponse?.note ?? "");
     setError(null);
-  }, [guests, initialResponse, open, preferredStatus, questions]);
+  }, [guests, implyParty, initialResponse, open, preferredStatus, questions]);
 
   useEffect(() => {
     if (!open) return;
@@ -144,7 +150,7 @@ export function RsvpModal({
               disabled={readOnly}
               onClick={() => {
                 setAttendanceStatus(status);
-                setAnswers(buildAnswers(questions, initialResponse, status));
+                setAnswers(buildAnswers(questions, initialResponse, status, implyParty));
               }}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 attendanceStatus === status
@@ -152,7 +158,7 @@ export function RsvpModal({
                   : "text-stone-600"
               }`}
             >
-              {status === "attending" ? attendingLabel : "Will not attend"}
+              {status === "attending" ? "Will attend" : "Will not attend"}
             </button>
           ))}
         </div>
@@ -224,7 +230,12 @@ export function RsvpModal({
               startTransition(async () => {
                 setError(null);
                 const selections = buildGuestSelections(guests, attendanceStatus);
-                const normalizedAnswers = normalizeAnswers(questions, answers, attendanceStatus);
+                const normalizedAnswers = normalizeAnswers(
+                  questions,
+                  answers,
+                  attendanceStatus,
+                  implyParty,
+                );
                 const response = await fetch("/api/rsvp", {
                   method: "POST",
                   headers: {

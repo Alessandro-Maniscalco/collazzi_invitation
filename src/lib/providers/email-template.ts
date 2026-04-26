@@ -29,6 +29,7 @@ export function renderInvitationEmail(input: InvitationEmailInput): InvitationEm
   const coupleName = "Bona and Alessandro";
   const cardUrl = absoluteUrl(input.appUrl, input.heroImageSrc || DEFAULT_CARD_IMAGE);
   const dateParts = splitDateLabel(input.summaryDateLabel);
+  const dateLine = [dateParts.date, dateParts.time].filter(Boolean).join(", ");
   const addressName = input.summaryAddressName || "Villa I Collazzi";
   const addressLabel = input.summaryAddressLabel || "Scandicci (Firenze), Italia";
   const mapUrl = input.mapUrl || DEFAULT_MAP_URL;
@@ -86,8 +87,7 @@ export function renderInvitationEmail(input: InvitationEmailInput): InvitationEm
             </tr>
             <tr>
               <td align="center" style="padding:0 40px;">
-                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:#333333;">${escapeHtml(dateParts.date)}</div>
-                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:#333333;">${escapeHtml(dateParts.time)}</div>
+                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:#333333;">${escapeHtml(dateLine)}</div>
                 <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:#333333;padding-top:8px;">
                   <a href="${escapeAttribute(calendarUrl(input))}" target="_blank" style="color:#333333;text-decoration:underline;">Add to calendar</a>
                 </div>
@@ -131,8 +131,7 @@ export function renderInvitationEmail(input: InvitationEmailInput): InvitationEm
     isReminder ? "Reminder to view the card and RSVP:" : "View the card:",
     input.inviteUrl,
     "",
-    dateParts.date,
-    dateParts.time,
+    dateLine,
     "",
     `Please RSVP before ${rsvpLabel}`,
     "",
@@ -162,8 +161,8 @@ function absoluteUrl(appUrl: string, pathOrUrl: string) {
 function splitDateLabel(label?: string) {
   if (!label) {
     return {
-      date: "Friday, August 28",
-      time: "7:30PM CET",
+      date: "Friday, August 28th",
+      time: "19h30",
     };
   }
 
@@ -172,7 +171,9 @@ function splitDateLabel(label?: string) {
     .map((part) => part.trim())
     .filter(Boolean)
     .at(-1) ?? label;
-  const match = mainEvent.match(/^(.*?),?\s+(\d{1,2}:\d{2}\s*[AP]M.*)$/i);
+  const match = mainEvent.match(
+    /^(.*?),?\s+(\d{1,2}:\d{2}\s*[AP]M.*|\d{1,2}h\d{2}(?:\s*\w+)?)$/i,
+  );
 
   if (!match) {
     return {
