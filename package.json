@@ -29,7 +29,6 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "resend": "^4.5.1",
-    "twilio": "^5.5.4",
     "zod": "^3.24.4"
   },
   "devDependencies": {

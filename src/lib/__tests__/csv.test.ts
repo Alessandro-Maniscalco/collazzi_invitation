@@ -5,7 +5,7 @@ import { parsePartyCsv } from "@/lib/csv";
 describe("parsePartyCsv", () => {
   it("parses semicolon-separated guests and tags", () => {
     const [row] = parsePartyCsv(
-      "label,email,phone,guests,tags,notes\nTaylor & Jordan,test@example.com,+1555,Taylor Russo;Jordan Russo,friends;vip,hello",
+      "label,email,guests,tags,notes\nTaylor & Jordan,test@example.com,Taylor Russo;Jordan Russo,friends;vip,hello",
     );
 
     expect(row.label).toBe("Taylor & Jordan");

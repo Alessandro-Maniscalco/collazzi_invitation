@@ -174,7 +174,6 @@ export function createSeedState(): AppState {
         label: "Taylor & Jordan Russo",
         guestIds: ["guest_taylor", "guest_jordan"],
         email: "preview-couple@example.com",
-        phone: "+15550001000",
         tags: ["friends", "vip"],
         notes: "Preview couple invite.",
         token: {
@@ -201,7 +200,6 @@ export function createSeedState(): AppState {
         label: "Morgan Family",
         guestIds: ["guest_morgan", "guest_emerson", "guest_luca"],
         email: "preview-family@example.com",
-        phone: "+15550002000",
         tags: ["family"],
         notes: "Preview family invite.",
         token: {

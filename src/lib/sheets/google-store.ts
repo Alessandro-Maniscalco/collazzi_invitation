@@ -14,6 +14,8 @@ import {
   findGuestSheetIntegrityErrors,
   parseGuestSheet,
   sheetGuestResponse,
+  toSheetBoolean,
+  type AddGuestInput,
   type GuestSheetHeader,
   type GuestSheetTable,
   type SheetColumnUpdate,
@@ -23,7 +25,6 @@ import type {
   ActivityEvent,
   AppState,
   DashboardSnapshot,
-  DeliveryChannel,
   DeliveryRecord,
   DeliveryStatus,
   Guest,
@@ -268,7 +269,6 @@ export async function importSheetPartiesFromCsv(csv: string, actor: string) {
           last_name: splitName.lastName,
           first_name: splitName.firstName,
           email: row.email ?? "",
-          phone: row.phone ?? "",
           source: row.tags.join("; "),
           admin_notes: row.notes ?? "",
         }),
@@ -287,6 +287,42 @@ export async function importSheetPartiesFromCsv(csv: string, actor: string) {
   );
 
   return appendRows.length;
+}
+
+export async function addSheetGuest(input: AddGuestInput, actor: string) {
+  const store = getGoogleSheetsGuestStore();
+  const loaded = await store.loadGuests();
+  const guestId = createGuestId();
+  const token = createGuestToken();
+  const inviteUrl = buildInviteUrl(env.APP_URL, token);
+  const label = labelForName(input.firstName, input.lastName, input.email);
+
+  await store.appendGuestRows(loaded.tabTitle, loaded.table.headers, [
+    rowValuesFromRecord(loaded.table.headers, {
+      last_name: input.lastName,
+      first_name: input.firstName,
+      email: input.email ?? "",
+      invited_by_ale: toSheetBoolean(input.invitedByAle),
+      invited_by_bona: toSheetBoolean(input.invitedByBona),
+      invited_by_mum: toSheetBoolean(input.invitedByMum),
+      counted: "TRUE",
+      source: input.source ?? "",
+      sent_whatsapp_save_the_date: toSheetBoolean(input.sentWhatsappSaveTheDate),
+      sent_instagram_save_the_date: toSheetBoolean(input.sentInstagramSaveTheDate),
+      guest_id: guestId,
+      token,
+      token_active: "TRUE",
+      invite_url: inviteUrl,
+    }),
+  ]);
+
+  await store.appendActivity("guests_imported", actor, `Added ${label} to the guest list.`);
+
+  return {
+    guestId,
+    token,
+    inviteUrl,
+  };
 }
 
 export async function regenerateSheetPartyToken(partyId: string, actor: string) {
@@ -321,7 +357,7 @@ export async function sendSheetBatch(input: SendBatchInput, actor: string, state
 
   for (const guest of candidates) {
     for (const channel of input.channels) {
-      const recipient = channel === "email" ? guest.email : guest.phone;
+      const recipient = guest.email;
       if (!recipient) {
         continue;
       }
@@ -815,7 +851,6 @@ function partyFromSheetGuest(guest: SheetGuest): Party {
     label: labelForSheetGuest(guest),
     guestIds: [guest.guestId],
     email: guest.email,
-    phone: guest.phone,
     notes: guest.adminNotes,
     tags: tagsForSheetGuest(guest),
     token: {
@@ -873,12 +908,10 @@ function guestFromSheetGuest(guest: SheetGuest): Guest {
 function deliveriesFromSheetGuest(guest: SheetGuest, eventTitle: string): DeliveryRecord[] {
   const status = guest.lastDeliveryStatus ?? (guest.sentInviteMarked ? "sent" : undefined);
 
-  if (!status) {
+  if (!status || !guest.email) {
     return [];
   }
 
-  const channel: DeliveryChannel = guest.email ? "email" : "sms";
-  const recipient = guest.email ?? guest.phone ?? "";
   const sentAt =
     guest.sentInviteAt ??
     guest.rsvpUpdatedAt ??
@@ -889,9 +922,9 @@ function deliveriesFromSheetGuest(guest: SheetGuest, eventTitle: string): Delive
     {
       id: `delivery_${guest.guestId}`,
       partyId: guest.guestId,
-      channel,
+      channel: "email",
       kind: "invite",
-      recipient,
+      recipient: guest.email,
       subjectLine: `${eventTitle} invitation for ${labelForSheetGuest(guest)}`,
       bodyPreview: `Open your invitation: ${guest.inviteUrl}`,
       status,
@@ -905,6 +938,10 @@ function deliveriesFromSheetGuest(guest: SheetGuest, eventTitle: string): Delive
 
 function labelForSheetGuest(guest: SheetGuest) {
   return [guest.firstName, guest.lastName].filter(Boolean).join(" ").trim() || guest.email || "Guest";
+}
+
+function labelForName(firstName: string, lastName: string, email?: string) {
+  return [firstName, lastName].filter(Boolean).join(" ").trim() || email || "Guest";
 }
 
 function tagsForSheetGuest(guest: SheetGuest) {

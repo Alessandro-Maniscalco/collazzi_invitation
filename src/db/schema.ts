@@ -9,7 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const hostRoleEnum = pgEnum("host_role", ["owner", "editor"]);
-export const deliveryChannelEnum = pgEnum("delivery_channel", ["email", "sms"]);
+export const deliveryChannelEnum = pgEnum("delivery_channel", ["email"]);
 export const deliveryKindEnum = pgEnum("delivery_kind", ["invite", "reminder"]);
 export const deliveryStatusEnum = pgEnum("delivery_status", [
   "sandbox",
@@ -47,7 +47,6 @@ export const parties = pgTable("party", {
   eventId: uuid("event_id").notNull(),
   label: text("label").notNull(),
   email: text("email"),
-  phone: text("phone"),
   tags: jsonb("tags").notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

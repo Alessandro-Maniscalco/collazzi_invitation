@@ -13,9 +13,8 @@ import { SEED_HOSTS } from "@/lib/seed-data";
 
 export async function POST(request: Request) {
   const formData = await request.formData();
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
-  const host = SEED_HOSTS.find((candidate) => candidate.email.toLowerCase() === email);
+  const host = SEED_HOSTS[0];
 
   if (!hasHostPasswordConfig()) {
     return NextResponse.redirect(new URL("/host/login?error=config", env.APP_URL));

@@ -22,9 +22,6 @@ const envSchema = z.object({
   HOST_PASSWORD: optionalString,
   RESEND_API_KEY: optionalString,
   RESEND_FROM_EMAIL: optionalEmail,
-  TWILIO_ACCOUNT_SID: optionalString,
-  TWILIO_AUTH_TOKEN: optionalString,
-  TWILIO_FROM_PHONE: optionalString,
   GOOGLE_SHEETS_ID: optionalString,
   GOOGLE_SHEETS_GID: optionalString,
   GOOGLE_SHEETS_TAB: optionalString,
@@ -45,9 +42,6 @@ export const env = envSchema.parse({
   HOST_PASSWORD: process.env.HOST_PASSWORD,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
-  TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
-  TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
-  TWILIO_FROM_PHONE: process.env.TWILIO_FROM_PHONE,
   GOOGLE_SHEETS_ID: process.env.GOOGLE_SHEETS_ID,
   GOOGLE_SHEETS_GID: process.env.GOOGLE_SHEETS_GID,
   GOOGLE_SHEETS_TAB: process.env.GOOGLE_SHEETS_TAB,
@@ -63,10 +57,6 @@ export function hasSupabaseConfig() {
 
 export function hasResendConfig() {
   return Boolean(env.RESEND_API_KEY && env.RESEND_FROM_EMAIL);
-}
-
-export function hasTwilioConfig() {
-  return Boolean(env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_FROM_PHONE);
 }
 
 export function hasGoogleSheetsConfig() {

@@ -1,7 +1,6 @@
 import { Resend } from "resend";
-import Twilio from "twilio";
 
-import { env, hasResendConfig, hasTwilioConfig } from "@/lib/env";
+import { env, hasResendConfig } from "@/lib/env";
 import type { DeliveryChannel, DeliveryKind } from "@/lib/types";
 
 interface DispatchDeliveryInput {
@@ -34,35 +33,7 @@ export async function dispatchDelivery(
       ? `Open your invitation: ${input.inviteUrl}`
       : `Reminder link: ${input.inviteUrl}`;
 
-  if (input.channel === "email") {
-    if (!hasResendConfig()) {
-      return {
-        status: "sandbox",
-        sandbox: true,
-        subjectLine,
-        bodyPreview,
-      };
-    }
-
-    const resend = new Resend(env.RESEND_API_KEY);
-    const response = await resend.emails.send({
-      from: env.RESEND_FROM_EMAIL!,
-      to: input.recipient,
-      subject: subjectLine,
-      text: `${input.partyLabel},\n\n${bodyPreview}\n\nThis invitation link is private to your party.`,
-      html: `<p>${input.partyLabel},</p><p><a href="${input.inviteUrl}">Open your invitation</a></p><p>This invitation link is private to your party.</p>`,
-    });
-
-    return {
-      status: response.error ? "failed" : "sent",
-      providerMessageId: response.data?.id,
-      sandbox: false,
-      subjectLine,
-      bodyPreview,
-    };
-  }
-
-  if (!hasTwilioConfig()) {
+  if (!hasResendConfig()) {
     return {
       status: "sandbox",
       sandbox: true,
@@ -71,16 +42,18 @@ export async function dispatchDelivery(
     };
   }
 
-  const client = Twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
-  const message = await client.messages.create({
-    from: env.TWILIO_FROM_PHONE,
+  const resend = new Resend(env.RESEND_API_KEY);
+  const response = await resend.emails.send({
+    from: env.RESEND_FROM_EMAIL!,
     to: input.recipient,
-    body: `${subjectLine}\n${input.inviteUrl}`,
+    subject: subjectLine,
+    text: `${input.partyLabel},\n\n${bodyPreview}\n\nThis invitation link is private to your party.`,
+    html: `<p>${input.partyLabel},</p><p><a href="${input.inviteUrl}">Open your invitation</a></p><p>This invitation link is private to your party.</p>`,
   });
 
   return {
-    status: "queued",
-    providerMessageId: message.sid,
+    status: response.error ? "failed" : "sent",
+    providerMessageId: response.data?.id,
     sandbox: false,
     subjectLine,
     bodyPreview,

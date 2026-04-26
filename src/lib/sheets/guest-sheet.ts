@@ -5,23 +5,22 @@ import type {
 } from "@/lib/types";
 
 export const GUEST_SHEET_HEADERS = [
-  "guest_id",
-  "token",
-  "token_active",
-  "invite_url",
   "last_name",
   "first_name",
   "email",
-  "phone",
   "invited_by_ale",
   "invited_by_bona",
   "invited_by_mum",
   "counted",
   "source",
+  "will_invite_to_walking_dinner",
   "sent_whatsapp_save_the_date",
   "sent_instagram_save_the_date",
   "spazio",
-  "will_invite_to_walking_dinner",
+  "guest_id",
+  "token",
+  "token_active",
+  "invite_url",
   "sent_invite_at",
   "invite_opened_at",
   "coming_to_walking_dinner",
@@ -48,7 +47,6 @@ export interface SheetGuest {
   lastName: string;
   firstName: string;
   email?: string;
-  phone?: string;
   invitedByAle: boolean;
   invitedByBona: boolean;
   invitedByMum: boolean;
@@ -93,9 +91,22 @@ export interface GuestSheetIntegrityError {
   rows: number[];
 }
 
+export interface AddGuestInput {
+  lastName: string;
+  firstName: string;
+  email?: string;
+  invitedByAle: boolean;
+  invitedByBona: boolean;
+  invitedByMum: boolean;
+  source?: string;
+  sentWhatsappSaveTheDate: boolean;
+  sentInstagramSaveTheDate: boolean;
+}
+
 const FIELD_ALIASES: Partial<Record<GuestSheetHeader, string[]>> = {
   last_name: ["last name", "surname", "last"],
   first_name: ["name", "first name", "first"],
+  counted: ["invited", "invite", "count", "include", "active"],
   invited_by_ale: ["ale", "alessandro"],
   invited_by_bona: ["bona"],
   invited_by_mum: ["parents", "parent", "mum", "mom", "mother"],
@@ -240,7 +251,7 @@ export function parseGuestSheet(values: string[][], appUrl: string): GuestSheetT
     .map((row, index) =>
       parseGuestRow(row, headerRowIndex + index + 2, normalized.columnMap, appUrl),
     )
-    .filter((guest): guest is SheetGuest => Boolean(guest));
+    .filter((guest): guest is SheetGuest => guest !== null && guest.counted);
 
   return {
     headerRowIndex,
@@ -388,7 +399,6 @@ function parseGuestRow(
   const lastName = cell(row, columnMap, "last_name");
   const firstName = cell(row, columnMap, "first_name");
   const email = cell(row, columnMap, "email");
-  const phone = cell(row, columnMap, "phone");
   const rsvpNote = cell(row, columnMap, "rsvp_note");
   const rsvpUpdatedAt = cell(row, columnMap, "rsvp_updated_at");
   const comingToWalkingDinner = parseSheetBoolean(
@@ -398,8 +408,9 @@ function parseGuestRow(
   const transferNeeded = parseSheetBoolean(cell(row, columnMap, "transfer_needed"));
   const notComing = parseSheetBoolean(cell(row, columnMap, "not_coming"));
   const sentInviteValue = cell(row, columnMap, "sent_invite_at");
+  const countedValue = cell(row, columnMap, "counted");
 
-  if (!guestId && !token && !lastName && !firstName && !email && !phone) {
+  if (!guestId && !token && !lastName && !firstName && !email) {
     return null;
   }
 
@@ -413,11 +424,10 @@ function parseGuestRow(
     lastName,
     firstName,
     email: email || undefined,
-    phone: phone || undefined,
     invitedByAle: parseSheetBoolean(cell(row, columnMap, "invited_by_ale")),
     invitedByBona: parseSheetBoolean(cell(row, columnMap, "invited_by_bona")),
     invitedByMum: parseSheetBoolean(cell(row, columnMap, "invited_by_mum")),
-    counted: parseSheetBoolean(cell(row, columnMap, "counted")),
+    counted: countedValue ? !parseSheetFalse(countedValue) : true,
     source: cell(row, columnMap, "source") || undefined,
     sentWhatsappSaveTheDate: parseSheetBoolean(
       cell(row, columnMap, "sent_whatsapp_save_the_date"),

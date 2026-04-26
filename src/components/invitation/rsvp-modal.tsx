@@ -22,19 +22,22 @@ interface RsvpModalProps {
   onSubmitted: (response: PartyResponse) => void;
 }
 
-function buildGuestSelections(guests: Guest[], response?: PartyResponse, status?: AttendanceStatus) {
-  if (response) {
-    return { ...response.guestSelections };
-  }
-
+function buildGuestSelections(guests: Guest[], status: AttendanceStatus) {
   return Object.fromEntries(
-    guests.map((guest) => [guest.id, status === "not_attending" ? false : true]),
+    guests.map((guest) => [guest.id, status === "attending"]),
   );
 }
 
-function buildAnswers(questions: Question[], response?: PartyResponse) {
+function buildAnswers(
+  questions: Question[],
+  response: PartyResponse | undefined,
+  status: AttendanceStatus,
+) {
   return Object.fromEntries(
-    questions.map((question) => [question.id, response?.answers[question.id] ?? false]),
+    questions.map((question) => [
+      question.id,
+      status === "attending" ? response?.answers[question.id] ?? false : false,
+    ]),
   );
 }
 
@@ -53,7 +56,6 @@ export function RsvpModal({
   const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatus>(
     preferredStatus ?? initialResponse?.status ?? "attending",
   );
-  const [selections, setSelections] = useState<Record<string, boolean>>({});
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
   const [note, setNote] = useState(initialResponse?.note ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -65,8 +67,7 @@ export function RsvpModal({
     if (!open) return;
     const status = preferredStatus ?? initialResponse?.status ?? "attending";
     setAttendanceStatus(status);
-    setSelections(buildGuestSelections(guests, initialResponse, status));
-    setAnswers(buildAnswers(questions, initialResponse));
+    setAnswers(buildAnswers(questions, initialResponse, status));
     setNote(initialResponse?.note ?? "");
     setError(null);
   }, [guests, initialResponse, open, preferredStatus, questions]);
@@ -118,7 +119,9 @@ export function RsvpModal({
               disabled={readOnly}
               onClick={() => {
                 setAttendanceStatus(status);
-                setSelections(buildGuestSelections(guests, undefined, status));
+                if (status === "not_attending") {
+                  setAnswers(buildAnswers(questions, undefined, status));
+                }
               }}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 attendanceStatus === status
@@ -132,59 +135,35 @@ export function RsvpModal({
         </div>
 
         <div className="mt-6 space-y-5">
-          <div>
-            <div className="text-sm font-semibold text-stone-800">Guest attendance</div>
-            <div className="mt-3 space-y-3">
-              {guests.map((guest) => (
-                <label
-                  key={guest.id}
-                  className="flex items-center justify-between rounded-2xl border border-[var(--app-line)] bg-white/80 px-4 py-3"
-                >
-                  <span>{guest.name}</span>
-                  <input
-                    type="checkbox"
-                    checked={selections[guest.id] ?? attendanceStatus === "attending"}
-                    disabled={readOnly}
-                    onChange={(event) =>
-                      setSelections((current) => ({
-                        ...current,
-                        [guest.id]: event.target.checked,
-                      }))
-                    }
-                    className="h-4 w-4 rounded border-stone-300 text-[var(--app-wine)]"
-                  />
-                </label>
-              ))}
+          {attendanceStatus === "attending" ? (
+            <div>
+              <div className="text-sm font-semibold text-stone-800">
+                Before you leave, kindly select your preferences below
+              </div>
+              <div className="mt-3 space-y-3">
+                {questions.map((question) => (
+                  <label
+                    key={question.id}
+                    className="flex items-center gap-3 rounded-2xl border border-[var(--app-line)] bg-white/80 px-4 py-3"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={Boolean(answers[question.id])}
+                      disabled={readOnly}
+                      onChange={(event) =>
+                        setAnswers((current) => ({
+                          ...current,
+                          [question.id]: event.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4 rounded border-stone-300 text-[var(--app-wine)]"
+                    />
+                    <span>{question.label}</span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
-
-          <div>
-            <div className="text-sm font-semibold text-stone-800">
-              Before you leave, kindly select your preferences below
-            </div>
-            <div className="mt-3 space-y-3">
-              {questions.map((question) => (
-                <label
-                  key={question.id}
-                  className="flex items-center gap-3 rounded-2xl border border-[var(--app-line)] bg-white/80 px-4 py-3"
-                >
-                  <input
-                    type="checkbox"
-                    checked={Boolean(answers[question.id])}
-                    disabled={readOnly}
-                    onChange={(event) =>
-                      setAnswers((current) => ({
-                        ...current,
-                        [question.id]: event.target.checked,
-                      }))
-                    }
-                    className="h-4 w-4 rounded border-stone-300 text-[var(--app-wine)]"
-                  />
-                  <span>{question.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+          ) : null}
 
           <label className="block">
             <span className="text-sm font-semibold text-stone-800">Private message</span>
@@ -219,6 +198,11 @@ export function RsvpModal({
             onClick={() =>
               startTransition(async () => {
                 setError(null);
+                const selections = buildGuestSelections(guests, attendanceStatus);
+                const normalizedAnswers =
+                  attendanceStatus === "attending"
+                    ? answers
+                    : buildAnswers(questions, undefined, attendanceStatus);
                 const response = await fetch("/api/rsvp", {
                   method: "POST",
                   headers: {
@@ -227,7 +211,7 @@ export function RsvpModal({
                   body: JSON.stringify({
                     token,
                     selections,
-                    answers,
+                    answers: normalizedAnswers,
                     note,
                   }),
                 });

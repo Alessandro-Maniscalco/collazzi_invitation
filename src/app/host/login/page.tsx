@@ -10,7 +10,7 @@ export default async function HostLoginPage({
     params.error === "config"
       ? "Host password is not configured."
       : params.error === "1"
-        ? "The email or password is incorrect."
+        ? "The password is incorrect."
         : null;
 
   return (
@@ -22,8 +22,7 @@ export default async function HostLoginPage({
             Private dashboard access.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-stone-300">
-            Sign in with the host email and password to manage guest links, invitations, and RSVP
-            responses.
+            Sign in with the host password to manage guest links, invitations, and RSVP responses.
           </p>
         </section>
 
@@ -36,16 +35,6 @@ export default async function HostLoginPage({
             </div>
           ) : null}
           <form action="/api/host/login" method="post" className="mt-6 space-y-4">
-            <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-stone-700">Email</span>
-              <input
-                type="email"
-                name="email"
-                required
-                autoComplete="email"
-                className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3 outline-none transition focus:border-[var(--app-wine)]"
-              />
-            </label>
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-stone-700">Password</span>
               <input

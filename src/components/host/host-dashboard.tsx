@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useDeferredValue, useMemo, useState } from "react";
+import { startTransition, useDeferredValue, useMemo, useState, type FormEvent } from "react";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -26,6 +26,24 @@ function createClientId(prefix: string) {
   return `${prefix}_${crypto.randomUUID().slice(0, 8)}`;
 }
 
+const emptyNewGuestForm = {
+  last_name: "",
+  first_name: "",
+  email: "",
+  invited_by_ale: false,
+  invited_by_bona: false,
+  invited_by_mum: false,
+  source: "",
+  sent_whatsapp_save_the_date: false,
+  sent_instagram_save_the_date: false,
+};
+
+type NewGuestForm = typeof emptyNewGuestForm;
+
+function freshNewGuestForm(): NewGuestForm {
+  return { ...emptyNewGuestForm };
+}
+
 export function HostDashboard({
   initialData,
   host,
@@ -41,10 +59,12 @@ export function HostDashboard({
     initialData.accommodations,
   );
   const [csvText, setCsvText] = useState(
-    "label,email,phone,guests,tags,notes\nJamie & Riley,preview-new@example.com,+15550003000,Jamie Lang;Riley Lang,friends;dinner,Imported sample row",
+    "label,email,guests,tags,notes\nJamie & Riley,preview-new@example.com,Jamie Lang;Riley Lang,friends;dinner,Imported sample row",
   );
+  const [newGuest, setNewGuest] = useState<NewGuestForm>(() => freshNewGuestForm());
   const [status, setStatus] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [addingGuest, setAddingGuest] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
   const [reminderFilter, setReminderFilter] = useState<
     "awaiting_response" | "attending" | "not_attending" | "all"
@@ -102,6 +122,36 @@ export function HostDashboard({
 
     setStatus("Imported guest rows.");
     startTransition(() => router.refresh());
+  }
+
+  async function addInvitedPerson(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setAddingGuest(true);
+    setStatus(null);
+
+    const response = await fetch("/api/host/guests", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newGuest),
+    });
+
+    setAddingGuest(false);
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      setStatus(payload?.error ?? "Could not add guest.");
+      return;
+    }
+
+    setStatus(`Added ${newGuest.first_name} ${newGuest.last_name}.`);
+    setNewGuest(freshNewGuestForm());
+    startTransition(() => router.refresh());
+  }
+
+  function updateNewGuest<K extends keyof NewGuestForm>(field: K, value: NewGuestForm[K]) {
+    setNewGuest((current) => ({ ...current, [field]: value }));
   }
 
   async function sendRequest(path: "/api/send" | "/api/reminders", body: Record<string, unknown>, success: string) {
@@ -210,7 +260,7 @@ export function HostDashboard({
               <div className="section-label">Delivery</div>
               <h2 className="mt-4 font-display text-4xl text-stone-950">Send invitations and reminders</h2>
               <p className="mt-3 text-sm leading-7 text-stone-600">
-                Email and SMS run in sandbox mode until Resend and Twilio environment variables are configured.
+                Email delivery runs in sandbox mode until Resend environment variables are configured.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -219,14 +269,14 @@ export function HostDashboard({
                 onClick={() =>
                   sendRequest(
                     "/api/send",
-                    { channels: ["email", "sms"], filter: "all" },
+                    { channels: ["email"], filter: "all" },
                     "Sent invitation batch.",
                   )
                 }
                 disabled={Boolean(sending)}
                 className="rounded-full bg-[var(--app-wine)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
               >
-                {sending === "/api/send" ? "Sending..." : "Send all invitations"}
+                {sending === "/api/send" ? "Sending..." : "Send all email invitations"}
               </button>
               <div className="flex items-center gap-2">
                 <select
@@ -458,10 +508,117 @@ export function HostDashboard({
             </div>
 
             <div className="paper-panel rounded-[2rem] border border-[var(--app-line)] p-8">
+              <div className="section-label">Add Guest</div>
+              <h2 className="mt-4 font-display text-4xl text-stone-950">Add one invited person</h2>
+              <form onSubmit={addInvitedPerson} className="mt-6 grid gap-5">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-stone-700">Last name</span>
+                    <input
+                      required
+                      value={newGuest.last_name}
+                      onChange={(event) => updateNewGuest("last_name", event.target.value)}
+                      className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-stone-700">First name</span>
+                    <input
+                      required
+                      value={newGuest.first_name}
+                      onChange={(event) => updateNewGuest("first_name", event.target.value)}
+                      className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3"
+                    />
+                  </label>
+                </div>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-stone-700">Email</span>
+                  <input
+                    type="email"
+                    value={newGuest.email}
+                    onChange={(event) => updateNewGuest("email", event.target.value)}
+                    className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-stone-700">
+                    Source
+                  </span>
+                  <input
+                    value={newGuest.source}
+                    onChange={(event) => updateNewGuest("source", event.target.value)}
+                    placeholder="Examples: AleAI, Bona list, Mum table, Instagram DM"
+                    className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3"
+                  />
+                </label>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <div className="mb-3 text-sm font-semibold text-stone-700">Invited by</div>
+                    <div className="grid gap-3">
+                      {[
+                        ["invited_by_ale", "Ale"],
+                        ["invited_by_bona", "Bona"],
+                        ["invited_by_mum", "Mum"],
+                      ].map(([field, label]) => (
+                        <label key={field} className="flex items-center gap-3 text-sm text-stone-700">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(newGuest[field as keyof NewGuestForm])}
+                            onChange={(event) =>
+                              updateNewGuest(
+                                field as "invited_by_ale" | "invited_by_bona" | "invited_by_mum",
+                                event.target.checked,
+                              )
+                            }
+                            className="h-4 w-4"
+                          />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mb-3 text-sm font-semibold text-stone-700">Save the date sent</div>
+                    <div className="grid gap-3">
+                      {[
+                        ["sent_whatsapp_save_the_date", "WhatsApp"],
+                        ["sent_instagram_save_the_date", "Instagram"],
+                      ].map(([field, label]) => (
+                        <label key={field} className="flex items-center gap-3 text-sm text-stone-700">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(newGuest[field as keyof NewGuestForm])}
+                            onChange={(event) =>
+                              updateNewGuest(
+                                field as
+                                  | "sent_whatsapp_save_the_date"
+                                  | "sent_instagram_save_the_date",
+                                event.target.checked,
+                              )
+                            }
+                            className="h-4 w-4"
+                          />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={addingGuest}
+                  className="w-fit rounded-full bg-[var(--app-wine)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {addingGuest ? "Adding..." : "Add invited person"}
+                </button>
+              </form>
+            </div>
+
+            <div className="paper-panel rounded-[2rem] border border-[var(--app-line)] p-8">
               <div className="section-label">Import Guests</div>
               <h2 className="mt-4 font-display text-4xl text-stone-950">CSV guest intake</h2>
               <p className="mt-3 text-sm leading-7 text-stone-600">
-                Expected columns: label,email,phone,guests,tags,notes. Use semicolons inside guests
+                Expected columns: label,email,guests,tags,notes. Use semicolons inside guests
                 and tags.
               </p>
               <textarea
@@ -507,7 +664,6 @@ export function HostDashboard({
                           </div>
                           <div className="text-right text-sm text-stone-600">
                             <div>{party.email ?? "No email"}</div>
-                            <div>{party.phone ?? "No phone"}</div>
                             <div className="mt-2">Last sent {formatRelative(party.lastSentAt)}</div>
                           </div>
                         </div>
@@ -530,19 +686,6 @@ export function HostDashboard({
                             className="rounded-full border border-[var(--app-line)] px-4 py-2 font-semibold"
                           >
                             Email
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              sendRequest(
-                                "/api/send",
-                                { partyIds: [party.id], channels: ["sms"] },
-                                `Sent SMS invite for ${party.label}.`,
-                              )
-                            }
-                            className="rounded-full border border-[var(--app-line)] px-4 py-2 font-semibold"
-                          >
-                            SMS
                           </button>
                           <button
                             type="button"

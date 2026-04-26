@@ -3,7 +3,6 @@ import { parse } from "csv-parse/sync";
 export interface CsvPartyRow {
   label: string;
   email?: string;
-  phone?: string;
   guests: string[];
   tags: string[];
   notes?: string;
@@ -19,7 +18,6 @@ export function parsePartyCsv(input: string): CsvPartyRow[] {
   return rows.map((row) => ({
     label: row.label,
     email: row.email || undefined,
-    phone: row.phone || undefined,
     guests: splitList(row.guests),
     tags: splitList(row.tags),
     notes: row.notes || undefined,

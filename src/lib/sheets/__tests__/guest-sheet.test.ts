@@ -13,6 +13,24 @@ function rowFromRecord(record: Record<string, string>) {
 }
 
 describe("parseGuestSheet", () => {
+  it("keeps editable guest columns first and leaves guest phone out of the app schema", () => {
+    expect(GUEST_SHEET_HEADERS.slice(0, 12)).toEqual([
+      "last_name",
+      "first_name",
+      "email",
+      "invited_by_ale",
+      "invited_by_bona",
+      "invited_by_mum",
+      "counted",
+      "source",
+      "will_invite_to_walking_dinner",
+      "sent_whatsapp_save_the_date",
+      "sent_instagram_save_the_date",
+      "spazio",
+    ]);
+    expect(GUEST_SHEET_HEADERS).not.toContain("phone");
+  });
+
   it("normalizes the current legacy headings and positional RSVP columns", () => {
     const table = parseGuestSheet(
       [
@@ -168,6 +186,45 @@ describe("parseGuestSheet", () => {
     );
 
     expect(table.guests[0].willInviteToWalkingDinner).toBe(true);
+  });
+
+  it("excludes rows marked not invited with counted 0", () => {
+    const table = parseGuestSheet(
+      [
+        [...GUEST_SHEET_HEADERS],
+        rowFromRecord({
+          first_name: "Zero",
+          last_name: "Counted",
+          email: "zero@example.com",
+          counted: "0",
+        }),
+      ],
+      "http://localhost:3000",
+    );
+
+    expect(table.guests).toHaveLength(0);
+  });
+
+  it("keeps rows with a blank counted value active", () => {
+    const table = parseGuestSheet(
+      [
+        [...GUEST_SHEET_HEADERS],
+        rowFromRecord({
+          first_name: "Blank",
+          last_name: "Counted",
+          email: "blank@example.com",
+        }),
+      ],
+      "http://localhost:3000",
+    );
+
+    expect(table.guests).toHaveLength(1);
+    expect(table.guests[0]).toMatchObject({
+      firstName: "Blank",
+      lastName: "Counted",
+      email: "blank@example.com",
+      counted: true,
+    });
   });
 
   it("reports duplicate guest ids and tokens before live sheet mutation", () => {

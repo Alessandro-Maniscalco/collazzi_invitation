@@ -9,6 +9,7 @@ import { isReadOnly } from "@/lib/formatters";
 import { dispatchDelivery } from "@/lib/providers/delivery";
 import { SEED_HOSTS, createSeedState, createToken } from "@/lib/seed-data";
 import {
+  addSheetGuest,
   getSheetDashboardSnapshot,
   getSheetInvitationByToken,
   importSheetPartiesFromCsv,
@@ -18,6 +19,7 @@ import {
   sendSheetBatch,
   updateSheetDeliveryStatusFromWebhook,
 } from "@/lib/sheets/google-store";
+import type { AddGuestInput } from "@/lib/sheets/guest-sheet";
 import type {
   AccommodationCard,
   ActivityEvent,
@@ -318,7 +320,6 @@ export async function importPartiesFromCsv(csv: string, actor: string) {
         id: partyId,
         label: row.label,
         email: row.email,
-        phone: row.phone,
         notes: row.notes,
         tags: row.tags,
         guestIds,
@@ -335,6 +336,54 @@ export async function importPartiesFromCsv(csv: string, actor: string) {
     );
 
     return rows.length;
+  });
+}
+
+export async function addGuest(input: AddGuestInput, actor: string) {
+  if (hasGoogleSheetsConfig()) {
+    return addSheetGuest(input, actor);
+  }
+
+  return updateState((state) => {
+    const partyId = nanoid();
+    const guestId = nanoid();
+    const token = createToken("guest");
+    const label = [input.firstName, input.lastName].filter(Boolean).join(" ").trim();
+    const tags = [
+      input.invitedByAle ? "invited_by_ale" : "",
+      input.invitedByBona ? "invited_by_bona" : "",
+      input.invitedByMum ? "invited_by_mum" : "",
+      input.sentWhatsappSaveTheDate ? "sent_whatsapp_save_the_date" : "",
+      input.sentInstagramSaveTheDate ? "sent_instagram_save_the_date" : "",
+      input.source ?? "",
+    ].filter(Boolean);
+
+    state.guests.push({
+      id: guestId,
+      partyId,
+      name: label,
+    });
+    state.parties.unshift({
+      id: partyId,
+      label,
+      email: input.email,
+      notes: input.source,
+      tags,
+      guestIds: [guestId],
+      token: {
+        value: token,
+        active: true,
+      },
+      deliveryIds: [],
+    });
+
+    addActivity(state, `Added ${label} to the guest list.`, actor, "guests_imported");
+
+    return {
+      guestId,
+      token,
+      inviteUrl: inviteUrl(token),
+    };
   });
 }
 
@@ -370,7 +419,7 @@ export async function sendBatch(input: SendBatchInput, actor: string) {
 
     for (const party of parties) {
       for (const channel of input.channels) {
-        const recipient = channel === "email" ? party.email : party.phone;
+        const recipient = party.email;
         if (!recipient) {
           continue;
         }

@@ -6,7 +6,7 @@ import { sendBatch } from "@/lib/repository";
 
 const payloadSchema = z.object({
   partyIds: z.array(z.string()).optional(),
-  channels: z.array(z.enum(["email", "sms"])).min(1),
+  channels: z.array(z.literal("email")).min(1),
   filter: z.enum(["all", "awaiting_response", "attending", "not_attending"]).optional(),
 });
 

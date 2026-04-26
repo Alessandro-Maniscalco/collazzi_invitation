@@ -1,5 +1,5 @@
 export type HostRole = "owner" | "editor";
-export type DeliveryChannel = "email" | "sms";
+export type DeliveryChannel = "email";
 export type DeliveryKind = "invite" | "reminder";
 export type DeliveryStatus =
   | "sandbox"
@@ -74,7 +74,6 @@ export interface Party {
   label: string;
   guestIds: string[];
   email?: string;
-  phone?: string;
   notes?: string;
   tags: string[];
   token: InviteToken;
