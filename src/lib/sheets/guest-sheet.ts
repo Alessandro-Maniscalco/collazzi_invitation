@@ -473,10 +473,15 @@ function parseSheetBoolean(value: string) {
 
 function parseTimestampLike(value: string) {
   const normalized = value.trim();
-  if (!normalized || parseSheetBoolean(normalized)) {
+  if (!normalized || parseSheetBoolean(normalized) || parseSheetFalse(normalized)) {
     return undefined;
   }
   return normalized;
+}
+
+function parseSheetFalse(value: string) {
+  const normalized = value.trim().toLowerCase();
+  return ["false", "no", "n", "0"].includes(normalized);
 }
 
 function parseDeliveryStatus(value: string) {

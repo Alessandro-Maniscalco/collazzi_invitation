@@ -89,6 +89,8 @@ describe("parseGuestSheet", () => {
       comingToParty: false,
       transferNeeded: true,
       notComing: false,
+      sentInviteAt: undefined,
+      sentInviteMarked: false,
       hasResponse: true,
     });
   });
