@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 
 import { env, hasResendConfig } from "@/lib/env";
+import { renderInvitationEmail } from "@/lib/providers/email-template";
 import type { DeliveryChannel, DeliveryKind } from "@/lib/types";
 
 interface DispatchDeliveryInput {
@@ -10,6 +11,12 @@ interface DispatchDeliveryInput {
   partyLabel: string;
   eventTitle: string;
   kind: DeliveryKind;
+  summaryDateLabel?: string;
+  summaryAddressName?: string;
+  summaryAddressLabel?: string;
+  rsvpDeadline?: string;
+  heroImageSrc?: string;
+  mapUrl?: string;
 }
 
 interface DispatchDeliveryResult {
@@ -23,22 +30,26 @@ interface DispatchDeliveryResult {
 export async function dispatchDelivery(
   input: DispatchDeliveryInput,
 ): Promise<DispatchDeliveryResult> {
-  const subjectLine =
-    input.kind === "invite"
-      ? `${input.eventTitle} invitation for ${input.partyLabel}`
-      : `Reminder: ${input.eventTitle}`;
-
-  const bodyPreview =
-    input.kind === "invite"
-      ? `Open your invitation: ${input.inviteUrl}`
-      : `Reminder link: ${input.inviteUrl}`;
+  const email = renderInvitationEmail({
+    appUrl: env.APP_URL,
+    inviteUrl: input.inviteUrl,
+    partyLabel: input.partyLabel,
+    eventTitle: input.eventTitle,
+    kind: input.kind,
+    summaryDateLabel: input.summaryDateLabel,
+    summaryAddressName: input.summaryAddressName,
+    summaryAddressLabel: input.summaryAddressLabel,
+    rsvpDeadline: input.rsvpDeadline,
+    heroImageSrc: input.heroImageSrc,
+    mapUrl: input.mapUrl,
+  });
 
   if (!hasResendConfig()) {
     return {
       status: "sandbox",
       sandbox: true,
-      subjectLine,
-      bodyPreview,
+      subjectLine: email.subjectLine,
+      bodyPreview: email.bodyPreview,
     };
   }
 
@@ -46,16 +57,16 @@ export async function dispatchDelivery(
   const response = await resend.emails.send({
     from: env.RESEND_FROM_EMAIL!,
     to: input.recipient,
-    subject: subjectLine,
-    text: `${input.partyLabel},\n\n${bodyPreview}\n\nThis invitation link is private to your party.`,
-    html: `<p>${input.partyLabel},</p><p><a href="${input.inviteUrl}">Open your invitation</a></p><p>This invitation link is private to your party.</p>`,
+    subject: email.subjectLine,
+    text: email.text,
+    html: email.html,
   });
 
   return {
     status: response.error ? "failed" : "sent",
     providerMessageId: response.data?.id,
     sandbox: false,
-    subjectLine,
-    bodyPreview,
+    subjectLine: email.subjectLine,
+    bodyPreview: email.bodyPreview,
   };
 }

@@ -432,6 +432,11 @@ export async function sendBatch(input: SendBatchInput, actor: string) {
           partyLabel: party.label,
           eventTitle: state.event.summaryName,
           kind: input.kind,
+          summaryDateLabel: state.event.summaryDateLabel,
+          summaryAddressName: state.event.summaryAddressName,
+          summaryAddressLabel: state.event.summaryAddressLabel,
+          rsvpDeadline: state.event.rsvpDeadline,
+          heroImageSrc: state.event.heroBackImageSrc,
         });
 
         const delivery: DeliveryRecord = {

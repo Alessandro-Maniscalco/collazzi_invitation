@@ -370,6 +370,11 @@ export async function sendSheetBatch(input: SendBatchInput, actor: string, state
         partyLabel: labelForSheetGuest(guest),
         eventTitle: state.event.summaryName,
         kind: input.kind,
+        summaryDateLabel: state.event.summaryDateLabel,
+        summaryAddressName: state.event.summaryAddressName,
+        summaryAddressLabel: state.event.summaryAddressLabel,
+        rsvpDeadline: state.event.rsvpDeadline,
+        heroImageSrc: eventForSheetGuest(state.event, guest).heroBackImageSrc,
       });
       const timestamp = new Date().toISOString();
       const delivery = {
