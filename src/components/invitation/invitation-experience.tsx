@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState, useTransition, type FormEvent } from "react";
 
 import Image from "next/image";
 import { Play, RefreshCw } from "lucide-react";
@@ -127,6 +127,10 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
   const [modalOpen, setModalOpen] = useState(false);
   const [preferredStatus, setPreferredStatus] = useState<AttendanceStatus | undefined>(undefined);
   const [response, setResponse] = useState<PartyResponse | undefined>(invitation.party.response);
+  const [guestEmail, setGuestEmail] = useState(invitation.party.email ?? "");
+  const [emailSaved, setEmailSaved] = useState(Boolean(invitation.party.email));
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [isEmailPending, startEmailTransition] = useTransition();
   const party = { ...invitation.party, response };
   const stageClass =
     stage === 0
@@ -165,6 +169,34 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
 
   function flipCard() {
     setStage((current) => (current === 5 ? 4 : 5));
+  }
+
+  function saveEmail(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setEmailError(null);
+
+    startEmailTransition(async () => {
+      const result = await fetch("/api/guest/email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token: party.token.value,
+          email: guestEmail,
+        }),
+      });
+
+      if (!result.ok) {
+        const payload = (await result.json().catch(() => null)) as { error?: string } | null;
+        setEmailError(payload?.error ?? "Unable to save email.");
+        return;
+      }
+
+      const payload = (await result.json()) as { email: string };
+      setGuestEmail(payload.email);
+      setEmailSaved(true);
+    });
   }
 
   return (
@@ -238,6 +270,40 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
           </figure>
         </div>
       </section>
+
+      {!invitation.party.email ? (
+        <section data-block-type="email_capture" className={styles.emailCapture}>
+          <div className={styles.emailCaptureInner}>
+            {emailSaved ? (
+              <div className={styles.emailSaved}>Email saved.</div>
+            ) : (
+              <form onSubmit={saveEmail} className={styles.emailForm}>
+                <label className={styles.emailLabel} htmlFor="guest-email">
+                  Email for updates
+                </label>
+                <div className={styles.emailControls}>
+                  <input
+                    id="guest-email"
+                    type="email"
+                    required
+                    value={guestEmail}
+                    onChange={(event) => setGuestEmail(event.target.value)}
+                    className={styles.emailInput}
+                  />
+                  <button
+                    type="submit"
+                    disabled={isEmailPending}
+                    className={styles.emailButton}
+                  >
+                    {isEmailPending ? "Saving..." : "Save email"}
+                  </button>
+                </div>
+                {emailError ? <div className={styles.emailError}>{emailError}</div> : null}
+              </form>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       <section data-block-type="basic_info" className={styles.block}>
         <div className={styles.blockContainer}>

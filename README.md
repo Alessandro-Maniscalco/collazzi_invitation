@@ -48,40 +48,46 @@ email-only from the host dashboard. Accommodation phone numbers are still accomm
 
 Recommended guest column order keeps host-editable fields on the left:
 
-1. `last_name` - guest surname. Required by the host dashboard one-person add form.
-2. `first_name` - guest given name. Required by the host dashboard one-person add form.
-3. `email` - optional email recipient for invitation and reminder delivery.
-4. `invited_by_ale` - boolean host/source flag; surfaced as metadata in dashboard data.
-5. `invited_by_bona` - boolean host/source flag; surfaced as metadata in dashboard data.
-6. `invited_by_mum` - boolean host/source flag; surfaced as metadata in dashboard data.
-7. `counted` - invitation gate. `TRUE`, `1`, or blank means the row is an invited guest in the app;
+1. `last_name` - primary guest surname. For a couple invite, put the email recipient here.
+2. `first_name` - primary guest given name. For example, `Monica`.
+3. `email` - optional email recipient for invitation and reminder delivery. For a couple, use the
+   woman's email if she is the recipient.
+4. `guest_2_last_name` - optional second guest surname, for example `Signori`.
+5. `guest_2_first_name` - optional second guest given name, for example `Saverio`.
+6. `display_name` - optional invitation label override. If blank, shared-surname couples display as
+   `Monica e Saverio Signori`.
+7. `invited_by_ale` - boolean host/source flag; surfaced as metadata in dashboard data.
+8. `invited_by_bona` - boolean host/source flag; surfaced as metadata in dashboard data.
+9. `invited_by_mum` - boolean host/source flag; surfaced as metadata in dashboard data.
+10. `counted` - invitation gate. `TRUE`, `1`, or blank means the row is an invited guest in the app;
    `FALSE`, `0`, or `No` means the row is excluded from guest lookup, host stats, and token creation.
-8. `source` - free-text provenance, for example `AleAI`, `Bona list`, `Mum table`, or
+11. `source` - free-text provenance, for example `AleAI`, `Bona list`, `Mum table`, or
    `Instagram DM`.
-9. `will_invite_to_walking_dinner` - boolean; controls whether the guest sees the Thursday dinner
-   section and walking dinner RSVP question. The host dashboard add-person form writes this field.
-10. `sent_whatsapp_save_the_date` - boolean tracking marker only; it does not send WhatsApp messages.
-11. `sent_instagram_save_the_date` - boolean tracking marker only; it does not send Instagram
+12. `will_invite_to_walking_dinner` - boolean; controls whether the guest sees the Thursday dinner
+   section and walking dinner RSVP question. The host dashboard add-party form writes this field.
+13. `sent_whatsapp_save_the_date` - boolean tracking marker only; it does not send WhatsApp messages.
+14. `sent_instagram_save_the_date` - boolean tracking marker only; it does not send Instagram
     messages.
-12. `spazio` - optional planning/admin field retained from the source sheet.
-13. `guest_id` - app-generated stable row identifier used as the party/guest id.
-14. `token` - app-generated private invitation token.
-15. `token_active` - boolean; `FALSE` disables the private invitation link.
-16. `invite_url` - app-generated URL from `APP_URL` and `token`.
-17. `sent_invite_at` - timestamp written when the app sends the email invitation. A boolean `TRUE`
+15. `spazio` - optional planning/admin field retained from the source sheet.
+16. `guest_id` - app-generated stable row identifier used as the party id and primary guest id.
+17. `token` - app-generated private invitation token.
+18. `token_active` - boolean; `FALSE` disables the private invitation link.
+19. `invite_url` - app-generated URL from `APP_URL` and `token`.
+20. `sent_invite_at` - timestamp written when the app sends the email invitation. A boolean `TRUE`
     is also treated as a sent marker, but timestamps are preferred.
-18. `invite_opened_at` - timestamp written when the guest first opens the invitation link.
-19. `coming_to_walking_dinner` - RSVP boolean for Thursday dinner.
-20. `coming_to_party` - RSVP boolean for Friday party.
-21. `transfer_needed` - RSVP boolean for shuttle/transfer need.
-22. `not_coming` - RSVP boolean for a decline.
-23. `rsvp_note` - free-text note submitted by the guest.
-24. `rsvp_updated_at` - timestamp written when the RSVP is submitted.
-25. `last_delivery_status` - last email delivery status: `sandbox`, `queued`, `sent`,
+21. `invite_opened_at` - timestamp written when the guest first opens the invitation link.
+22. `coming_to_walking_dinner` - RSVP boolean for Thursday dinner.
+23. `coming_to_party` - RSVP boolean for the primary guest attending the Friday party.
+24. `guest_2_coming_to_party` - RSVP boolean for the second guest attending the Friday party.
+25. `transfer_needed` - RSVP boolean for shuttle/transfer need.
+26. `not_coming` - RSVP boolean for a decline; when `TRUE`, neither guest is attending.
+27. `rsvp_note` - free-text note submitted by the guest.
+28. `rsvp_updated_at` - timestamp written when the RSVP is submitted.
+29. `last_delivery_status` - last email delivery status: `sandbox`, `queued`, `sent`,
     `delivered`, `opened`, or `failed`.
-26. `provider_message_id` - provider id used to match delivery webhook updates.
-27. `last_error` - last delivery or RSVP-related error message; cleared on successful RSVP writes.
-28. `admin_notes` - internal host notes shown in dashboard data, not guest-facing.
+30. `provider_message_id` - provider id used to match delivery webhook updates.
+31. `last_error` - last delivery or RSVP-related error message; cleared on successful RSVP writes.
+32. `admin_notes` - internal host notes shown in dashboard data, not guest-facing.
 
 Boolean columns are values, not labels. The API reads and writes `TRUE`/`FALSE`; Google Sheets
 checkbox formatting is recommended because it is easier for humans to edit the same boolean values.

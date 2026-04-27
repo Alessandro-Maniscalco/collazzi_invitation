@@ -8,6 +8,9 @@ export const GUEST_SHEET_HEADERS = [
   "last_name",
   "first_name",
   "email",
+  "guest_2_last_name",
+  "guest_2_first_name",
+  "display_name",
   "invited_by_ale",
   "invited_by_bona",
   "invited_by_mum",
@@ -25,6 +28,7 @@ export const GUEST_SHEET_HEADERS = [
   "invite_opened_at",
   "coming_to_walking_dinner",
   "coming_to_party",
+  "guest_2_coming_to_party",
   "transfer_needed",
   "not_coming",
   "rsvp_note",
@@ -47,6 +51,9 @@ export interface SheetGuest {
   lastName: string;
   firstName: string;
   email?: string;
+  guest2LastName: string;
+  guest2FirstName: string;
+  displayName?: string;
   invitedByAle: boolean;
   invitedByBona: boolean;
   invitedByMum: boolean;
@@ -61,6 +68,7 @@ export interface SheetGuest {
   inviteOpenedAt?: string;
   comingToWalkingDinner: boolean;
   comingToParty: boolean;
+  guest2ComingToParty: boolean;
   transferNeeded: boolean;
   notComing: boolean;
   rsvpNote: string;
@@ -77,12 +85,27 @@ export interface GuestSheetTable {
   headers: string[];
   columnMap: Partial<Record<GuestSheetHeader, number>>;
   guests: SheetGuest[];
+  nextAppendRowNumber: number;
   needsHeaderUpdate: boolean;
 }
 
 export interface SheetColumnUpdate {
   header: GuestSheetHeader;
   value: string;
+}
+
+export interface SheetGuestMember {
+  id: string;
+  partyId: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  primary: boolean;
+}
+
+export interface SheetGuestSelectionIds {
+  primaryGuestId: string;
+  guest2Id?: string;
 }
 
 export interface GuestSheetIntegrityError {
@@ -95,6 +118,9 @@ export interface AddGuestInput {
   lastName: string;
   firstName: string;
   email?: string;
+  guest2LastName?: string;
+  guest2FirstName?: string;
+  displayName?: string;
   invitedByAle: boolean;
   invitedByBona: boolean;
   invitedByMum: boolean;
@@ -107,6 +133,21 @@ export interface AddGuestInput {
 const FIELD_ALIASES: Partial<Record<GuestSheetHeader, string[]>> = {
   last_name: ["last name", "surname", "last"],
   first_name: ["name", "first name", "first"],
+  guest_2_last_name: [
+    "guest 2 last name",
+    "second guest last name",
+    "second last name",
+    "partner last name",
+    "spouse last name",
+  ],
+  guest_2_first_name: [
+    "guest 2 first name",
+    "second guest first name",
+    "second first name",
+    "partner first name",
+    "spouse first name",
+  ],
+  display_name: ["display name", "party label", "invite label", "invitation name"],
   counted: ["invited", "invite", "count", "include", "active"],
   invited_by_ale: ["ale", "alessandro"],
   invited_by_bona: ["bona"],
@@ -128,6 +169,12 @@ const FIELD_ALIASES: Partial<Record<GuestSheetHeader, string[]>> = {
   invite_opened_at: ["opened invite", "invite opened"],
   coming_to_walking_dinner: ["coming to walking dinner", "walking dinner"],
   coming_to_party: ["coming to party", "party"],
+  guest_2_coming_to_party: [
+    "guest 2 coming to party",
+    "second guest coming to party",
+    "partner coming to party",
+    "spouse coming to party",
+  ],
   transfer_needed: ["transfer needed", "transfer"],
   not_coming: ["not coming", "declined"],
   rsvp_note: ["note", "notes", "private message"],
@@ -166,7 +213,7 @@ const DELIVERY_STATUSES: DeliveryStatus[] = [
 ];
 
 export function normalizeHeaderName(value: string) {
-  return value
+  return String(value ?? "")
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "_")
@@ -247,6 +294,13 @@ export function parseGuestSheet(values: string[][], appUrl: string): GuestSheetT
   const rawHeaders = values[headerRowIndex] ?? [];
   const normalized = normalizeGuestHeaders(rawHeaders);
   const rows = values.slice(headerRowIndex + 1);
+  const lastValueRowIndex = values.reduce(
+    (lastIndex, row, index) =>
+      index > headerRowIndex && row.some((value) => String(value ?? "").trim() !== "")
+        ? index
+        : lastIndex,
+    headerRowIndex,
+  );
 
   const guests = rows
     .map((row, index) =>
@@ -259,6 +313,7 @@ export function parseGuestSheet(values: string[][], appUrl: string): GuestSheetT
     headers: normalized.headers,
     columnMap: normalized.columnMap,
     guests,
+    nextAppendRowNumber: Math.max(headerRowIndex + 2, lastValueRowIndex + 2),
     needsHeaderUpdate: normalized.changed,
   };
 }
@@ -273,18 +328,25 @@ export function findGuestSheetIntegrityErrors(guests: SheetGuest[]) {
 export function buildRsvpColumnUpdates(
   input: SaveRsvpInput,
   timestamp = new Date().toISOString(),
+  selectionIds?: SheetGuestSelectionIds,
 ): SheetColumnUpdate[] {
-  const attending = Object.values(input.selections).some(Boolean);
+  const primaryAttending = selectionIds
+    ? Boolean(input.selections[selectionIds.primaryGuestId])
+    : Object.values(input.selections).some(Boolean);
+  const guest2Attending = selectionIds?.guest2Id
+    ? Boolean(input.selections[selectionIds.guest2Id])
+    : false;
+  const attending = primaryAttending || guest2Attending;
   const notComing = !attending;
 
-  return [
+  const updates: SheetColumnUpdate[] = [
     {
       header: "coming_to_walking_dinner",
       value: toSheetBoolean(!notComing && Boolean(input.answers.question_walking_dinner)),
     },
     {
       header: "coming_to_party",
-      value: toSheetBoolean(!notComing && Boolean(input.answers.question_party)),
+      value: toSheetBoolean(!notComing && primaryAttending),
     },
     {
       header: "transfer_needed",
@@ -295,6 +357,15 @@ export function buildRsvpColumnUpdates(
     { header: "rsvp_updated_at", value: timestamp },
     { header: "last_error", value: "" },
   ];
+
+  if (selectionIds?.guest2Id) {
+    updates.splice(2, 0, {
+      header: "guest_2_coming_to_party",
+      value: toSheetBoolean(!notComing && guest2Attending),
+    });
+  }
+
+  return updates;
 }
 
 export function sheetGuestResponse(guest: SheetGuest): PartyResponse | undefined {
@@ -302,22 +373,99 @@ export function sheetGuestResponse(guest: SheetGuest): PartyResponse | undefined
     return undefined;
   }
 
-  const attending = !guest.notComing;
+  const guestSelections = Object.fromEntries(
+    sheetGuestMembers(guest).map((member) => [
+      member.id,
+      !guest.notComing &&
+        (member.primary ? guest.comingToParty : guest.guest2ComingToParty),
+    ]),
+  );
+  const attending = Object.values(guestSelections).some(Boolean);
 
   return {
     status: attending ? "attending" : "not_attending",
-    guestSelections: {
-      [guest.guestId]: attending,
-    },
+    guestSelections,
     answers: {
       question_walking_dinner:
         attending && guest.willInviteToWalkingDinner && guest.comingToWalkingDinner,
-      question_party: attending && guest.comingToParty,
+      question_party: attending,
       question_transfer: attending && guest.transferNeeded,
     },
     note: guest.rsvpNote,
     updatedAt: guest.rsvpUpdatedAt ?? new Date(0).toISOString(),
   };
+}
+
+export function sheetGuestSelectionIds(guest: SheetGuest): SheetGuestSelectionIds {
+  const members = sheetGuestMembers(guest);
+  const primary = members.find((member) => member.primary);
+  const guest2 = members.find((member) => !member.primary);
+
+  return {
+    primaryGuestId: primary?.id ?? guest.guestId,
+    guest2Id: guest2?.id,
+  };
+}
+
+export function sheetGuestMembers(guest: SheetGuest): SheetGuestMember[] {
+  const hasGuest2 = Boolean(guest.guest2FirstName || guest.guest2LastName);
+  const hasPrimary = Boolean(guest.firstName || guest.lastName || guest.email || !hasGuest2);
+  const members: SheetGuestMember[] = [];
+
+  if (hasPrimary) {
+    members.push({
+      id: guest.guestId,
+      partyId: guest.guestId,
+      name: labelForName(guest.firstName, guest.lastName, guest.email),
+      firstName: guest.firstName,
+      lastName: guest.lastName,
+      primary: true,
+    });
+  }
+
+  if (hasGuest2) {
+    members.push({
+      id: secondarySheetGuestId(guest.guestId),
+      partyId: guest.guestId,
+      name: labelForName(guest.guest2FirstName, guest.guest2LastName),
+      firstName: guest.guest2FirstName,
+      lastName: guest.guest2LastName,
+      primary: false,
+    });
+  }
+
+  return members;
+}
+
+export function labelForSheetGuest(guest: SheetGuest) {
+  if (guest.displayName) {
+    return guest.displayName;
+  }
+
+  const members = sheetGuestMembers(guest);
+  if (members.length === 2) {
+    const [primary, guest2] = members;
+    const sharedLastName =
+      primary.lastName &&
+      guest2.lastName &&
+      primary.lastName.toLocaleLowerCase() === guest2.lastName.toLocaleLowerCase();
+
+    if (sharedLastName && primary.firstName && guest2.firstName) {
+      return `${primary.firstName} e ${guest2.firstName} ${primary.lastName}`;
+    }
+
+    return `${primary.name} e ${guest2.name}`;
+  }
+
+  return members[0]?.name || guest.email || "Guest";
+}
+
+export function labelForName(firstName: string, lastName: string, email?: string) {
+  return [firstName, lastName].filter(Boolean).join(" ").trim() || email || "Guest";
+}
+
+function secondarySheetGuestId(guestId: string) {
+  return `${guestId}__guest_2`;
 }
 
 export function toSheetBoolean(value: boolean) {
@@ -400,18 +548,33 @@ function parseGuestRow(
   const lastName = cell(row, columnMap, "last_name");
   const firstName = cell(row, columnMap, "first_name");
   const email = cell(row, columnMap, "email");
+  const guest2LastName = cell(row, columnMap, "guest_2_last_name");
+  const guest2FirstName = cell(row, columnMap, "guest_2_first_name");
+  const displayName = cell(row, columnMap, "display_name");
   const rsvpNote = cell(row, columnMap, "rsvp_note");
   const rsvpUpdatedAt = cell(row, columnMap, "rsvp_updated_at");
   const comingToWalkingDinner = parseSheetBoolean(
     cell(row, columnMap, "coming_to_walking_dinner"),
   );
   const comingToParty = parseSheetBoolean(cell(row, columnMap, "coming_to_party"));
+  const guest2ComingToParty = parseSheetBoolean(
+    cell(row, columnMap, "guest_2_coming_to_party"),
+  );
   const transferNeeded = parseSheetBoolean(cell(row, columnMap, "transfer_needed"));
   const notComing = parseSheetBoolean(cell(row, columnMap, "not_coming"));
   const sentInviteValue = cell(row, columnMap, "sent_invite_at");
   const countedValue = cell(row, columnMap, "counted");
 
-  if (!guestId && !token && !lastName && !firstName && !email) {
+  if (
+    !guestId &&
+    !token &&
+    !lastName &&
+    !firstName &&
+    !email &&
+    !guest2LastName &&
+    !guest2FirstName &&
+    !displayName
+  ) {
     return null;
   }
 
@@ -425,6 +588,9 @@ function parseGuestRow(
     lastName,
     firstName,
     email: email || undefined,
+    guest2LastName,
+    guest2FirstName,
+    displayName: displayName || undefined,
     invitedByAle: parseSheetBoolean(cell(row, columnMap, "invited_by_ale")),
     invitedByBona: parseSheetBoolean(cell(row, columnMap, "invited_by_bona")),
     invitedByMum: parseSheetBoolean(cell(row, columnMap, "invited_by_mum")),
@@ -445,6 +611,7 @@ function parseGuestRow(
     inviteOpenedAt: cell(row, columnMap, "invite_opened_at") || undefined,
     comingToWalkingDinner,
     comingToParty,
+    guest2ComingToParty,
     transferNeeded,
     notComing,
     rsvpNote,
@@ -458,6 +625,7 @@ function parseGuestRow(
       notComing ||
       comingToWalkingDinner ||
       comingToParty ||
+      guest2ComingToParty ||
       transferNeeded,
   } satisfies SheetGuest;
 }

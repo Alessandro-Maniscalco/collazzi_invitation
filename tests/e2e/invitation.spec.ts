@@ -14,9 +14,11 @@ test("guest preview invitation renders and accepts RSVP edits", async ({ page })
     page.getByRole("heading", { name: "Will you attend, Taylor & Jordan Russo?" }),
   ).toBeVisible();
   await expect(page.getByText("Bona and Alessandro Maniscalco").nth(1)).toBeVisible();
-  await expect(page.getByText("Guest attendance")).toHaveCount(0);
+  await expect(page.getByText("Who will attend?")).toBeVisible();
+  await expect(page.getByLabel("Taylor Russo")).toBeChecked();
+  await expect(page.getByLabel("Jordan Russo")).toBeChecked();
   await page.getByLabel("Walking Dinner - Thursday, August 27th, 19h30").check();
-  await page.getByLabel("The Party - Friday, August 28th, 19h30").check();
+  await expect(page.getByLabel("The Party - Friday, August 28th, 19h30")).toHaveCount(0);
   await expect(page.getByLabel("Transfer needed for the party")).toBeVisible();
   await page.getByPlaceholder("Private message to host (optional)").fill("See you there.");
   const rsvpResponse = page.waitForResponse(
@@ -49,6 +51,7 @@ test("guest preview invitation renders and accepts RSVP edits", async ({ page })
   await expect(page.getByText("Before you leave, kindly select your preferences below")).toHaveCount(
     0,
   );
+  await expect(page.getByText("Who will attend?")).toHaveCount(0);
   await expect(page.getByLabel("The Party - Friday, August 28th, 19h30")).toHaveCount(0);
   await page.getByPlaceholder("Private message to host (optional)").fill("Sorry to miss it.");
   const declineResponsePromise = page.waitForResponse(

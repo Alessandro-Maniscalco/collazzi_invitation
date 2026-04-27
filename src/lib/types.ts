@@ -203,6 +203,11 @@ export interface SaveRsvpInput {
   note: string;
 }
 
+export interface SaveGuestEmailInput {
+  token: string;
+  email: string;
+}
+
 export interface SendBatchInput {
   partyIds?: string[];
   channels: DeliveryChannel[];

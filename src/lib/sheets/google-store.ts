@@ -12,8 +12,12 @@ import {
   buildRsvpColumnUpdates,
   columnLetter,
   findGuestSheetIntegrityErrors,
+  labelForName,
+  labelForSheetGuest,
   parseGuestSheet,
   sheetGuestResponse,
+  sheetGuestMembers,
+  sheetGuestSelectionIds,
   toSheetBoolean,
   type AddGuestInput,
   type GuestSheetHeader,
@@ -31,6 +35,7 @@ import type {
   InvitationView,
   Party,
   PartyResponse,
+  SaveGuestEmailInput,
   SaveRsvpInput,
   SendBatchInput,
 } from "@/lib/types";
@@ -49,6 +54,7 @@ const CHECKBOX_HEADERS: GuestSheetHeader[] = [
   "will_invite_to_walking_dinner",
   "coming_to_walking_dinner",
   "coming_to_party",
+  "guest_2_coming_to_party",
   "transfer_needed",
   "not_coming",
 ];
@@ -122,7 +128,7 @@ export async function getSheetInvitationByToken(
   return {
     event: eventForSheetGuest(state.event, guest),
     party,
-    guests: [guestFromSheetGuest(guest)],
+    guests: guestsFromSheetGuest(guest),
     questions: questionsForSheetGuest(state.questions, guest),
     itinerary: itineraryForSheetGuest(state.itinerary, guest),
     accommodations: state.accommodations,
@@ -148,7 +154,11 @@ export async function recordSheetInviteOpen(token: string, actor = "guest") {
       { header: "invite_opened_at", value: timestamp },
       { header: "last_delivery_status", value: "opened" },
     ]);
-    await store.appendActivity("invite_opened", actor, `${labelForSheetGuest(guest)} opened their invitation.`);
+    await store.appendActivity(
+      "invite_opened",
+      actor,
+      `${labelForSheetGuest(guest)} opened their invitation.`,
+    );
   }
 
   return partyFromSheetGuest(guest);
@@ -170,6 +180,14 @@ export async function saveSheetRsvp(input: SaveRsvpInput, state: AppState) {
   }
 
   const timestamp = new Date().toISOString();
+  const selectionIds = sheetGuestSelectionIds(guest);
+  const guestSelections = Object.fromEntries(
+    sheetGuestMembers(guest).map((member) => [
+      member.id,
+      Boolean(input.selections[member.id]),
+    ]),
+  );
+  const attending = Object.values(guestSelections).some(Boolean);
   const rsvpInput = guest.willInviteToWalkingDinner
     ? input
     : {
@@ -182,7 +200,7 @@ export async function saveSheetRsvp(input: SaveRsvpInput, state: AppState) {
   await store.writeGuestColumns(
     table,
     guest.rowNumber,
-    buildRsvpColumnUpdates(rsvpInput, timestamp),
+    buildRsvpColumnUpdates(rsvpInput, timestamp, selectionIds),
   );
   await store.appendActivity(
     "rsvp_submitted",
@@ -190,16 +208,12 @@ export async function saveSheetRsvp(input: SaveRsvpInput, state: AppState) {
     `${labelForSheetGuest(guest)} submitted an RSVP.`,
   );
 
-  const attending = Object.values(input.selections).some(Boolean);
-
   return {
     status: attending ? "attending" : "not_attending",
-    guestSelections: {
-      [guest.guestId]: attending,
-    },
+    guestSelections,
     answers: {
       question_walking_dinner: attending && Boolean(rsvpInput.answers.question_walking_dinner),
-      question_party: attending && Boolean(rsvpInput.answers.question_party),
+      question_party: attending,
       question_transfer: attending && Boolean(rsvpInput.answers.question_transfer),
     },
     note: input.note,
@@ -207,20 +221,52 @@ export async function saveSheetRsvp(input: SaveRsvpInput, state: AppState) {
   } satisfies PartyResponse;
 }
 
+export async function saveSheetGuestEmail(input: SaveGuestEmailInput) {
+  const store = getGoogleSheetsGuestStore();
+  const { table } = await store.loadGuests();
+  const guest = table.guests.find(
+    (candidate) => candidate.token === input.token && candidate.tokenActive,
+  );
+
+  if (!guest) {
+    throw new Error("Invitation not found.");
+  }
+
+  await store.writeGuestColumns(table, guest.rowNumber, [
+    { header: "email", value: input.email },
+    { header: "last_error", value: "" },
+  ]);
+  await store.appendActivity(
+    "content_updated",
+    "guest",
+    `${labelForSheetGuest(guest)} added an email address.`,
+  );
+
+  return { email: input.email };
+}
+
 export async function getSheetDashboardSnapshot(state: AppState): Promise<DashboardSnapshot> {
   const store = getGoogleSheetsGuestStore();
   const { table } = await store.loadGuests();
   const hydratedParties = table.guests.map((guest) => ({
     ...partyFromSheetGuest(guest),
-    guests: [guestFromSheetGuest(guest)],
+    guests: guestsFromSheetGuest(guest),
     deliveries: deliveriesFromSheetGuest(guest, state.event.summaryName),
   }));
-  const attendingGuests = hydratedParties.filter(
-    (party) => party.response?.guestSelections[party.id],
-  ).length;
-  const declinedGuests = hydratedParties.filter(
-    (party) => party.response && !party.response.guestSelections[party.id],
-  ).length;
+  const attendingGuests = hydratedParties.reduce((count, party) => {
+    if (!party.response) return count;
+    return (
+      count +
+      party.guests.filter((member) => party.response?.guestSelections[member.id]).length
+    );
+  }, 0);
+  const declinedGuests = hydratedParties.reduce((count, party) => {
+    if (!party.response) return count;
+    return (
+      count +
+      party.guests.filter((member) => !party.response?.guestSelections[member.id]).length
+    );
+  }, 0);
   const activities = await store.readActivities();
 
   return {
@@ -253,12 +299,14 @@ export async function importSheetPartiesFromCsv(csv: string, actor: string) {
 
   for (const row of rows) {
     const names = row.guests.length ? row.guests : [row.label];
+    const guestGroups = groupCsvGuestNames(names);
 
-    for (const name of names) {
-      if (!name) continue;
+    for (const [primaryName, guest2Name] of guestGroups) {
+      if (!primaryName) continue;
       const guestId = createGuestId();
       const token = createGuestToken();
-      const splitName = splitGuestName(name);
+      const splitName = splitGuestName(primaryName);
+      const guest2SplitName = splitGuestName(guest2Name ?? "");
 
       appendRows.push(
         rowValuesFromRecord(loaded.table.headers, {
@@ -269,6 +317,8 @@ export async function importSheetPartiesFromCsv(csv: string, actor: string) {
           last_name: splitName.lastName,
           first_name: splitName.firstName,
           email: row.email ?? "",
+          guest_2_last_name: guest2SplitName.lastName,
+          guest_2_first_name: guest2SplitName.firstName,
           source: row.tags.join("; "),
           admin_notes: row.notes ?? "",
         }),
@@ -277,7 +327,7 @@ export async function importSheetPartiesFromCsv(csv: string, actor: string) {
   }
 
   if (appendRows.length) {
-    await store.appendGuestRows(loaded.tabTitle, loaded.table.headers, appendRows);
+    await store.appendGuestRows(loaded.tabTitle, loaded.table, appendRows);
   }
 
   await store.appendActivity(
@@ -295,13 +345,18 @@ export async function addSheetGuest(input: AddGuestInput, actor: string) {
   const guestId = createGuestId();
   const token = createGuestToken();
   const inviteUrl = buildInviteUrl(env.APP_URL, token);
-  const label = labelForName(input.firstName, input.lastName, input.email);
+  const label =
+    input.displayName ||
+    labelForName(input.firstName, input.lastName, input.email);
 
-  await store.appendGuestRows(loaded.tabTitle, loaded.table.headers, [
+  await store.appendGuestRows(loaded.tabTitle, loaded.table, [
     rowValuesFromRecord(loaded.table.headers, {
       last_name: input.lastName,
       first_name: input.firstName,
       email: input.email ?? "",
+      guest_2_last_name: input.guest2LastName ?? "",
+      guest_2_first_name: input.guest2FirstName ?? "",
+      display_name: input.displayName ?? "",
       invited_by_ale: toSheetBoolean(input.invitedByAle),
       invited_by_bona: toSheetBoolean(input.invitedByBona),
       invited_by_mum: toSheetBoolean(input.invitedByMum),
@@ -374,7 +429,7 @@ export async function sendSheetBatch(input: SendBatchInput, actor: string, state
         summaryAddressName: state.event.summaryAddressName,
         summaryAddressLabel: state.event.summaryAddressLabel,
         rsvpDeadline: state.event.rsvpDeadline,
-        heroImageSrc: eventForSheetGuest(state.event, guest).heroBackImageSrc,
+        heroImageSrc: PARTY_ONLY_BACK_IMAGE_SRC,
       });
       const timestamp = new Date().toISOString();
       const delivery = {
@@ -508,14 +563,18 @@ export class GoogleSheetsGuestStore {
     );
   }
 
-  async appendGuestRows(tabTitle: string, headers: string[], rows: string[][]) {
+  async appendGuestRows(tabTitle: string, table: GuestSheetTable, rows: string[][]) {
     assertSheetMutationAllowed();
     const sheets = await this.getSheets();
-    await sheets.spreadsheets.values.append({
+    const endRowNumber = table.nextAppendRowNumber + rows.length - 1;
+
+    await sheets.spreadsheets.values.update({
       spreadsheetId: env.GOOGLE_SHEETS_ID,
-      range: rangeFor(tabTitle, `A:${columnLetter(headers.length - 1)}`),
+      range: rangeFor(
+        tabTitle,
+        `A${table.nextAppendRowNumber}:${columnLetter(table.headers.length - 1)}${endRowNumber}`,
+      ),
       valueInputOption: "USER_ENTERED",
-      insertDataOption: "INSERT_ROWS",
       requestBody: {
         values: rows,
       },
@@ -855,7 +914,7 @@ function partyFromSheetGuest(guest: SheetGuest): Party {
   return {
     id: guest.guestId,
     label: labelForSheetGuest(guest),
-    guestIds: [guest.guestId],
+    guestIds: sheetGuestMembers(guest).map((member) => member.id),
     email: guest.email,
     notes: guest.adminNotes,
     tags: tagsForSheetGuest(guest),
@@ -903,12 +962,12 @@ function partyOnlyDateLabel(label: string) {
   return parts.at(-1) ?? label;
 }
 
-function guestFromSheetGuest(guest: SheetGuest): Guest {
-  return {
-    id: guest.guestId,
-    partyId: guest.guestId,
-    name: labelForSheetGuest(guest),
-  };
+function guestsFromSheetGuest(guest: SheetGuest): Guest[] {
+  return sheetGuestMembers(guest).map((member) => ({
+    id: member.id,
+    partyId: member.partyId,
+    name: member.name,
+  }));
 }
 
 function deliveriesFromSheetGuest(guest: SheetGuest, eventTitle: string): DeliveryRecord[] {
@@ -942,14 +1001,6 @@ function deliveriesFromSheetGuest(guest: SheetGuest, eventTitle: string): Delive
   ];
 }
 
-function labelForSheetGuest(guest: SheetGuest) {
-  return [guest.firstName, guest.lastName].filter(Boolean).join(" ").trim() || guest.email || "Guest";
-}
-
-function labelForName(firstName: string, lastName: string, email?: string) {
-  return [firstName, lastName].filter(Boolean).join(" ").trim() || email || "Guest";
-}
-
 function tagsForSheetGuest(guest: SheetGuest) {
   return [
     guest.invitedByAle ? "invited_by_ale" : "",
@@ -978,6 +1029,16 @@ function splitGuestName(name: string) {
     firstName: parts.slice(0, -1).join(" "),
     lastName: parts.at(-1) ?? "",
   };
+}
+
+function groupCsvGuestNames(names: string[]): Array<[string, string?]> {
+  const normalizedNames = names.map((name) => name.trim()).filter(Boolean);
+
+  if (normalizedNames.length === 2) {
+    return [[normalizedNames[0], normalizedNames[1]]];
+  }
+
+  return normalizedNames.map((name) => [name]);
 }
 
 function createGuestId() {

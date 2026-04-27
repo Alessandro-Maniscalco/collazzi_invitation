@@ -4,8 +4,10 @@ import {
   buildRsvpColumnUpdates,
   findGuestSheetIntegrityErrors,
   GUEST_SHEET_HEADERS,
+  labelForSheetGuest,
   parseGuestSheet,
   sheetGuestResponse,
+  sheetGuestMembers,
 } from "@/lib/sheets/guest-sheet";
 
 function rowFromRecord(record: Record<string, string>) {
@@ -14,10 +16,13 @@ function rowFromRecord(record: Record<string, string>) {
 
 describe("parseGuestSheet", () => {
   it("keeps editable guest columns first and leaves guest phone out of the app schema", () => {
-    expect(GUEST_SHEET_HEADERS.slice(0, 12)).toEqual([
+    expect(GUEST_SHEET_HEADERS.slice(0, 15)).toEqual([
       "last_name",
       "first_name",
       "email",
+      "guest_2_last_name",
+      "guest_2_first_name",
+      "display_name",
       "invited_by_ale",
       "invited_by_bona",
       "invited_by_mum",
@@ -76,6 +81,7 @@ describe("parseGuestSheet", () => {
     );
 
     expect(table.headerRowIndex).toBe(1);
+    expect(table.nextAppendRowNumber).toBe(4);
     expect(table.needsHeaderUpdate).toBe(true);
     expect(table.headers.slice(0, 16)).toEqual([
       "last_name",
@@ -113,6 +119,25 @@ describe("parseGuestSheet", () => {
     });
   });
 
+  it("chooses the next explicit append row below the live guest data", () => {
+    const table = parseGuestSheet(
+      [
+        ["", "", "", 403, 358, 123, 0, "", "Inviti Inviati"],
+        ["", "", "", "", "", "", "", "", 414],
+        [...GUEST_SHEET_HEADERS],
+        rowFromRecord({
+          first_name: "Existing",
+          last_name: "Guest",
+          email: "existing@example.com",
+        }),
+      ],
+      "http://localhost:3000",
+    );
+
+    expect(table.headerRowIndex).toBe(2);
+    expect(table.nextAppendRowNumber).toBe(5);
+  });
+
   it("maps normalized RSVP fields to the app response shape", () => {
     const table = parseGuestSheet(
       [
@@ -146,6 +171,61 @@ describe("parseGuestSheet", () => {
       },
       note: "See you there",
       updatedAt: "2026-04-25T12:00:00.000Z",
+    });
+  });
+
+  it("keeps two invited guests on one row with separate RSVP selections", () => {
+    const table = parseGuestSheet(
+      [
+        [...GUEST_SHEET_HEADERS],
+        rowFromRecord({
+          guest_id: "guest_signori",
+          token: "guest_token",
+          token_active: "TRUE",
+          first_name: "Monica",
+          last_name: "Signori",
+          email: "monica@example.com",
+          guest_2_first_name: "Saverio",
+          guest_2_last_name: "Signori",
+          coming_to_party: "TRUE",
+          guest_2_coming_to_party: "FALSE",
+          not_coming: "FALSE",
+          rsvp_updated_at: "2026-04-25T12:00:00.000Z",
+        }),
+      ],
+      "http://localhost:3000",
+    );
+
+    const guest = table.guests[0];
+
+    expect(labelForSheetGuest(guest)).toBe("Monica e Saverio Signori");
+    expect(sheetGuestMembers(guest)).toEqual([
+      {
+        id: "guest_signori",
+        partyId: "guest_signori",
+        name: "Monica Signori",
+        firstName: "Monica",
+        lastName: "Signori",
+        primary: true,
+      },
+      {
+        id: "guest_signori__guest_2",
+        partyId: "guest_signori",
+        name: "Saverio Signori",
+        firstName: "Saverio",
+        lastName: "Signori",
+        primary: false,
+      },
+    ]);
+    expect(sheetGuestResponse(guest)).toMatchObject({
+      status: "attending",
+      guestSelections: {
+        guest_signori: true,
+        guest_signori__guest_2: false,
+      },
+      answers: {
+        question_party: true,
+      },
     });
   });
 
@@ -274,6 +354,37 @@ describe("buildRsvpColumnUpdates", () => {
       { header: "transfer_needed", value: "FALSE" },
       { header: "not_coming", value: "TRUE" },
       { header: "rsvp_note", value: "Sorry" },
+      { header: "rsvp_updated_at", value: "2026-04-25T12:00:00.000Z" },
+      { header: "last_error", value: "" },
+    ]);
+  });
+
+  it("writes primary and second guest party attendance separately", () => {
+    const updates = buildRsvpColumnUpdates(
+      {
+        token: "guest_token",
+        selections: { guest_1: true, guest_1__guest_2: false },
+        answers: {
+          question_walking_dinner: true,
+          question_party: true,
+          question_transfer: false,
+        },
+        note: "",
+      },
+      "2026-04-25T12:00:00.000Z",
+      {
+        primaryGuestId: "guest_1",
+        guest2Id: "guest_1__guest_2",
+      },
+    );
+
+    expect(updates).toEqual([
+      { header: "coming_to_walking_dinner", value: "TRUE" },
+      { header: "coming_to_party", value: "TRUE" },
+      { header: "guest_2_coming_to_party", value: "FALSE" },
+      { header: "transfer_needed", value: "FALSE" },
+      { header: "not_coming", value: "FALSE" },
+      { header: "rsvp_note", value: "" },
       { header: "rsvp_updated_at", value: "2026-04-25T12:00:00.000Z" },
       { header: "last_error", value: "" },
     ]);

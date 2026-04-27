@@ -18,19 +18,34 @@ interface RsvpModalProps {
 }
 
 const PARTY_QUESTION_ID = "question_party";
-const WALKING_DINNER_QUESTION_ID = "question_walking_dinner";
 
 function isImpliedPartyQuestion(question: Question) {
   return question.id === PARTY_QUESTION_ID;
 }
 
-function hasWalkingDinnerQuestion(questions: Question[]) {
-  return questions.some((question) => question.id === WALKING_DINNER_QUESTION_ID);
+function hasSelectedGuest(selections: Record<string, boolean>) {
+  return Object.values(selections).some(Boolean);
 }
 
-function buildGuestSelections(guests: Guest[], status: AttendanceStatus) {
+function buildGuestSelections(
+  guests: Guest[],
+  status: AttendanceStatus,
+  response?: PartyResponse,
+) {
+  const savedSelections = response?.guestSelections ?? {};
+  const hasSavedSelection = guests.some((guest) => savedSelections[guest.id] !== undefined);
+  const useSavedSelections =
+    status === "attending" && response?.status === "attending" && hasSavedSelection;
+
   return Object.fromEntries(
-    guests.map((guest) => [guest.id, status === "attending"]),
+    guests.map((guest) => [
+      guest.id,
+      status === "attending"
+        ? useSavedSelections
+          ? Boolean(savedSelections[guest.id])
+          : true
+        : false,
+    ]),
   );
 }
 
@@ -55,11 +70,14 @@ function normalizeAnswers(
   answers: Record<string, boolean>,
   status: AttendanceStatus,
   implyParty: boolean,
+  selections: Record<string, boolean>,
 ) {
+  const attending = status === "attending" && hasSelectedGuest(selections);
+
   return Object.fromEntries(
     questions.map((question) => [
       question.id,
-      status === "attending"
+      attending
         ? (implyParty && isImpliedPartyQuestion(question)) || Boolean(answers[question.id])
         : false,
     ]),
@@ -81,20 +99,25 @@ export function RsvpModal({
   const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatus>(
     preferredStatus ?? initialResponse?.status ?? "attending",
   );
+  const [guestSelections, setGuestSelections] = useState<Record<string, boolean>>(() =>
+    buildGuestSelections(
+      guests,
+      preferredStatus ?? initialResponse?.status ?? "attending",
+      initialResponse,
+    ),
+  );
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
   const [note, setNote] = useState(initialResponse?.note ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const hasWalkingDinnerOption = hasWalkingDinnerQuestion(questions);
-  const implyParty = !hasWalkingDinnerOption;
-  const visibleQuestions = questions.filter(
-    (question) => hasWalkingDinnerOption || !isImpliedPartyQuestion(question),
-  );
+  const implyParty = true;
+  const visibleQuestions = questions.filter((question) => !isImpliedPartyQuestion(question));
 
   useEffect(() => {
     if (!open) return;
     const status = preferredStatus ?? initialResponse?.status ?? "attending";
     setAttendanceStatus(status);
+    setGuestSelections(buildGuestSelections(guests, status, initialResponse));
     setAnswers(buildAnswers(questions, initialResponse, status, implyParty));
     setNote(initialResponse?.note ?? "");
     setError(null);
@@ -150,6 +173,7 @@ export function RsvpModal({
               disabled={readOnly}
               onClick={() => {
                 setAttendanceStatus(status);
+                setGuestSelections(buildGuestSelections(guests, status, initialResponse));
                 setAnswers(buildAnswers(questions, initialResponse, status, implyParty));
               }}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
@@ -165,35 +189,67 @@ export function RsvpModal({
 
         <div className="mt-6 space-y-5">
           {attendanceStatus === "attending" ? (
-            visibleQuestions.length > 0 ? (
-              <div>
-                <div className="text-sm font-semibold text-stone-800">
-                  Before you leave, kindly select your preferences below
+            <>
+              {guests.length > 1 ? (
+                <div>
+                  <div className="text-sm font-semibold text-stone-800">
+                    Who will attend?
+                  </div>
+                  <div className="mt-3 space-y-3">
+                    {guests.map((guest) => (
+                      <label
+                        key={guest.id}
+                        className="flex items-center gap-3 rounded-2xl border border-[var(--app-line)] bg-white/80 px-4 py-3"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={Boolean(guestSelections[guest.id])}
+                          disabled={readOnly}
+                          onChange={(event) =>
+                            setGuestSelections((current) => ({
+                              ...current,
+                              [guest.id]: event.target.checked,
+                            }))
+                          }
+                          className="h-4 w-4 rounded border-stone-300 text-[var(--app-wine)]"
+                        />
+                        <span>{guest.name}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-                <div className="mt-3 space-y-3">
-                  {visibleQuestions.map((question) => (
-                    <label
-                      key={question.id}
-                      className="flex items-center gap-3 rounded-2xl border border-[var(--app-line)] bg-white/80 px-4 py-3"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={Boolean(answers[question.id])}
-                        disabled={readOnly}
-                        onChange={(event) =>
-                          setAnswers((current) => ({
-                            ...current,
-                            [question.id]: event.target.checked,
-                          }))
-                        }
-                        className="h-4 w-4 rounded border-stone-300 text-[var(--app-wine)]"
-                      />
-                      <span>{question.label}</span>
-                    </label>
-                  ))}
+              ) : null}
+
+              {visibleQuestions.length > 0 ? (
+                <div>
+                  <div className="text-sm font-semibold text-stone-800">
+                    Before you leave, kindly select your preferences below
+                  </div>
+                  <div className="mt-3 space-y-3">
+                    {visibleQuestions.map((question) => (
+                      <label
+                        key={question.id}
+                        className="flex items-center gap-3 rounded-2xl border border-[var(--app-line)] bg-white/80 px-4 py-3"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={Boolean(answers[question.id])}
+                          disabled={readOnly}
+                          onChange={(event) =>
+                            setAnswers((current) => ({
+                              ...current,
+                              [question.id]: event.target.checked,
+                            }))
+                          }
+                          className="h-4 w-4 rounded border-stone-300 text-[var(--app-wine)]"
+                        />
+                        <span>{question.label}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ) : null
+              ) : null}
+            </>
           ) : null}
 
           <label className="block">
@@ -229,12 +285,22 @@ export function RsvpModal({
             onClick={() =>
               startTransition(async () => {
                 setError(null);
-                const selections = buildGuestSelections(guests, attendanceStatus);
+                const selections =
+                  attendanceStatus === "attending"
+                    ? guestSelections
+                    : buildGuestSelections(guests, "not_attending", initialResponse);
+
+                if (attendanceStatus === "attending" && !hasSelectedGuest(selections)) {
+                  setError("Select at least one guest, or choose Will not attend.");
+                  return;
+                }
+
                 const normalizedAnswers = normalizeAnswers(
                   questions,
                   answers,
                   attendanceStatus,
                   implyParty,
+                  selections,
                 );
                 const response = await fetch("/api/rsvp", {
                   method: "POST",

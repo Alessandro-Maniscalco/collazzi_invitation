@@ -12,24 +12,15 @@ import {
   latestDelivery,
   partyAttendanceSummary,
 } from "@/lib/formatters";
-import type {
-  AccommodationCard,
-  DashboardSnapshot,
-  EventRecord,
-  HostUser,
-  ItineraryItem,
-  Party,
-  Question,
-} from "@/lib/types";
-
-function createClientId(prefix: string) {
-  return `${prefix}_${crypto.randomUUID().slice(0, 8)}`;
-}
+import type { DashboardSnapshot, HostUser, Party } from "@/lib/types";
 
 const emptyNewGuestForm = {
   last_name: "",
   first_name: "",
   email: "",
+  guest_2_last_name: "",
+  guest_2_first_name: "",
+  display_name: "",
   invited_by_ale: false,
   invited_by_bona: false,
   invited_by_mum: false,
@@ -53,18 +44,11 @@ export function HostDashboard({
   host: HostUser;
 }) {
   const router = useRouter();
-  const [event, setEvent] = useState<EventRecord>(initialData.event);
-  const [questions, setQuestions] = useState<Question[]>(initialData.questions);
-  const [itinerary, setItinerary] = useState<ItineraryItem[]>(initialData.itinerary);
-  const [accommodations, setAccommodations] = useState<AccommodationCard[]>(
-    initialData.accommodations,
-  );
   const [csvText, setCsvText] = useState(
     "label,email,guests,tags,notes\nJamie & Riley,preview-new@example.com,Jamie Lang;Riley Lang,friends;dinner,Imported sample row",
   );
   const [newGuest, setNewGuest] = useState<NewGuestForm>(() => freshNewGuestForm());
   const [status, setStatus] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [addingGuest, setAddingGuest] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
   const [reminderFilter, setReminderFilter] = useState<
@@ -76,35 +60,6 @@ export function HostDashboard({
     const lines = deferredCsv.trim().split("\n").filter(Boolean);
     return Math.max(lines.length - 1, 0);
   }, [deferredCsv]);
-
-  async function saveContent() {
-    setSaving(true);
-    setStatus(null);
-
-    const response = await fetch("/api/host/event", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        event,
-        questions,
-        itinerary,
-        accommodations,
-      }),
-    });
-
-    setSaving(false);
-
-    if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-      setStatus(payload?.error ?? "Could not save content.");
-      return;
-    }
-
-    setStatus("Saved invitation content.");
-    startTransition(() => router.refresh());
-  }
 
   async function importCsv() {
     const response = await fetch("/api/host/import", {
@@ -146,7 +101,14 @@ export function HostDashboard({
       return;
     }
 
-    setStatus(`Added ${newGuest.first_name} ${newGuest.last_name}.`);
+    const addedLabel =
+      newGuest.display_name ||
+      (newGuest.guest_2_first_name || newGuest.guest_2_last_name
+        ? `${newGuest.first_name} e ${newGuest.guest_2_first_name || newGuest.guest_2_last_name} ${
+            newGuest.last_name
+          }`.trim()
+        : `${newGuest.first_name} ${newGuest.last_name}`.trim());
+    setStatus(`Added ${addedLabel}.`);
     setNewGuest(freshNewGuestForm());
     startTransition(() => router.refresh());
   }
@@ -205,7 +167,7 @@ export function HostDashboard({
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <div className="section-label text-[var(--app-gold)]">Host Dashboard</div>
-              <h1 className="mt-4 font-display text-5xl">{event.summaryName}</h1>
+              <h1 className="mt-4 font-display text-5xl">{initialData.event.summaryName}</h1>
               <p className="mt-4 max-w-3xl text-base leading-8 text-stone-300">
                 Signed in as {host.email} ({host.role}). In local development this dashboard uses a
                 file-backed mock store; the same schema is modeled in Drizzle for Supabase/Postgres.
@@ -316,205 +278,14 @@ export function HostDashboard({
         <section className="grid gap-8 xl:grid-cols-[1.05fr_0.95fr]">
           <div className="space-y-8">
             <div className="paper-panel rounded-[2rem] border border-[var(--app-line)] p-8">
-              <div className="section-label">Invitation Content</div>
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <label className="block">
-                  <span className="mb-2 block text-sm font-semibold text-stone-700">Summary name</span>
-                  <input
-                    value={event.summaryName}
-                    onChange={(eventObject) =>
-                      setEvent((current) => ({ ...current, summaryName: eventObject.target.value }))
-                    }
-                    className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3"
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-2 block text-sm font-semibold text-stone-700">RSVP deadline</span>
-                  <input
-                    value={event.rsvpDeadline}
-                    onChange={(eventObject) =>
-                      setEvent((current) => ({ ...current, rsvpDeadline: eventObject.target.value }))
-                    }
-                    className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3"
-                  />
-                </label>
-                <label className="block md:col-span-2">
-                  <span className="mb-2 block text-sm font-semibold text-stone-700">Introduction</span>
-                  <textarea
-                    value={event.introduction}
-                    onChange={(eventObject) =>
-                      setEvent((current) => ({ ...current, introduction: eventObject.target.value }))
-                    }
-                    rows={4}
-                    className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3"
-                  />
-                </label>
-              </div>
-
-              <div className="mt-8 space-y-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-semibold text-stone-800">RSVP questions</div>
-                    <div className="text-sm text-stone-600">
-                      Editable prompts shown in the guest modal.
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setQuestions((current) => [
-                        ...current,
-                        { id: createClientId("question"), label: "New question", type: "checkbox" },
-                      ])
-                    }
-                    className="rounded-full border border-[var(--app-line)] px-4 py-2 text-sm font-semibold"
-                  >
-                    Add question
-                  </button>
-                </div>
-                {questions.map((question) => (
-                  <div key={question.id} className="flex gap-3">
-                    <input
-                      value={question.label}
-                      onChange={(eventObject) =>
-                        setQuestions((current) =>
-                          current.map((item) =>
-                            item.id === question.id
-                              ? { ...item, label: eventObject.target.value }
-                              : item,
-                          ),
-                        )
-                      }
-                      className="flex-1 rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setQuestions((current) => current.filter((item) => item.id !== question.id))
-                      }
-                      className="rounded-2xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-stone-700"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-8 space-y-6">
-                <div className="text-sm font-semibold text-stone-800">Itinerary</div>
-                {itinerary.map((item) => (
-                  <div
-                    key={item.id}
-                    className="grid gap-3 rounded-[1.5rem] border border-[var(--app-line)] bg-white/70 p-4"
-                  >
-                    <input
-                      value={item.venueName}
-                      onChange={(eventObject) =>
-                        setItinerary((current) =>
-                          current.map((entry) =>
-                            entry.id === item.id
-                              ? { ...entry, venueName: eventObject.target.value }
-                              : entry,
-                          ),
-                        )
-                      }
-                      className="rounded-2xl border border-[var(--app-line)] px-4 py-3"
-                    />
-                    <textarea
-                      value={item.description}
-                      rows={3}
-                      onChange={(eventObject) =>
-                        setItinerary((current) =>
-                          current.map((entry) =>
-                            entry.id === item.id
-                              ? { ...entry, description: eventObject.target.value }
-                              : entry,
-                          ),
-                        )
-                      }
-                      className="rounded-2xl border border-[var(--app-line)] px-4 py-3"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-8 space-y-5">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm font-semibold text-stone-800">Accommodation cards</div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setAccommodations((current) => [
-                        ...current,
-                        {
-                          id: createClientId("accommodation"),
-                          title: "New accommodation",
-                          city: "City",
-                          address: "",
-                          addressLines: [],
-                          phone: "",
-                          ctaLabel: "Book",
-                          ctaUrl: "https://example.com",
-                          imageSrc: "/assets/collazzi/horto-convento.jpeg",
-                          notes: "",
-                        },
-                      ])
-                    }
-                    className="rounded-full border border-[var(--app-line)] px-4 py-2 text-sm font-semibold"
-                  >
-                    Add accommodation
-                  </button>
-                </div>
-                {accommodations.map((item) => (
-                  <div key={item.id} className="grid gap-3 rounded-[1.5rem] border border-[var(--app-line)] bg-white/70 p-4">
-                    <input
-                      value={item.title}
-                      onChange={(eventObject) =>
-                        setAccommodations((current) =>
-                          current.map((entry) =>
-                            entry.id === item.id
-                              ? { ...entry, title: eventObject.target.value }
-                              : entry,
-                          ),
-                        )
-                      }
-                      className="rounded-2xl border border-[var(--app-line)] px-4 py-3"
-                    />
-                    <textarea
-                      value={item.notes}
-                      rows={2}
-                      onChange={(eventObject) =>
-                        setAccommodations((current) =>
-                          current.map((entry) =>
-                            entry.id === item.id
-                              ? { ...entry, notes: eventObject.target.value }
-                              : entry,
-                          ),
-                        )
-                      }
-                      className="rounded-2xl border border-[var(--app-line)] px-4 py-3"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <button
-                type="button"
-                onClick={saveContent}
-                disabled={saving}
-                className="mt-8 rounded-full bg-[var(--app-wine)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                {saving ? "Saving..." : "Save content"}
-              </button>
-            </div>
-
-            <div className="paper-panel rounded-[2rem] border border-[var(--app-line)] p-8">
               <div className="section-label">Add Guest</div>
-              <h2 className="mt-4 font-display text-4xl text-stone-950">Add one invited person</h2>
+              <h2 className="mt-4 font-display text-4xl text-stone-950">Add invited party</h2>
               <form onSubmit={addInvitedPerson} className="mt-6 grid gap-5">
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-stone-700">Last name</span>
+                    <span className="mb-2 block text-sm font-semibold text-stone-700">
+                      Primary last name
+                    </span>
                     <input
                       required
                       value={newGuest.last_name}
@@ -523,7 +294,9 @@ export function HostDashboard({
                     />
                   </label>
                   <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-stone-700">First name</span>
+                    <span className="mb-2 block text-sm font-semibold text-stone-700">
+                      Primary first name
+                    </span>
                     <input
                       required
                       value={newGuest.first_name}
@@ -538,6 +311,40 @@ export function HostDashboard({
                     type="email"
                     value={newGuest.email}
                     onChange={(event) => updateNewGuest("email", event.target.value)}
+                    className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3"
+                  />
+                </label>
+                <div className="section-label">Second Guest</div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-stone-700">
+                      Second guest first name
+                    </span>
+                    <input
+                      value={newGuest.guest_2_first_name}
+                      onChange={(event) => updateNewGuest("guest_2_first_name", event.target.value)}
+                      className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-stone-700">
+                      Second guest last name
+                    </span>
+                    <input
+                      value={newGuest.guest_2_last_name}
+                      onChange={(event) => updateNewGuest("guest_2_last_name", event.target.value)}
+                      className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3"
+                    />
+                  </label>
+                </div>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-stone-700">
+                    Display name
+                  </span>
+                  <input
+                    value={newGuest.display_name}
+                    onChange={(event) => updateNewGuest("display_name", event.target.value)}
+                    placeholder="Auto-generated when blank"
                     className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3"
                   />
                 </label>
@@ -621,7 +428,7 @@ export function HostDashboard({
                   disabled={addingGuest}
                   className="w-fit rounded-full bg-[var(--app-wine)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
                 >
-                  {addingGuest ? "Adding..." : "Add invited person"}
+                  {addingGuest ? "Adding..." : "Add invited party"}
                 </button>
               </form>
             </div>

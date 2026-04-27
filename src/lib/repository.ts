@@ -15,6 +15,7 @@ import {
   importSheetPartiesFromCsv,
   recordSheetInviteOpen,
   regenerateSheetPartyToken,
+  saveSheetGuestEmail,
   saveSheetRsvp,
   sendSheetBatch,
   updateSheetDeliveryStatusFromWebhook,
@@ -31,6 +32,7 @@ import type {
   HostContentUpdate,
   InvitationView,
   Party,
+  SaveGuestEmailInput,
   SaveRsvpInput,
   SendBatchInput,
 } from "@/lib/types";
@@ -127,6 +129,27 @@ function getAttendanceStatus(selections: Record<string, boolean>) {
 
 function inviteUrl(token: string) {
   return `${env.APP_URL.replace(/\/$/, "")}/i/${token}`;
+}
+
+function labelForInputName(firstName: string, lastName: string, email?: string) {
+  return [firstName, lastName].filter(Boolean).join(" ").trim() || email || "Guest";
+}
+
+function coupleLabel(primaryLabel: string, guest2Label: string, input: AddGuestInput) {
+  if (!guest2Label) {
+    return primaryLabel;
+  }
+
+  const sharedLastName =
+    input.lastName &&
+    input.guest2LastName &&
+    input.lastName.toLocaleLowerCase() === input.guest2LastName.toLocaleLowerCase();
+
+  if (sharedLastName && input.firstName && input.guest2FirstName) {
+    return `${input.firstName} e ${input.guest2FirstName} ${input.lastName}`;
+  }
+
+  return `${primaryLabel} e ${guest2Label}`;
 }
 
 function filterParties(state: AppState, input: SendBatchInput) {
@@ -233,6 +256,27 @@ export async function saveRsvp(input: SaveRsvpInput) {
     addActivity(state, `${party.label} submitted an RSVP.`, "guest", "rsvp_submitted");
 
     return party.response;
+  });
+}
+
+export async function saveGuestEmail(input: SaveGuestEmailInput) {
+  if (hasGoogleSheetsConfig()) {
+    return saveSheetGuestEmail(input);
+  }
+
+  return updateState((state) => {
+    const party = state.parties.find(
+      (candidate) => candidate.token.value === input.token && candidate.token.active,
+    );
+
+    if (!party) {
+      throw new Error("Invitation not found.");
+    }
+
+    party.email = input.email;
+    addActivity(state, `${party.label} added an email address.`, "guest", "content_updated");
+
+    return { email: party.email };
   });
 }
 
@@ -347,8 +391,14 @@ export async function addGuest(input: AddGuestInput, actor: string) {
   return updateState((state) => {
     const partyId = nanoid();
     const guestId = nanoid();
+    const guest2Id = input.guest2FirstName || input.guest2LastName ? nanoid() : undefined;
     const token = createToken("guest");
-    const label = [input.firstName, input.lastName].filter(Boolean).join(" ").trim();
+    const primaryLabel = labelForInputName(input.firstName, input.lastName, input.email);
+    const guest2Label =
+      input.guest2FirstName || input.guest2LastName
+        ? labelForInputName(input.guest2FirstName ?? "", input.guest2LastName ?? "")
+        : "";
+    const label = input.displayName || coupleLabel(primaryLabel, guest2Label, input);
     const tags = [
       input.invitedByAle ? "invited_by_ale" : "",
       input.invitedByBona ? "invited_by_bona" : "",
@@ -362,15 +412,25 @@ export async function addGuest(input: AddGuestInput, actor: string) {
     state.guests.push({
       id: guestId,
       partyId,
-      name: label,
+      name: primaryLabel,
     });
+
+    if (guest2Id && guest2Label) {
+      state.guests.push({
+        id: guest2Id,
+        partyId,
+        name: guest2Label,
+      });
+    }
+
+    const guestIds = [guestId, guest2Id].filter(Boolean) as string[];
     state.parties.unshift({
       id: partyId,
       label,
       email: input.email,
       notes: input.source,
       tags,
-      guestIds: [guestId],
+      guestIds,
       token: {
         value: token,
         active: true,
@@ -382,6 +442,7 @@ export async function addGuest(input: AddGuestInput, actor: string) {
 
     return {
       guestId,
+      guest2Id,
       token,
       inviteUrl: inviteUrl(token),
     };
