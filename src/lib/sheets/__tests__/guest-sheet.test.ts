@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildRsvpColumnUpdates,
+  buildInviteUrlFormula,
   findGuestSheetIntegrityErrors,
   GUEST_SHEET_HEADERS,
   labelForSheetGuest,
@@ -15,6 +16,12 @@ function rowFromRecord(record: Record<string, string>) {
 }
 
 describe("parseGuestSheet", () => {
+  it("builds invite URL formulas from the token cell", () => {
+    expect(buildInviteUrlFormula("https://example.com/", "Q", 12)).toBe(
+      '=IF(Q12="","", "https://example.com/i/"&Q12)',
+    );
+  });
+
   it("keeps editable guest columns first and leaves guest phone out of the app schema", () => {
     expect(GUEST_SHEET_HEADERS.slice(0, 15)).toEqual([
       "last_name",

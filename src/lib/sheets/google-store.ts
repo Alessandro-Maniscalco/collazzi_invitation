@@ -9,6 +9,7 @@ import { dispatchDelivery } from "@/lib/providers/delivery";
 import { parsePartyCsv } from "@/lib/csv";
 import {
   buildInviteUrl,
+  buildInviteUrlFormula,
   buildRsvpColumnUpdates,
   columnLetter,
   findGuestSheetIntegrityErrors,
@@ -313,7 +314,10 @@ export async function importSheetPartiesFromCsv(csv: string, actor: string) {
           guest_id: guestId,
           token,
           token_active: "TRUE",
-          invite_url: buildInviteUrl(env.APP_URL, token),
+          invite_url: inviteUrlFormulaForRow(
+            loaded.table,
+            loaded.table.nextAppendRowNumber + appendRows.length,
+          ),
           last_name: splitName.lastName,
           first_name: splitName.firstName,
           email: row.email ?? "",
@@ -368,7 +372,7 @@ export async function addSheetGuest(input: AddGuestInput, actor: string) {
       guest_id: guestId,
       token,
       token_active: "TRUE",
-      invite_url: inviteUrl,
+      invite_url: inviteUrlFormulaForRow(loaded.table, loaded.table.nextAppendRowNumber),
     }),
   ]);
 
@@ -394,7 +398,7 @@ export async function regenerateSheetPartyToken(partyId: string, actor: string) 
   await store.writeGuestColumns(table, guest.rowNumber, [
     { header: "token", value: token },
     { header: "token_active", value: "TRUE" },
-    { header: "invite_url", value: buildInviteUrl(env.APP_URL, token) },
+    { header: "invite_url", value: inviteUrlFormulaForRow(table, guest.rowNumber) },
   ]);
   await store.appendActivity(
     "token_regenerated",
@@ -651,7 +655,11 @@ export class GoogleSheetsGuestStore {
 
       const inviteUrl = buildInviteUrl(env.APP_URL, token);
       if (token && guest.inviteUrl !== inviteUrl) {
-        writes.push({ rowNumber: guest.rowNumber, header: "invite_url", value: inviteUrl });
+        writes.push({
+          rowNumber: guest.rowNumber,
+          header: "invite_url",
+          value: inviteUrlFormulaForRow(table, guest.rowNumber),
+        });
         guest.inviteUrl = inviteUrl;
       }
     }
@@ -1017,6 +1025,15 @@ function rowValuesFromRecord(
   record: Partial<Record<GuestSheetHeader, string>>,
 ) {
   return headers.map((header) => record[header as GuestSheetHeader] ?? "");
+}
+
+function inviteUrlFormulaForRow(table: GuestSheetTable, rowNumber: number) {
+  const tokenColumnIndex = table.columnMap.token;
+  if (tokenColumnIndex === undefined) {
+    throw new Error("Missing Google Sheet column: token");
+  }
+
+  return buildInviteUrlFormula(env.APP_URL, columnLetter(tokenColumnIndex), rowNumber);
 }
 
 function splitGuestName(name: string) {

@@ -224,6 +224,13 @@ export function buildInviteUrl(appUrl: string, token: string) {
   return `${appUrl.replace(/\/$/, "")}/i/${token}`;
 }
 
+export function buildInviteUrlFormula(appUrl: string, tokenColumn: string, rowNumber: number) {
+  const baseUrl = `${appUrl.replace(/\/$/, "")}/i/`.replace(/"/g, '""');
+  const tokenCell = `${tokenColumn}${rowNumber}`;
+
+  return `=IF(${tokenCell}="","", "${baseUrl}"&${tokenCell})`;
+}
+
 export function columnLetter(index: number) {
   let column = "";
   let current = index + 1;
