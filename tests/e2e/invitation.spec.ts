@@ -8,23 +8,7 @@ test("guest preview invitation renders and accepts RSVP edits", async ({ page })
   await expect(page.getByText("Bona and Alessandro Maniscalco").first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Thursday, August 27th" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Friday, August 28th" })).toBeVisible();
-  await expect(page.getByLabel("Email for updates")).toBeVisible();
-
-  const email = `marcello-${Date.now()}@example.com`;
-  await page.getByLabel("Email for updates").fill(email);
-  const emailResponsePromise = page.waitForResponse(
-    (response) =>
-      response.url().endsWith("/api/guest/email") &&
-      response.request().method() === "POST",
-  );
-  await page.getByRole("button", { name: /^(Save|Update) email$/ }).click();
-  const emailResponse = await emailResponsePromise;
-  expect(emailResponse.ok()).toBe(true);
-  expect(emailResponse.request().postDataJSON()).toMatchObject({
-    token: "preview-couple",
-    email,
-  });
-  await expect(page.getByText("Email saved.")).toBeVisible();
+  await expect(page.getByLabel("Email for updates")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Will attend" }).first().click();
   await expect(
@@ -88,6 +72,58 @@ test("guest preview invitation renders and accepts RSVP edits", async ({ page })
       question_party: false,
     },
   });
+});
+
+test("guest invitation without an email can save one", async ({ page }) => {
+  await page.goto("/host/login", { waitUntil: "domcontentloaded" });
+  await page.getByLabel("Password").fill("playwright-host-password");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL(/\/host$/);
+
+  const token = await page.evaluate(async () => {
+    const response = await fetch("/api/host/guests", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        last_name: "Noemail",
+        first_name: `Guest ${Date.now()}`,
+        email: "",
+        invited_by_ale: true,
+        invited_by_bona: false,
+        invited_by_mum: false,
+        will_invite_to_walking_dinner: false,
+        sent_whatsapp_save_the_date: false,
+        sent_instagram_save_the_date: false,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+    const payload = (await response.json()) as { guest: { token: string } };
+    return payload.guest.token;
+  });
+
+  await page.goto(`/i/${token}`);
+  await expect(page.getByLabel("Email for updates")).toBeVisible();
+
+  const email = `noemail-${Date.now()}@example.com`;
+  await page.getByLabel("Email for updates").fill(email);
+  const emailResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/guest/email") &&
+      response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "Save email" }).click();
+  const emailResponse = await emailResponsePromise;
+  expect(emailResponse.ok()).toBe(true);
+  expect(emailResponse.request().postDataJSON()).toMatchObject({
+    token,
+    email,
+  });
+  await expect(page.getByText("Email saved.")).toBeVisible();
+  await expect(page.getByLabel("Email for updates")).toHaveCount(0);
 });
 
 test("host dashboard login works in mock mode", async ({ page }) => {

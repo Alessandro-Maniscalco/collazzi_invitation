@@ -131,6 +131,7 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
   const [emailSaved, setEmailSaved] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isEmailPending, startEmailTransition] = useTransition();
+  const hasGuestEmail = Boolean(invitation.party.email?.trim());
   const party = { ...invitation.party, response };
   const stageClass =
     stage === 0
@@ -271,41 +272,39 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
         </div>
       </section>
 
-      <section data-block-type="email_capture" className={styles.emailCapture}>
-        <div className={styles.emailCaptureInner}>
-          <form onSubmit={saveEmail} className={styles.emailForm}>
-            <label className={styles.emailLabel} htmlFor="guest-email">
-              Email for updates
-            </label>
-            <div className={styles.emailControls}>
-              <input
-                id="guest-email"
-                type="email"
-                required
-                value={guestEmail}
-                onChange={(event) => {
-                  setGuestEmail(event.target.value);
-                  setEmailSaved(false);
-                }}
-                className={styles.emailInput}
-              />
-              <button
-                type="submit"
-                disabled={isEmailPending}
-                className={styles.emailButton}
-              >
-                {isEmailPending
-                  ? "Saving..."
-                  : invitation.party.email || emailSaved
-                    ? "Update email"
-                    : "Save email"}
-              </button>
-            </div>
-            {emailSaved ? <div className={styles.emailSaved}>Email saved.</div> : null}
-            {emailError ? <div className={styles.emailError}>{emailError}</div> : null}
-          </form>
-        </div>
-      </section>
+      {!hasGuestEmail ? (
+        <section data-block-type="email_capture" className={styles.emailCapture}>
+          <div className={styles.emailCaptureInner}>
+            {emailSaved ? (
+              <div className={styles.emailSaved}>Email saved.</div>
+            ) : (
+              <form onSubmit={saveEmail} className={styles.emailForm}>
+                <label className={styles.emailLabel} htmlFor="guest-email">
+                  Email for updates
+                </label>
+                <div className={styles.emailControls}>
+                  <input
+                    id="guest-email"
+                    type="email"
+                    required
+                    value={guestEmail}
+                    onChange={(event) => setGuestEmail(event.target.value)}
+                    className={styles.emailInput}
+                  />
+                  <button
+                    type="submit"
+                    disabled={isEmailPending}
+                    className={styles.emailButton}
+                  >
+                    {isEmailPending ? "Saving..." : "Save email"}
+                  </button>
+                </div>
+                {emailError ? <div className={styles.emailError}>{emailError}</div> : null}
+              </form>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       <section data-block-type="basic_info" className={styles.block}>
         <div className={styles.blockContainer}>
