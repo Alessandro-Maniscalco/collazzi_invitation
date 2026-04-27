@@ -8,6 +8,7 @@ const payloadSchema = z.object({
   selections: z.record(z.string(), z.boolean()),
   answers: z.record(z.string(), z.boolean()),
   note: z.string().max(1200).optional().default(""),
+  email: z.string().trim().email().transform((value) => value.toLowerCase()).optional(),
 });
 
 export async function POST(request: Request) {

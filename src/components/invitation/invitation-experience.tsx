@@ -127,12 +127,14 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
   const [modalOpen, setModalOpen] = useState(false);
   const [preferredStatus, setPreferredStatus] = useState<AttendanceStatus | undefined>(undefined);
   const [response, setResponse] = useState<PartyResponse | undefined>(invitation.party.response);
+  const [savedGuestEmail, setSavedGuestEmail] = useState(invitation.party.email ?? "");
   const [guestEmail, setGuestEmail] = useState(invitation.party.email ?? "");
   const [emailSaved, setEmailSaved] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isEmailPending, startEmailTransition] = useTransition();
-  const hasGuestEmail = Boolean(invitation.party.email?.trim());
-  const party = { ...invitation.party, response };
+  const hasGuestEmail = Boolean(savedGuestEmail.trim());
+  const showEmailCapture = !hasGuestEmail || emailSaved;
+  const party = { ...invitation.party, email: savedGuestEmail || undefined, response };
   const stageClass =
     stage === 0
       ? styles.stageClosed
@@ -196,6 +198,7 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
 
       const payload = (await result.json()) as { email: string };
       setGuestEmail(payload.email);
+      setSavedGuestEmail(payload.email);
       setEmailSaved(true);
     });
   }
@@ -272,7 +275,7 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
         </div>
       </section>
 
-      {!hasGuestEmail ? (
+      {showEmailCapture ? (
         <section data-block-type="email_capture" className={styles.emailCapture}>
           <div className={styles.emailCaptureInner}>
             {emailSaved ? (
@@ -280,7 +283,7 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
             ) : (
               <form onSubmit={saveEmail} className={styles.emailForm}>
                 <label className={styles.emailLabel} htmlFor="guest-email">
-                  Email for updates
+                  Please enter your email:
                 </label>
                 <div className={styles.emailControls}>
                   <input
@@ -358,6 +361,8 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
       <RsvpModal
         open={modalOpen}
         partyLabel={party.label}
+        partyEmail={party.email}
+        initialEmail={guestEmail}
         guests={invitation.guests}
         questions={invitation.questions}
         token={party.token.value}
@@ -366,6 +371,11 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
         preferredStatus={preferredStatus}
         onClose={() => setModalOpen(false)}
         onSubmitted={setResponse}
+        onEmailSubmitted={(email) => {
+          setGuestEmail(email);
+          setSavedGuestEmail(email);
+          setEmailSaved(true);
+        }}
       />
     </main>
   );

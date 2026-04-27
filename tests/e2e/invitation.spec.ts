@@ -8,25 +8,26 @@ test("guest preview invitation renders and accepts RSVP edits", async ({ page })
   await expect(page.getByText("Bona and Alessandro Maniscalco").first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Thursday, August 27th" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Friday, August 28th" })).toBeVisible();
-  await expect(page.getByLabel("Email for updates")).toHaveCount(0);
+  await expect(page.getByLabel("Please enter your email:")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Will attend" }).first().click();
   await expect(
     page.getByRole("heading", { name: "Will you attend, Taylor & Jordan Russo?" }),
   ).toBeVisible();
+  const dialog = page.getByRole("dialog");
   await expect(page.getByText("Bona and Alessandro Maniscalco").nth(1)).toBeVisible();
-  await expect(page.getByText("Who will attend?")).toBeVisible();
-  await expect(page.getByLabel("Taylor Russo")).toBeChecked();
-  await expect(page.getByLabel("Jordan Russo")).toBeChecked();
-  await page.getByLabel("Walking Dinner - Thursday, August 27th, 19h30").check();
-  await expect(page.getByLabel("The Party - Friday, August 28th, 19h30")).toHaveCount(0);
-  await expect(page.getByLabel("Transfer needed for the party")).toBeVisible();
-  await page.getByPlaceholder("Private message to host (optional)").fill("See you there.");
+  await expect(dialog.getByText("Who will attend?")).toBeVisible();
+  await expect(dialog.getByLabel("Taylor Russo")).toBeChecked();
+  await expect(dialog.getByLabel("Jordan Russo")).toBeChecked();
+  await dialog.getByLabel("Walking Dinner - Thursday, August 27th, 19h30").check();
+  await dialog.getByLabel("The Party - Friday, August 28th, 19h30").check();
+  await expect(dialog.getByLabel("Transfer needed for the party")).toBeVisible();
+  await dialog.getByPlaceholder("Private message to host (optional)").fill("See you there.");
   const rsvpResponse = page.waitForResponse(
     (response) =>
       response.url().endsWith("/api/rsvp") && response.request().method() === "POST",
   );
-  await page.getByRole("button", { name: "Confirm" }).click();
+  await dialog.getByRole("button", { name: "Confirm" }).click();
   const attendResponse = await rsvpResponse;
   expect(attendResponse.ok()).toBe(true);
   expect(attendResponse.request().postDataJSON()).toMatchObject({
@@ -106,10 +107,10 @@ test("guest invitation without an email can save one", async ({ page }) => {
   });
 
   await page.goto(`/i/${token}`);
-  await expect(page.getByLabel("Email for updates")).toBeVisible();
+  await expect(page.getByLabel("Please enter your email:")).toBeVisible();
 
   const email = `noemail-${Date.now()}@example.com`;
-  await page.getByLabel("Email for updates").fill(email);
+  await page.getByLabel("Please enter your email:").fill(email);
   const emailResponsePromise = page.waitForResponse(
     (response) =>
       response.url().endsWith("/api/guest/email") &&
@@ -123,7 +124,63 @@ test("guest invitation without an email can save one", async ({ page }) => {
     email,
   });
   await expect(page.getByText("Email saved.")).toBeVisible();
-  await expect(page.getByLabel("Email for updates")).toHaveCount(0);
+  await expect(page.getByLabel("Please enter your email:")).toHaveCount(0);
+});
+
+test("attending RSVP without a saved email requires and submits one", async ({ page }) => {
+  await page.goto("/host/login", { waitUntil: "domcontentloaded" });
+  await page.getByLabel("Password").fill("playwright-host-password");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL(/\/host$/);
+
+  const token = await page.evaluate(async () => {
+    const response = await fetch("/api/host/guests", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        last_name: "Requiredemail",
+        first_name: `Guest ${Date.now()}`,
+        email: "",
+        invited_by_ale: true,
+        invited_by_bona: false,
+        invited_by_mum: false,
+        will_invite_to_walking_dinner: false,
+        sent_whatsapp_save_the_date: false,
+        sent_instagram_save_the_date: false,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+    const payload = (await response.json()) as { guest: { token: string } };
+    return payload.guest.token;
+  });
+
+  await page.goto(`/i/${token}`);
+  await page.getByRole("button", { name: "Will attend" }).first().click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByLabel("Please enter your email:")).toBeVisible();
+  await dialog.getByRole("button", { name: "Confirm" }).click();
+  await expect(dialog.getByText("Please enter your email.")).toBeVisible();
+
+  const email = `required-email-${Date.now()}@example.com`;
+  await dialog.getByLabel("Please enter your email:").fill(email);
+  const rsvpResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/rsvp") && response.request().method() === "POST",
+  );
+  await dialog.getByRole("button", { name: "Confirm" }).click();
+  const rsvpResponse = await rsvpResponsePromise;
+  expect(rsvpResponse.ok()).toBe(true);
+  expect(rsvpResponse.request().postDataJSON()).toMatchObject({
+    token,
+    email,
+  });
+  await expect(dialog).toBeHidden({ timeout: 15_000 });
+  await expect(page.getByText("Email saved.")).toBeVisible();
 });
 
 test("host dashboard login works in mock mode", async ({ page }) => {

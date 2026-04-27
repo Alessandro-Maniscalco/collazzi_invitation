@@ -43,7 +43,7 @@ export function createSeedState(): AppState {
       summaryAddressLabel: "Via Volterrana, 4A, 50018 Scandicci FI",
       introduction: "",
       dressCode: "Black Tie and Long Dress",
-      rsvpDeadline: "2026-06-15T18:00:00.000Z",
+      rsvpDeadline: "2026-07-28T18:00:00.000Z",
       footerNote: "",
     },
     hosts: SEED_HOSTS.map((host) => ({ ...host })),

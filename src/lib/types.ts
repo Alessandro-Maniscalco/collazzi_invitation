@@ -201,6 +201,7 @@ export interface SaveRsvpInput {
   selections: Record<string, boolean>;
   answers: Record<string, boolean>;
   note: string;
+  email?: string;
 }
 
 export interface SaveGuestEmailInput {

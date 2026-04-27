@@ -396,4 +396,33 @@ describe("buildRsvpColumnUpdates", () => {
       { header: "last_error", value: "" },
     ]);
   });
+
+  it("respects an explicit party checkbox for walking dinner invitees", () => {
+    const updates = buildRsvpColumnUpdates(
+      {
+        token: "guest_token",
+        selections: { guest_1: true },
+        answers: {
+          question_walking_dinner: true,
+          question_party: false,
+          question_transfer: true,
+        },
+        note: "Dinner only",
+      },
+      "2026-04-25T12:00:00.000Z",
+      {
+        primaryGuestId: "guest_1",
+      },
+    );
+
+    expect(updates).toEqual([
+      { header: "coming_to_walking_dinner", value: "TRUE" },
+      { header: "coming_to_party", value: "FALSE" },
+      { header: "transfer_needed", value: "TRUE" },
+      { header: "not_coming", value: "FALSE" },
+      { header: "rsvp_note", value: "Dinner only" },
+      { header: "rsvp_updated_at", value: "2026-04-25T12:00:00.000Z" },
+      { header: "last_error", value: "" },
+    ]);
+  });
 });

@@ -86,6 +86,9 @@ interface SheetsClient {
           properties?: {
             sheetId?: number;
             title?: string;
+            gridProperties?: {
+              rowCount?: number;
+            };
           };
         }>;
       };
@@ -189,6 +192,12 @@ export async function saveSheetRsvp(input: SaveRsvpInput, state: AppState) {
     ]),
   );
   const attending = Object.values(guestSelections).some(Boolean);
+  const email = input.email?.trim().toLowerCase();
+
+  if (attending && !guest.email?.trim() && !email) {
+    throw new Error("Please enter your email.");
+  }
+
   const rsvpInput = guest.willInviteToWalkingDinner
     ? input
     : {
@@ -196,13 +205,27 @@ export async function saveSheetRsvp(input: SaveRsvpInput, state: AppState) {
         answers: {
           ...input.answers,
           question_walking_dinner: false,
+          question_party: attending,
         },
       };
+  const columnUpdates = buildRsvpColumnUpdates(rsvpInput, timestamp, selectionIds);
+
+  if (email) {
+    columnUpdates.push({ header: "email", value: email });
+  }
+
   await store.writeGuestColumns(
     table,
     guest.rowNumber,
-    buildRsvpColumnUpdates(rsvpInput, timestamp, selectionIds),
+    columnUpdates,
   );
+  if (email && guest.email !== email) {
+    await store.appendActivity(
+      "content_updated",
+      "guest",
+      `${labelForSheetGuest(guest)} added an email address.`,
+    );
+  }
   await store.appendActivity(
     "rsvp_submitted",
     "guest",
@@ -214,7 +237,7 @@ export async function saveSheetRsvp(input: SaveRsvpInput, state: AppState) {
     guestSelections,
     answers: {
       question_walking_dinner: attending && Boolean(rsvpInput.answers.question_walking_dinner),
-      question_party: attending,
+      question_party: attending && Boolean(rsvpInput.answers.question_party),
       question_transfer: attending && Boolean(rsvpInput.answers.question_transfer),
     },
     note: input.note,
@@ -571,6 +594,7 @@ export class GoogleSheetsGuestStore {
     assertSheetMutationAllowed();
     const sheets = await this.getSheets();
     const endRowNumber = table.nextAppendRowNumber + rows.length - 1;
+    await this.ensureRowCapacity(tabTitle, endRowNumber);
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: env.GOOGLE_SHEETS_ID,
@@ -785,6 +809,39 @@ export class GoogleSheetsGuestStore {
         },
       });
     }
+  }
+
+  private async ensureRowCapacity(tabTitle: string, requiredRowCount: number) {
+    const sheets = await this.getSheets();
+    const metadata = await sheets.spreadsheets.get({
+      spreadsheetId: env.GOOGLE_SHEETS_ID,
+    });
+    const match = metadata.data.sheets?.find((sheet) => sheet.properties?.title === tabTitle);
+    const sheetId = match?.properties?.sheetId;
+    const rowCount = match?.properties?.gridProperties?.rowCount;
+
+    if (sheetId === undefined) {
+      throw new Error(`Unable to find Google Sheets tab: ${tabTitle}.`);
+    }
+
+    if (rowCount === undefined || rowCount >= requiredRowCount) {
+      return;
+    }
+
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: env.GOOGLE_SHEETS_ID,
+      requestBody: {
+        requests: [
+          {
+            appendDimension: {
+              sheetId,
+              dimension: "ROWS",
+              length: requiredRowCount - rowCount,
+            },
+          },
+        ],
+      },
+    });
   }
 
   private async getGuestTabTitle() {

@@ -345,6 +345,7 @@ export function buildRsvpColumnUpdates(
     : false;
   const attending = primaryAttending || guest2Attending;
   const notComing = !attending;
+  const partySelected = Boolean(input.answers.question_party);
 
   const updates: SheetColumnUpdate[] = [
     {
@@ -353,7 +354,7 @@ export function buildRsvpColumnUpdates(
     },
     {
       header: "coming_to_party",
-      value: toSheetBoolean(!notComing && primaryAttending),
+      value: toSheetBoolean(!notComing && partySelected && primaryAttending),
     },
     {
       header: "transfer_needed",
@@ -368,7 +369,7 @@ export function buildRsvpColumnUpdates(
   if (selectionIds?.guest2Id) {
     updates.splice(2, 0, {
       header: "guest_2_coming_to_party",
-      value: toSheetBoolean(!notComing && guest2Attending),
+      value: toSheetBoolean(!notComing && partySelected && guest2Attending),
     });
   }
 

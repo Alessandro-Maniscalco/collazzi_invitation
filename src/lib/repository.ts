@@ -39,6 +39,7 @@ import type {
 
 const DATA_DIR = join(process.cwd(), ".data");
 const DATA_FILE = join(DATA_DIR, "mock-state.json");
+const EMAIL_CARD_IMAGE_SRC = "/assets/collazzi/invito-save-date.jpg";
 
 declare global {
   var __collazzi_write_queue: Promise<unknown> | undefined;
@@ -245,8 +246,20 @@ export async function saveRsvp(input: SaveRsvpInput) {
       throw new Error("RSVPs are closed for this invitation.");
     }
 
+    const status = getAttendanceStatus(input.selections);
+    const email = input.email?.trim().toLowerCase();
+
+    if (status === "attending" && !party.email?.trim() && !email) {
+      throw new Error("Please enter your email.");
+    }
+
+    if (email && party.email !== email) {
+      party.email = email;
+      addActivity(state, `${party.label} added an email address.`, "guest", "content_updated");
+    }
+
     party.response = {
-      status: getAttendanceStatus(input.selections),
+      status,
       guestSelections: input.selections,
       answers: input.answers,
       note: input.note,
@@ -497,7 +510,7 @@ export async function sendBatch(input: SendBatchInput, actor: string) {
           summaryAddressName: state.event.summaryAddressName,
           summaryAddressLabel: state.event.summaryAddressLabel,
           rsvpDeadline: state.event.rsvpDeadline,
-          heroImageSrc: state.event.heroBackImageSrc,
+          heroImageSrc: EMAIL_CARD_IMAGE_SRC,
         });
 
         const delivery: DeliveryRecord = {

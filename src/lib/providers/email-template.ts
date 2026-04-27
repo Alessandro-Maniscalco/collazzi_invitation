@@ -21,18 +21,21 @@ export interface InvitationEmail {
   html: string;
 }
 
-const DEFAULT_CARD_IMAGE = "/assets/collazzi/invito-save-date.jpg";
-const DEFAULT_MAP_URL =
-  "https://www.google.com/maps/search/?api=1&query=Villa+I+Collazzi+Scandicci";
+const ENVELOPE_CARD_IMAGE = "/assets/collazzi/maniscalco-post-envelope-bg.jpg";
+const BORDEAUX = "#660033";
+const TEXT_COLOR = "#2f2721";
+const CARD_TEXT_COLOR = "#fbf0dc";
 
 export function renderInvitationEmail(input: InvitationEmailInput): InvitationEmail {
-  const coupleName = "Bona and Alessandro";
-  const cardUrl = absoluteUrl(input.appUrl, input.heroImageSrc || DEFAULT_CARD_IMAGE);
+  const coupleName = "Bona and Alessandro Maniscalco";
+  const envelopeCardUrl = absoluteUrl(input.appUrl, ENVELOPE_CARD_IMAGE);
   const dateParts = splitDateLabel(input.summaryDateLabel);
   const dateLine = [dateParts.date, dateParts.time].filter(Boolean).join(", ");
+  const timeLineHtml = dateParts.time
+    ? `<div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:${TEXT_COLOR};">${escapeHtml(dateParts.time)}</div>`
+    : "";
   const addressName = input.summaryAddressName || "Villa I Collazzi";
   const addressLabel = input.summaryAddressLabel || "Scandicci (Firenze), Italia";
-  const mapUrl = input.mapUrl || DEFAULT_MAP_URL;
   const rsvpLabel = formatRsvpDeadline(input.rsvpDeadline);
   const isReminder = input.kind === "reminder";
   const subjectLine = isReminder
@@ -49,69 +52,64 @@ export function renderInvitationEmail(input: InvitationEmailInput): InvitationEm
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${escapeHtml(subjectLine)}</title>
   </head>
-  <body style="margin:0;padding:0;background:#fefbf6;color:#333333;">
+  <body style="margin:0;padding:0;background:#ffffff;color:${TEXT_COLOR};">
     <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
       ${escapeHtml(bodyPreview)}
     </div>
-    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background:#fefbf6;">
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background:#ffffff;">
       <tr>
         <td align="center" style="padding:0;">
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:640px;background:#fefbf6;">
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:640px;background:#ffffff;">
             <tr>
-              <td align="center" style="padding:28px 20px 16px;">
-                <div style="font-family:Georgia,serif;font-size:25px;line-height:30px;color:#2f2721;">
+              <td align="center" style="padding:28px 20px 24px;">
+                <div style="font-family:Georgia,serif;font-size:24px;line-height:28px;color:${TEXT_COLOR};">
                   ${escapeHtml(coupleName)}
                 </div>
               </td>
             </tr>
             <tr>
-              <td align="center" style="padding:0 40px 14px;">
-                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:#333333;">
+              <td align="center" style="padding:0 60px 24px;">
+                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:${TEXT_COLOR};">
                   For: ${escapeHtml(input.partyLabel)}
                 </div>
               </td>
             </tr>
             <tr>
-              <td align="center" style="padding:0 40px 24px;">
-                <a href="${escapeAttribute(input.inviteUrl)}" target="_blank" style="display:inline-block;border-bottom:1px solid #333333;color:#333333;font-family:Arial,sans-serif;font-size:12px;font-weight:bold;letter-spacing:2.6px;line-height:20px;text-decoration:none;text-transform:uppercase;">
+              <td align="center" style="padding:0 60px 20px;">
+                <a href="${escapeAttribute(input.inviteUrl)}" target="_blank" style="display:inline-block;border-bottom:1px solid ${TEXT_COLOR};color:${TEXT_COLOR};font-family:Arial,sans-serif;font-size:12px;font-weight:bold;letter-spacing:2.6px;line-height:20px;text-decoration:none;text-transform:uppercase;">
                   VIEW THE CARD
                 </a>
               </td>
             </tr>
             <tr>
-              <td align="center" style="padding:8px 14px 28px;">
+              <td align="center" style="padding:0 16px 30px;">
                 <a href="${escapeAttribute(input.inviteUrl)}" target="_blank" style="text-decoration:none;">
-                  <img alt="Event Invitation" src="${escapeAttribute(cardUrl)}" width="612" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;max-width:612px;" />
+                  ${renderEnvelopeCard(input.partyLabel, envelopeCardUrl)}
                 </a>
               </td>
             </tr>
             <tr>
               <td align="center" style="padding:0 40px;">
-                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:#333333;">${escapeHtml(dateLine)}</div>
-                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:#333333;padding-top:8px;">
-                  <a href="${escapeAttribute(calendarUrl(input))}" target="_blank" style="color:#333333;text-decoration:underline;">Add to calendar</a>
-                </div>
+                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:${TEXT_COLOR};">${escapeHtml(dateParts.date)}</div>
+                ${timeLineHtml}
               </td>
             </tr>
             <tr>
               <td align="center" style="padding:30px 40px 26px;">
-                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:#333333;">
+                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:${TEXT_COLOR};">
                   Please RSVP before ${escapeHtml(rsvpLabel)}
                 </div>
               </td>
             </tr>
             <tr>
               <td align="center" style="padding:0 40px;">
-                <div style="font-family:Arial,sans-serif;font-size:16px;font-weight:bold;line-height:28px;color:#333333;">${escapeHtml(addressName)}</div>
-                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:#333333;">${escapeHtml(addressLabel)}</div>
-                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:#333333;padding-top:8px;">
-                  <a href="${escapeAttribute(mapUrl)}" target="_blank" style="color:#333333;text-decoration:underline;">View map</a>
-                </div>
+                <div style="font-family:Arial,sans-serif;font-size:16px;font-weight:bold;line-height:28px;color:${TEXT_COLOR};">${escapeHtml(addressName)}</div>
+                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:${TEXT_COLOR};">${escapeHtml(addressLabel)}</div>
               </td>
             </tr>
             <tr>
               <td align="center" style="padding:32px 40px 38px;">
-                <div style="font-family:Arial,sans-serif;font-size:12px;line-height:18px;color:#7b7066;">
+                <div style="font-family:Arial,sans-serif;font-size:12px;line-height:18px;color:#6f625b;">
                   This private link is for ${escapeHtml(input.partyLabel)}.
                 </div>
               </td>
@@ -137,7 +135,6 @@ export function renderInvitationEmail(input: InvitationEmailInput): InvitationEm
     "",
     addressName,
     addressLabel,
-    mapUrl,
     "",
     `This private link is for ${input.partyLabel}.`,
   ].join("\n");
@@ -188,9 +185,30 @@ function splitDateLabel(label?: string) {
   };
 }
 
+function renderEnvelopeCard(partyLabel: string, cardImageUrl: string) {
+  const escapedLabel = escapeHtml(partyLabel);
+  const escapedCardImageUrl = escapeAttribute(cardImageUrl);
+
+  return `<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="604" height="453" background="${escapedCardImageUrl}" style="border-collapse:collapse;width:100%;max-width:604px;height:453px;background:${BORDEAUX} url('${escapedCardImageUrl}') center top / 100% 100% no-repeat;border:0;">
+                    <tr>
+                      <td style="height:194px;font-size:1px;line-height:1px;">&nbsp;</td>
+                    </tr>
+                    <tr>
+                      <td align="center" valign="middle" style="height:86px;padding:0 54px;">
+                        <div style="font-family:Georgia,'Times New Roman',serif;font-size:42px;line-height:48px;font-weight:normal;color:${CARD_TEXT_COLOR};text-align:center;text-decoration:none;">
+                          ${escapedLabel}
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="height:173px;font-size:1px;line-height:1px;">&nbsp;</td>
+                    </tr>
+                  </table>`;
+}
+
 function formatRsvpDeadline(value?: string) {
   if (!value) {
-    return "June 15th";
+    return "July 28th";
   }
 
   const date = new Date(value);
@@ -215,15 +233,6 @@ function ordinal(day: number) {
   if (last === 2) return "nd";
   if (last === 3) return "rd";
   return "th";
-}
-
-function calendarUrl(input: InvitationEmailInput) {
-  const title = encodeURIComponent(input.eventTitle);
-  const details = encodeURIComponent(`Open your private invitation: ${input.inviteUrl}`);
-  const location = encodeURIComponent(
-    [input.summaryAddressName, input.summaryAddressLabel].filter(Boolean).join(", "),
-  );
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}`;
 }
 
 function escapeHtml(value: string) {

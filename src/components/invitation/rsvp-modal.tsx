@@ -7,6 +7,8 @@ import type { AttendanceStatus, Guest, PartyResponse, Question } from "@/lib/typ
 interface RsvpModalProps {
   open: boolean;
   partyLabel: string;
+  partyEmail?: string;
+  initialEmail?: string;
   guests: Guest[];
   questions: Question[];
   token: string;
@@ -15,12 +17,34 @@ interface RsvpModalProps {
   preferredStatus?: AttendanceStatus;
   onClose: () => void;
   onSubmitted: (response: PartyResponse) => void;
+  onEmailSubmitted?: (email: string) => void;
 }
 
+const WALKING_DINNER_QUESTION_ID = "question_walking_dinner";
 const PARTY_QUESTION_ID = "question_party";
 
 function isImpliedPartyQuestion(question: Question) {
   return question.id === PARTY_QUESTION_ID;
+}
+
+export function shouldImplyPartyAttendance(questions: Question[]) {
+  return !questions.some((question) => question.id === WALKING_DINNER_QUESTION_ID);
+}
+
+export function visibleRsvpQuestions(questions: Question[], implyParty: boolean) {
+  return questions.filter((question) => !(implyParty && isImpliedPartyQuestion(question)));
+}
+
+export function normalizeRsvpEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+export function isValidRsvpEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeRsvpEmail(email));
+}
+
+export function shouldRequireEmailForRsvp(status: AttendanceStatus, partyEmail?: string) {
+  return status === "attending" && !partyEmail?.trim();
 }
 
 function hasSelectedGuest(selections: Record<string, boolean>) {
@@ -87,6 +111,8 @@ function normalizeAnswers(
 export function RsvpModal({
   open,
   partyLabel,
+  partyEmail,
+  initialEmail,
   guests,
   questions,
   token,
@@ -95,6 +121,7 @@ export function RsvpModal({
   preferredStatus,
   onClose,
   onSubmitted,
+  onEmailSubmitted,
 }: RsvpModalProps) {
   const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatus>(
     preferredStatus ?? initialResponse?.status ?? "attending",
@@ -108,10 +135,12 @@ export function RsvpModal({
   );
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
   const [note, setNote] = useState(initialResponse?.note ?? "");
+  const [email, setEmail] = useState(initialEmail ?? partyEmail ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const implyParty = true;
-  const visibleQuestions = questions.filter((question) => !isImpliedPartyQuestion(question));
+  const implyParty = shouldImplyPartyAttendance(questions);
+  const visibleQuestions = visibleRsvpQuestions(questions, implyParty);
+  const requiresEmail = shouldRequireEmailForRsvp(attendanceStatus, partyEmail);
 
   useEffect(() => {
     if (!open) return;
@@ -120,8 +149,9 @@ export function RsvpModal({
     setGuestSelections(buildGuestSelections(guests, status, initialResponse));
     setAnswers(buildAnswers(questions, initialResponse, status, implyParty));
     setNote(initialResponse?.note ?? "");
+    setEmail(initialEmail ?? partyEmail ?? "");
     setError(null);
-  }, [guests, implyParty, initialResponse, open, preferredStatus, questions]);
+  }, [guests, implyParty, initialEmail, initialResponse, open, partyEmail, preferredStatus, questions]);
 
   useEffect(() => {
     if (!open) return;
@@ -141,11 +171,16 @@ export function RsvpModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-8 backdrop-blur-sm">
-      <div className="paper-panel max-h-[calc(100vh-2rem)] w-full max-w-xl overflow-y-auto rounded-[2rem] border border-[var(--app-line)] p-6 sm:p-8">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="rsvp-title"
+        className="paper-panel max-h-[calc(100vh-2rem)] w-full max-w-xl overflow-y-auto rounded-[2rem] border border-[var(--app-line)] p-6 sm:p-8"
+      >
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="section-label">RSVP</div>
-            <h2 className="mt-3 font-display text-4xl text-stone-950">
+            <h2 id="rsvp-title" className="mt-3 font-display text-4xl text-stone-950">
               Will you attend, {partyLabel}?
             </h2>
             <p className="mt-2 text-base text-stone-700">Bona and Alessandro Maniscalco</p>
@@ -252,6 +287,23 @@ export function RsvpModal({
             </>
           ) : null}
 
+          {requiresEmail ? (
+            <label className="block">
+              <span className="text-sm font-semibold text-stone-800">
+                Please enter your email:
+              </span>
+              <input
+                type="email"
+                required
+                value={email}
+                disabled={readOnly}
+                autoComplete="email"
+                onChange={(event) => setEmail(event.target.value)}
+                className="mt-3 w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3 outline-none transition focus:border-[var(--app-wine)]"
+              />
+            </label>
+          ) : null}
+
           <label className="block">
             <span className="text-sm font-semibold text-stone-800">Private message</span>
             <textarea
@@ -295,6 +347,18 @@ export function RsvpModal({
                   return;
                 }
 
+                const emailToSubmit = normalizeRsvpEmail(email);
+
+                if (requiresEmail && !emailToSubmit) {
+                  setError("Please enter your email.");
+                  return;
+                }
+
+                if (requiresEmail && !isValidRsvpEmail(emailToSubmit)) {
+                  setError("Please enter a valid email.");
+                  return;
+                }
+
                 const normalizedAnswers = normalizeAnswers(
                   questions,
                   answers,
@@ -312,6 +376,7 @@ export function RsvpModal({
                     selections,
                     answers: normalizedAnswers,
                     note,
+                    ...(requiresEmail ? { email: emailToSubmit } : {}),
                   }),
                 });
 
@@ -324,6 +389,9 @@ export function RsvpModal({
                 }
 
                 const payload = (await response.json()) as { response: PartyResponse };
+                if (requiresEmail) {
+                  onEmailSubmitted?.(emailToSubmit);
+                }
                 onSubmitted(payload.response);
                 onClose();
               })
