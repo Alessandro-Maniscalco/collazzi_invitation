@@ -24,11 +24,11 @@ export interface InvitationEmail {
 const BORDEAUX = "#660033";
 const TEXT_COLOR = "#2f2721";
 const CARD_TEXT_COLOR = "#fbf0dc";
-const POSTMARK_COLOR = "#d9c3a9";
+const ENVELOPE_CARD_IMAGE = "/assets/collazzi/maniscalco-post-envelope-bg.jpg";
 
 export function renderInvitationEmail(input: InvitationEmailInput): InvitationEmail {
   const coupleName = "Bona and Alessandro Maniscalco";
-  const inviteDomain = domainFromUrl(input.inviteUrl);
+  const envelopeCardUrl = absoluteUrl(input.appUrl, ENVELOPE_CARD_IMAGE);
   const dateParts = splitDateLabel(input.summaryDateLabel);
   const dateLine = [dateParts.date, dateParts.time].filter(Boolean).join(", ");
   const timeLineHtml = dateParts.time
@@ -77,13 +77,15 @@ export function renderInvitationEmail(input: InvitationEmailInput): InvitationEm
             <tr>
               <td align="center" style="padding:0 60px 20px;">
                 <a href="${escapeAttribute(input.inviteUrl)}" target="_blank" style="display:inline-block;border-bottom:1px solid ${TEXT_COLOR};color:${TEXT_COLOR};font-family:Arial,sans-serif;font-size:12px;font-weight:bold;letter-spacing:2.6px;line-height:20px;text-decoration:none;text-transform:uppercase;">
-                  OPEN INVITATION ON ${escapeHtml(inviteDomain.toUpperCase())}
+                  OPEN INVITE
                 </a>
               </td>
             </tr>
             <tr>
               <td align="center" style="padding:0 16px 30px;">
-                ${renderEnvelopeCard(input.partyLabel)}
+                <a href="${escapeAttribute(input.inviteUrl)}" target="_blank" style="display:block;text-decoration:none;">
+                  ${renderEnvelopeCard(input.partyLabel, envelopeCardUrl)}
+                </a>
               </td>
             </tr>
             <tr>
@@ -145,12 +147,12 @@ export function renderInvitationEmail(input: InvitationEmailInput): InvitationEm
   };
 }
 
-function domainFromUrl(value: string) {
-  try {
-    return new URL(value).hostname.replace(/^www\./, "");
-  } catch {
-    return "bonaalessandro.ink";
+function absoluteUrl(appUrl: string, pathOrUrl: string) {
+  if (/^https?:\/\//i.test(pathOrUrl)) {
+    return pathOrUrl;
   }
+
+  return `${appUrl.replace(/\/$/, "")}/${pathOrUrl.replace(/^\//, "")}`;
 }
 
 function splitDateLabel(label?: string) {
@@ -183,31 +185,23 @@ function splitDateLabel(label?: string) {
   };
 }
 
-function renderEnvelopeCard(partyLabel: string) {
+function renderEnvelopeCard(partyLabel: string, cardImageUrl: string) {
   const escapedLabel = escapeHtml(partyLabel);
+  const escapedCardImageUrl = escapeAttribute(cardImageUrl);
 
-  return `<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="604" height="360" style="border-collapse:collapse;width:100%;max-width:604px;height:360px;background:${BORDEAUX};border:0;">
+  return `<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="604" height="453" background="${escapedCardImageUrl}" style="border-collapse:collapse;width:100%;max-width:604px;height:453px;background:${BORDEAUX} url('${escapedCardImageUrl}') center top / 100% 100% no-repeat;border:0;">
                     <tr>
-                      <td align="right" valign="top" style="height:92px;padding:22px 22px 0 22px;">
-                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="116" height="116" style="border-collapse:collapse;width:116px;height:116px;background:#f7ead6;border:6px solid #f7ead6;">
-                          <tr>
-                            <td align="center" valign="middle" style="border:2px solid ${POSTMARK_COLOR};font-family:Georgia,'Times New Roman',serif;color:${BORDEAUX};font-size:16px;line-height:20px;">
-                              <div>Maniscalco's</div>
-                              <div style="font-size:38px;line-height:38px;font-style:italic;">Post</div>
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
+                      <td style="height:194px;font-size:1px;line-height:1px;">&nbsp;</td>
                     </tr>
                     <tr>
-                      <td align="center" valign="middle" style="height:120px;padding:0 54px;">
-                        <div style="font-family:Georgia,'Times New Roman',serif;font-size:40px;line-height:46px;font-weight:normal;color:${CARD_TEXT_COLOR};text-align:center;text-decoration:none;">
+                      <td align="center" valign="middle" style="height:86px;padding:0 54px;">
+                        <div style="font-family:Georgia,'Times New Roman',serif;font-size:42px;line-height:48px;font-weight:normal;color:${CARD_TEXT_COLOR};text-align:center;text-decoration:none;">
                           ${escapedLabel}
                         </div>
                       </td>
                     </tr>
                     <tr>
-                      <td style="height:148px;font-size:1px;line-height:1px;">&nbsp;</td>
+                      <td style="height:173px;font-size:1px;line-height:1px;">&nbsp;</td>
                     </tr>
                   </table>`;
 }
