@@ -1,11 +1,17 @@
 import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { join } from "node:path";
 
 import sharp from "sharp";
+import TextToSVG from "text-to-svg";
 
 const CARD_WIDTH = 1254;
 const CARD_HEIGHT = 940;
 const CARD_TEXT_COLOR = "#fbf0dc";
+const nodeRequire = createRequire(import.meta.url);
+const FONT_PATH = nodeRequire.resolve(
+  "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-normal.woff",
+);
 const CARD_BACKGROUND_PATH = join(
   process.cwd(),
   "public",
@@ -13,6 +19,7 @@ const CARD_BACKGROUND_PATH = join(
   "collazzi",
   "maniscalco-post-envelope-bg.jpg",
 );
+let cachedTextToSvg: TextToSVG | null = null;
 
 export async function renderInviteCardImage(partyLabel: string) {
   const background = await readFile(CARD_BACKGROUND_PATH);
@@ -25,40 +32,45 @@ export async function renderInviteCardImage(partyLabel: string) {
 }
 
 function renderNameOverlay(partyLabel: string) {
-  const lines = wrapName(partyLabel);
+  const textToSvg = getTextToSvg();
+  const lines = wrapName(partyLabel, textToSvg);
   const fontSize = lines.length > 1 ? 86 : 92;
   const lineHeight = Math.round(fontSize * 1.15);
   const firstBaseline = CARD_HEIGHT / 2 - ((lines.length - 1) * lineHeight) / 2;
 
-  const text = lines
+  const paths = lines
     .map((line, index) => {
       const y = Math.round(firstBaseline + index * lineHeight);
-      return `<text x="${CARD_WIDTH / 2}" y="${y}" text-anchor="middle">${escapeXml(line)}</text>`;
+      return textToSvg.getPath(line, {
+        x: CARD_WIDTH / 2,
+        y,
+        fontSize,
+        anchor: "center middle",
+        attributes: {
+          fill: CARD_TEXT_COLOR,
+        },
+      });
     })
     .join("");
 
   return `<svg width="${CARD_WIDTH}" height="${CARD_HEIGHT}" viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    text {
-      fill: ${CARD_TEXT_COLOR};
-      font-family: Georgia, 'Times New Roman', serif;
-      font-size: ${fontSize}px;
-      font-weight: 400;
-      dominant-baseline: middle;
-    }
-  </style>
-  ${text}
+  ${paths}
 </svg>`;
 }
 
-function wrapName(value: string) {
+function getTextToSvg() {
+  cachedTextToSvg ??= TextToSVG.loadSync(FONT_PATH);
+  return cachedTextToSvg;
+}
+
+function wrapName(value: string, textToSvg: TextToSVG) {
   const words = value.trim().replace(/\s+/g, " ").split(" ").filter(Boolean);
   if (!words.length) {
     return ["Guest Name"];
   }
 
   const joined = words.join(" ");
-  if (estimateTextWidth(joined, 92) <= 1120) {
+  if (textToSvg.getWidth(joined, { fontSize: 92 }) <= 1120) {
     return [joined];
   }
 
@@ -70,7 +82,7 @@ function wrapName(value: string) {
     }
 
     const candidate = `${current} ${word}`;
-    if (estimateTextWidth(candidate, 86) <= 1040 || acc.length >= 2) {
+    if (textToSvg.getWidth(candidate, { fontSize: 86 }) <= 1040 || acc.length >= 2) {
       acc[acc.length - 1] = candidate;
     } else {
       acc.push(word);
@@ -83,17 +95,4 @@ function wrapName(value: string) {
   }
 
   return [lines.slice(0, -1).join(" "), lines.at(-1) ?? ""];
-}
-
-function estimateTextWidth(value: string, fontSize: number) {
-  return value.length * fontSize * 0.52;
-}
-
-function escapeXml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
 }
