@@ -8,6 +8,7 @@ const payloadSchema = z.object({
   partyIds: z.array(z.string()).optional(),
   channels: z.array(z.literal("email")).min(1),
   filter: z.enum(["all", "awaiting_response", "attending", "not_attending"]).optional(),
+  source: z.string().trim().min(1).optional(),
 });
 
 export async function POST(request: Request) {

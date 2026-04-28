@@ -955,9 +955,16 @@ async function loadServiceAccountCredentials() {
 }
 
 function filterSheetGuests(guests: SheetGuest[], input: SendBatchInput) {
-  const selected = input.partyIds?.length
+  let selected = input.partyIds?.length
     ? guests.filter((guest) => input.partyIds?.includes(guest.guestId))
     : guests;
+
+  if (input.source) {
+    const source = input.source.trim().toLocaleLowerCase();
+    selected = selected.filter(
+      (guest) => (guest.source ?? "").trim().toLocaleLowerCase() === source,
+    );
+  }
 
   if (!input.filter || input.filter === "all") {
     return selected;
@@ -982,6 +989,7 @@ function partyFromSheetGuest(guest: SheetGuest): Party {
     guestIds: sheetGuestMembers(guest).map((member) => member.id),
     email: guest.email,
     notes: guest.adminNotes,
+    source: guest.source,
     tags: tagsForSheetGuest(guest),
     token: {
       value: guest.token,

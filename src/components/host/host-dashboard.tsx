@@ -32,8 +32,26 @@ const emptyNewGuestForm = {
 
 type NewGuestForm = typeof emptyNewGuestForm;
 
+const SYSTEM_PARTY_TAGS = new Set([
+  "invited_by_ale",
+  "invited_by_bona",
+  "invited_by_mum",
+  "walking_dinner_invited",
+  "sent_whatsapp_save_the_date",
+  "sent_instagram_save_the_date",
+  "counted",
+]);
+
 function freshNewGuestForm(): NewGuestForm {
   return { ...emptyNewGuestForm };
+}
+
+function sourceForParty(party: DashboardSnapshot["parties"][number]) {
+  if (party.source?.trim()) {
+    return party.source.trim();
+  }
+
+  return party.tags.find((tag) => !SYSTEM_PARTY_TAGS.has(tag))?.trim() ?? "";
 }
 
 export function HostDashboard({
@@ -54,12 +72,23 @@ export function HostDashboard({
   const [reminderFilter, setReminderFilter] = useState<
     "awaiting_response" | "attending" | "not_attending" | "all"
   >("awaiting_response");
+  const [inviteSource, setInviteSource] = useState("");
 
   const deferredCsv = useDeferredValue(csvText);
   const previewCount = useMemo(() => {
     const lines = deferredCsv.trim().split("\n").filter(Boolean);
     return Math.max(lines.length - 1, 0);
   }, [deferredCsv]);
+  const sourceOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(initialData.parties.map(sourceForParty).filter(Boolean)),
+      ).sort((left, right) => left.localeCompare(right)),
+    [initialData.parties],
+  );
+  const selectedSourceCount = inviteSource
+    ? initialData.parties.filter((party) => sourceForParty(party) === inviteSource).length
+    : 0;
 
   async function importCsv() {
     const response = await fetch("/api/host/import", {
@@ -241,8 +270,43 @@ export function HostDashboard({
               >
                 {sending === "/api/send" ? "Sending..." : "Send all email invitations"}
               </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  aria-label="Invitation source"
+                  value={inviteSource}
+                  onChange={(event) => setInviteSource(event.target.value)}
+                  className="rounded-full border border-[var(--app-line)] bg-white px-4 py-3 text-sm"
+                >
+                  <option value="">Choose source</option>
+                  {sourceOptions.map((source) => (
+                    <option key={source} value={source}>
+                      {source}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() =>
+                    sendRequest(
+                      "/api/send",
+                      { channels: ["email"], source: inviteSource },
+                      `Sent invitations for ${inviteSource}.`,
+                    )
+                  }
+                  disabled={Boolean(sending) || !inviteSource}
+                  className="rounded-full border border-[var(--app-line)] bg-white px-5 py-3 text-sm font-semibold text-stone-800 disabled:opacity-50"
+                >
+                  {sending === "/api/send" ? "Sending..." : "Send source invitations"}
+                </button>
+                {inviteSource ? (
+                  <span className="text-sm text-stone-600">
+                    {selectedSourceCount} parties
+                  </span>
+                ) : null}
+              </div>
               <div className="flex items-center gap-2">
                 <select
+                  aria-label="Reminder audience"
                   value={reminderFilter}
                   onChange={(event) =>
                     setReminderFilter(

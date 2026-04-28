@@ -75,6 +75,7 @@ export interface Party {
   guestIds: string[];
   email?: string;
   notes?: string;
+  source?: string;
   tags: string[];
   token: InviteToken;
   response?: PartyResponse;
@@ -214,6 +215,7 @@ export interface SendBatchInput {
   channels: DeliveryChannel[];
   kind: DeliveryKind;
   filter?: "all" | "awaiting_response" | "attending" | "not_attending";
+  source?: string;
 }
 
 export interface HostContentUpdate {

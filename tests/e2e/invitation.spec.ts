@@ -191,6 +191,9 @@ test("host dashboard login works in mock mode", async ({ page }) => {
   await expect(page).toHaveURL(/\/host$/);
   await expect(page.getByText("Host Dashboard", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("Taylor & Jordan Russo", { exact: true }).first()).toBeVisible();
+  await expect(page.getByLabel("Invitation source")).toBeVisible();
+  await expect(page.getByLabel("Invitation source")).toContainText("friends");
+  await expect(page.getByRole("button", { name: "Send source invitations" })).toBeDisabled();
 });
 
 test("home page redirects to host login", async ({ page }) => {

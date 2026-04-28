@@ -40,6 +40,15 @@ import type {
 const DATA_DIR = join(process.cwd(), ".data");
 const DATA_FILE = join(DATA_DIR, "mock-state.json");
 const EMAIL_CARD_IMAGE_SRC = "/assets/collazzi/invito-save-date.jpg";
+const SYSTEM_PARTY_TAGS = new Set([
+  "invited_by_ale",
+  "invited_by_bona",
+  "invited_by_mum",
+  "walking_dinner_invited",
+  "sent_whatsapp_save_the_date",
+  "sent_instagram_save_the_date",
+  "counted",
+]);
 
 declare global {
   var __collazzi_write_queue: Promise<unknown> | undefined;
@@ -154,9 +163,16 @@ function coupleLabel(primaryLabel: string, guest2Label: string, input: AddGuestI
 }
 
 function filterParties(state: AppState, input: SendBatchInput) {
-  const selected = input.partyIds?.length
+  let selected = input.partyIds?.length
     ? state.parties.filter((party) => input.partyIds?.includes(party.id))
     : state.parties;
+
+  if (input.source) {
+    const source = input.source.trim().toLocaleLowerCase();
+    selected = selected.filter(
+      (party) => sourceForParty(party).toLocaleLowerCase() === source,
+    );
+  }
 
   if (!input.filter || input.filter === "all") {
     return selected;
@@ -169,6 +185,18 @@ function filterParties(state: AppState, input: SendBatchInput) {
 
     return party.response?.status === input.filter;
   });
+}
+
+function sourceForParty(party: Party) {
+  if (party.source?.trim()) {
+    return party.source.trim();
+  }
+
+  if (party.notes?.trim()) {
+    return party.notes.trim();
+  }
+
+  return party.tags.find((tag) => !SYSTEM_PARTY_TAGS.has(tag))?.trim() ?? "";
 }
 
 export async function recordInviteOpen(tokenValue: string) {
@@ -373,14 +401,15 @@ export async function importPartiesFromCsv(csv: string, actor: string) {
         state.guests.push({ id: guestId, partyId, name });
       });
 
-      state.parties.unshift({
-        id: partyId,
-        label: row.label,
-        email: row.email,
-        notes: row.notes,
-        tags: row.tags,
-        guestIds,
-        token: { value: createToken("guest"), active: true },
+    state.parties.unshift({
+      id: partyId,
+      label: row.label,
+      email: row.email,
+      notes: row.notes,
+      source: row.notes,
+      tags: row.tags,
+      guestIds,
+      token: { value: createToken("guest"), active: true },
         deliveryIds: [],
       });
     });
@@ -442,6 +471,7 @@ export async function addGuest(input: AddGuestInput, actor: string) {
       label,
       email: input.email,
       notes: input.source,
+      source: input.source,
       tags,
       guestIds,
       token: {
