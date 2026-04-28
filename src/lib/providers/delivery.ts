@@ -60,7 +60,7 @@ export async function dispatchDelivery(
     subject: email.subjectLine,
     text: email.text,
     html: email.html,
-    replyTo: env.RESEND_REPLY_TO_EMAIL,
+    ...(env.RESEND_REPLY_TO_EMAIL ? { replyTo: env.RESEND_REPLY_TO_EMAIL } : {}),
   });
 
   return {

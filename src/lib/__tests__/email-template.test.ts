@@ -22,22 +22,21 @@ describe("renderInvitationEmail", () => {
     });
 
     expect(email.subjectLine).toBe("Bona and Alessandro Maniscalco invitation");
-    expect(email.bodyPreview).toContain("Open your private invitation");
+    expect(email.bodyPreview).toContain("Private invitation for Alessandro Maniscalco");
     expect(email.text).toContain("For: Alessandro Maniscalco");
     expect(email.text).toContain("Friday, August 28th, 19h30");
     expect(email.text).not.toContain("Thursday, August 27th");
     expect(email.text).toContain("Please RSVP before July 28th");
-    expect(email.html).toContain("VIEW THE CARD");
+    expect(email.html).toContain("OPEN INVITATION ON BONAALESSANDRO.INK");
     expect(email.html).toContain("For: Alessandro Maniscalco");
     expect(email.html).toContain("https://bonaalessandro.ink/i/guest_example");
-    expect(email.html).toContain(
-      "https://bonaalessandro.ink/assets/collazzi/maniscalco-post-envelope-bg.jpg",
-    );
     expect(email.html).toContain("background:#660033");
+    expect(email.html).toContain("Maniscalco's");
     expect(email.html).toContain("Villa I Collazzi");
     expect(email.html).toContain("Via Volterrana, 4A, 50018 Scandicci FI");
     expect(email.html).not.toContain("calendar.google.com");
     expect(email.html).not.toContain("google.com/maps");
+    expect(email.html).not.toContain("maniscalco-post-envelope-bg.jpg");
     expect(email.text).not.toContain("google.com/maps");
   });
 
@@ -49,6 +48,6 @@ describe("renderInvitationEmail", () => {
 
     expect(email.subjectLine).toBe("Reminder: Bona and Alessandro Maniscalco");
     expect(email.bodyPreview).toContain("Reminder to RSVP");
-    expect(email.text).toContain("Reminder to view the card and RSVP");
+    expect(email.text).toContain("Reminder to view the invitation and RSVP");
   });
 });
