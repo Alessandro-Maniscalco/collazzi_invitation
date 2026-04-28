@@ -1,5 +1,4 @@
 import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
 import { join } from "node:path";
 
 import sharp from "sharp";
@@ -8,9 +7,12 @@ import TextToSVG from "text-to-svg";
 const CARD_WIDTH = 1254;
 const CARD_HEIGHT = 940;
 const CARD_TEXT_COLOR = "#fbf0dc";
-const nodeRequire = createRequire(import.meta.url);
-const FONT_PATH = nodeRequire.resolve(
-  "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-normal.woff",
+const FONT_PATH = join(
+  process.cwd(),
+  "public",
+  "assets",
+  "fonts",
+  "cormorant-garamond-latin-400-normal.woff",
 );
 const CARD_BACKGROUND_PATH = join(
   process.cwd(),
