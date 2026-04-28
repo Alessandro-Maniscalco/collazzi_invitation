@@ -32,9 +32,10 @@ describe("renderInvitationEmail", () => {
     expect(email.html).toContain("For: Alessandro Maniscalco");
     expect(email.html).toContain("https://bonaalessandro.ink/i/guest_example");
     expect(email.html).toContain("background:#660033");
-    expect(email.html).toContain(
-      "https://bonaalessandro.ink/assets/collazzi/maniscalco-post-envelope-bg.jpg",
-    );
+    expect(email.html).toContain("https://bonaalessandro.ink/api/invite-card?");
+    expect(email.html).toContain("name=Alessandro+Maniscalco");
+    expect(email.html).not.toContain("background=\"");
+    expect(email.html).not.toContain("maniscalco-post-envelope-bg.jpg");
     expect(email.html).toContain("Villa I Collazzi");
     expect(email.html).toContain("Via Volterrana, 4A, 50018 Scandicci FI");
     expect(email.html).not.toContain("calendar.google.com");

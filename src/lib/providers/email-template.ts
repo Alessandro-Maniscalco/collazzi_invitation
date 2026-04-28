@@ -23,12 +23,11 @@ export interface InvitationEmail {
 
 const BORDEAUX = "#660033";
 const TEXT_COLOR = "#2f2721";
-const CARD_TEXT_COLOR = "#fbf0dc";
-const ENVELOPE_CARD_IMAGE = "/assets/collazzi/maniscalco-post-envelope-bg.jpg";
+const CARD_IMAGE_VERSION = "2";
 
 export function renderInvitationEmail(input: InvitationEmailInput): InvitationEmail {
   const coupleName = "Bona and Alessandro Maniscalco";
-  const envelopeCardUrl = absoluteUrl(input.appUrl, ENVELOPE_CARD_IMAGE);
+  const envelopeCardUrl = inviteCardImageUrl(input.appUrl, input.partyLabel);
   const dateParts = splitDateLabel(input.summaryDateLabel);
   const dateLine = [dateParts.date, dateParts.time].filter(Boolean).join(", ");
   const timeLineHtml = dateParts.time
@@ -84,7 +83,7 @@ export function renderInvitationEmail(input: InvitationEmailInput): InvitationEm
             <tr>
               <td align="center" style="padding:0 16px 30px;">
                 <a href="${escapeAttribute(input.inviteUrl)}" target="_blank" style="display:block;text-decoration:none;">
-                  ${renderEnvelopeCard(input.partyLabel, envelopeCardUrl)}
+                  <img src="${escapeAttribute(envelopeCardUrl)}" width="604" height="453" alt="Private invitation for ${escapeAttribute(input.partyLabel)}" style="border:0;display:block;outline:none;text-decoration:none;width:100%;max-width:604px;height:auto;background:${BORDEAUX};font-size:16px;color:${TEXT_COLOR};" />
                 </a>
               </td>
             </tr>
@@ -147,12 +146,12 @@ export function renderInvitationEmail(input: InvitationEmailInput): InvitationEm
   };
 }
 
-function absoluteUrl(appUrl: string, pathOrUrl: string) {
-  if (/^https?:\/\//i.test(pathOrUrl)) {
-    return pathOrUrl;
-  }
-
-  return `${appUrl.replace(/\/$/, "")}/${pathOrUrl.replace(/^\//, "")}`;
+function inviteCardImageUrl(appUrl: string, partyLabel: string) {
+  const params = new URLSearchParams({
+    name: partyLabel,
+    v: CARD_IMAGE_VERSION,
+  });
+  return `${appUrl.replace(/\/$/, "")}/api/invite-card?${params.toString()}`;
 }
 
 function splitDateLabel(label?: string) {
@@ -183,27 +182,6 @@ function splitDateLabel(label?: string) {
     date: match[1].trim(),
     time: match[2].replace(/\s+/g, " ").trim(),
   };
-}
-
-function renderEnvelopeCard(partyLabel: string, cardImageUrl: string) {
-  const escapedLabel = escapeHtml(partyLabel);
-  const escapedCardImageUrl = escapeAttribute(cardImageUrl);
-
-  return `<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="604" height="453" background="${escapedCardImageUrl}" style="border-collapse:collapse;width:100%;max-width:604px;height:453px;background:${BORDEAUX} url('${escapedCardImageUrl}') center top / 100% 100% no-repeat;border:0;">
-                    <tr>
-                      <td style="height:194px;font-size:1px;line-height:1px;">&nbsp;</td>
-                    </tr>
-                    <tr>
-                      <td align="center" valign="middle" style="height:86px;padding:0 54px;">
-                        <div style="font-family:Georgia,'Times New Roman',serif;font-size:42px;line-height:48px;font-weight:normal;color:${CARD_TEXT_COLOR};text-align:center;text-decoration:none;">
-                          ${escapedLabel}
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="height:173px;font-size:1px;line-height:1px;">&nbsp;</td>
-                    </tr>
-                  </table>`;
 }
 
 function formatRsvpDeadline(value?: string) {
