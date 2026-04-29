@@ -2,10 +2,10 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { HOST_COOKIE_NAME } from "@/lib/auth";
-import { env } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase";
 
-export async function POST() {
+export async function POST(request: Request) {
+  const origin = new URL(request.url).origin;
   const cookieStore = await cookies();
   cookieStore.delete(HOST_COOKIE_NAME);
 
@@ -14,5 +14,5 @@ export async function POST() {
     await supabase.auth.signOut();
   }
 
-  return NextResponse.redirect(new URL("/host/login", env.APP_URL));
+  return NextResponse.redirect(new URL("/host/login", origin));
 }

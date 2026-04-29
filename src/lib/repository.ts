@@ -1,4 +1,5 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { nanoid } from "nanoid";
@@ -37,7 +38,9 @@ import type {
   SendBatchInput,
 } from "@/lib/types";
 
-const DATA_DIR = join(process.cwd(), ".data");
+const DATA_DIR = process.env.VERCEL
+  ? join(tmpdir(), "collazzi-invitation")
+  : join(process.cwd(), ".data");
 const DATA_FILE = join(DATA_DIR, "mock-state.json");
 const EMAIL_CARD_IMAGE_SRC = "/assets/collazzi/invito-save-date.jpg";
 const SYSTEM_PARTY_TAGS = new Set([

@@ -933,7 +933,7 @@ function isTypedColumnValidationError(error: unknown) {
 async function loadServiceAccountCredentials() {
   let credentials: { email?: string; privateKey?: string };
 
-  if (env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
+  if (env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH && !process.env.VERCEL) {
     const raw = await readFile(env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH, "utf8");
     const key = JSON.parse(raw) as { client_email?: string; private_key?: string };
     credentials = {

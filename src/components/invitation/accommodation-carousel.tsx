@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import Image from "next/image";
-import { Building2, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { cn } from "@/lib/formatters";
 import type { AccommodationCard } from "@/lib/types";
@@ -56,7 +56,6 @@ export function AccommodationCarousel({ cards }: { cards: AccommodationCard[] })
 
             <header className={styles.accommodationHeader}>
               <div className={styles.accommodationHeaderInner}>
-                <Building2 className={styles.accommodationIcon} strokeWidth={1.1} />
                 <h2 className={styles.accommodationTitle}>Accommodation</h2>
               </div>
             </header>
@@ -69,11 +68,11 @@ export function AccommodationCarousel({ cards }: { cards: AccommodationCard[] })
                     alt={card.title}
                     fill
                     className={styles.accommodationImage}
-                    sizes="220px"
+                    sizes="(max-width: 760px) 160px, 180px"
                   />
                 </figure>
 
-                <div>
+                <div className={styles.accommodationDetails}>
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
                     target="_blank"

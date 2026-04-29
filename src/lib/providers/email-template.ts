@@ -23,7 +23,7 @@ export interface InvitationEmail {
 
 const BORDEAUX = "#660033";
 const TEXT_COLOR = "#2f2721";
-const CARD_IMAGE_VERSION = "2";
+const CARD_IMAGE_VERSION = "3";
 
 export function renderInvitationEmail(input: InvitationEmailInput): InvitationEmail {
   const coupleName = "Bona and Alessandro Maniscalco";

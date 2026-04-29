@@ -12,9 +12,10 @@ function emptyToUndefined(value: unknown) {
 const optionalString = z.preprocess(emptyToUndefined, z.string().optional());
 const optionalUrl = z.preprocess(emptyToUndefined, z.string().url().optional());
 const optionalEmail = z.preprocess(emptyToUndefined, z.string().email().optional());
+const appUrl = z.preprocess(emptyToUndefined, z.string().url().default("http://localhost:3000"));
 
 const envSchema = z.object({
-  APP_URL: z.string().url().default("http://localhost:3000"),
+  APP_URL: appUrl,
   DATABASE_URL: optionalString,
   NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalString,
@@ -34,8 +35,11 @@ const envSchema = z.object({
     .default(false),
 });
 
+const vercelGeneratedUrl =
+  process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+
 export const env = envSchema.parse({
-  APP_URL: process.env.APP_URL,
+  APP_URL: process.env.APP_URL || (vercelGeneratedUrl ? `https://${vercelGeneratedUrl}` : undefined),
   DATABASE_URL: process.env.DATABASE_URL,
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,

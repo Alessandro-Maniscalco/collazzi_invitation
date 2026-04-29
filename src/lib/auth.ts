@@ -4,29 +4,47 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { env } from "@/lib/env";
 import { getDashboardSnapshot } from "@/lib/repository";
-import type { HostUser } from "@/lib/types";
+import type { DashboardSnapshot, HostUser } from "@/lib/types";
 
 export const HOST_COOKIE_NAME = "collazzi-host";
 const SESSION_SEPARATOR = ".";
 
-export async function getHostSession() {
-  const snapshot = await getDashboardSnapshot();
+export async function getHostSessionId() {
   const cookieStore = await cookies();
-  const hostId = parseHostSessionValue(cookieStore.get(HOST_COOKIE_NAME)?.value);
+  return parseHostSessionValue(cookieStore.get(HOST_COOKIE_NAME)?.value);
+}
 
-  if (hostId) {
-    return snapshot.hosts.find((host) => host.id === hostId) ?? null;
+export function findHostById(snapshot: DashboardSnapshot, hostId: string) {
+  return snapshot.hosts.find((host) => host.id === hostId) ?? null;
+}
+
+export async function getHostSession() {
+  const hostId = await getHostSessionId();
+
+  if (!hostId) {
+    return null;
   }
 
-  return null;
+  const snapshot = await getDashboardSnapshot();
+  return findHostById(snapshot, hostId);
+}
+
+export async function requireHostSessionId() {
+  const hostId = await getHostSessionId();
+  if (!hostId) {
+    redirect("/host/login");
+  }
+  return hostId;
 }
 
 export async function requireHostSession() {
-  const session = await getHostSession();
-  if (!session) {
+  const hostId = await requireHostSessionId();
+  const snapshot = await getDashboardSnapshot();
+  const host = findHostById(snapshot, hostId);
+  if (!host) {
     redirect("/host/login");
   }
-  return session;
+  return host;
 }
 
 export function isOwner(host: HostUser) {

@@ -1,14 +1,23 @@
 @font-face {
-  font-family: "Plantin PP";
+  font-family: "400 normal-Plantin MT STD";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("https://assets.ppassets.com/p-3m0vOwYWNdekJzmitSJyZj/flyer/font/woff2")
+  src: url("https://flyer-cdn.paperlesspost.com/pages-react-viewer/static/media/plantin_regular.woff2")
     format("woff2");
 }
 
 @font-face {
-  font-family: "Basis PP";
+  font-family: "400 normal-Plantin Cyrillic";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("https://flyer-cdn.paperlesspost.com/pages-react-viewer/static/media/plantin_regular.woff2")
+    format("woff2");
+}
+
+@font-face {
+  font-family: "400 normal-Basis Grotesque";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -17,7 +26,16 @@
 }
 
 @font-face {
-  font-family: "Basis PP";
+  font-family: "500 normal-Basis Grotesque";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("https://assets.ppassets.com/p-4SCcrzmyskBpLjqpPPNDni/flyer/font/woff2")
+    format("woff2");
+}
+
+@font-face {
+  font-family: "700 normal-Basis Grotesque";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
@@ -29,35 +47,11 @@
   min-height: 100vh;
   background: #fefbf6;
   color: #333;
-  font-family: "Plantin PP", var(--font-display), Georgia, serif;
-}
-
-.headerLogo {
-  display: flex;
-  justify-content: center;
-  padding: 38px 0 16px;
-  background: #fefbf6;
-}
-
-.logoBorder {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border: 1px solid #333;
-  border-radius: 999px;
-  font-family: "Basis PP", var(--font-sans), sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-indent: 0.18em;
+  font-family: "400 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
 }
 
 .primaryMedia {
-  background:
-    radial-gradient(circle at 50% 24%, rgba(255, 255, 255, 0.08), transparent 38%),
-    linear-gradient(90deg, rgba(68, 42, 28, 0.12), transparent 23%, transparent 77%, rgba(68, 42, 28, 0.12)),
-    #b58e73;
+  background: #b58e73;
 }
 
 .mediaContainer {
@@ -68,9 +62,9 @@
 
 .mediaInner {
   position: relative;
-  height: min(62vw, 720px);
-  min-height: 520px;
-  max-height: 720px;
+  height: min(50vw, 620px);
+  min-height: 620px;
+  max-height: 620px;
   margin: 0;
   overflow: hidden;
   background: transparent;
@@ -82,9 +76,7 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background:
-    radial-gradient(circle at center, rgba(255, 255, 255, 0.08), transparent 54%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(80, 50, 30, 0.03));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(64, 33, 18, 0.025));
   pointer-events: none;
 }
 
@@ -105,9 +97,9 @@
 }
 
 .emailLabel {
-  font-family: "Basis PP", var(--font-sans), sans-serif;
-  font-size: 12px;
-  font-weight: 700;
+  font-family: "700 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 12.8333px;
+  font-weight: 400;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
@@ -126,7 +118,7 @@
   background: #fff;
   padding: 0 16px;
   color: #333;
-  font-family: "Basis PP", var(--font-sans), sans-serif;
+  font-family: "400 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
   font-size: 16px;
   outline: none;
 }
@@ -141,9 +133,9 @@
   background: #4b0015;
   padding: 0 22px;
   color: #fff;
-  font-family: "Basis PP", var(--font-sans), sans-serif;
-  font-size: 12px;
-  font-weight: 700;
+  font-family: "700 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 11.4333px;
+  font-weight: 400;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -154,7 +146,7 @@
 
 .emailError,
 .emailSaved {
-  font-family: "Basis PP", var(--font-sans), sans-serif;
+  font-family: "400 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
   font-size: 14px;
   line-height: 22px;
 }
@@ -172,7 +164,7 @@
   right: 24px;
   bottom: 24px;
   z-index: 10;
-  display: flex;
+  display: none;
   gap: 12px;
 }
 
@@ -198,69 +190,83 @@
 
 .stack {
   position: absolute;
-  inset: 0;
+  top: clamp(38px, 4.2vw, 58px);
+  right: 0;
+  bottom: auto;
+  left: 0;
   z-index: 1;
-  width: min(100vw, 720px);
-  height: min(100%, 720px);
-  margin: auto;
-  perspective: 1600px;
+  width: min(100vw, 560px);
+  height: min(100vw, 560px);
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0 auto;
+  perspective: 100vh;
+  transform-style: preserve-3d;
   --envelope-burgundy: #4b0015;
   --envelope-burgundy-dark: #3f0012;
   --envelope-burgundy-light: #59051e;
-  --envelope-paper: #f4f0e7;
+  --envelope-paper: #f2eee5;
+  --flip-ease: cubic-bezier(0.22, 0.68, 0.18, 1);
+  --card-x: 0%;
+  --card-y: 9%;
+  --card-scale: 0.38;
+  --card-opacity: 0;
+  --card-clip-bottom: 0%;
+  --card-layer: 3;
+  --card-rotate: 0deg;
+  --card-shadow: 3px 3px 8px rgba(0, 0, 0, 0.14);
+  --card-rotate-transition: none;
+  --closed-back-opacity: 0;
+  --envelope-opacity: 0;
+  --envelope-x: 0%;
+  --envelope-y: 12%;
+  --envelope-scale: 0.74;
+  --envelope-crop: 40%;
+  --front-flap-opacity: 1;
+  --front-flap-transform: translate3d(0, 0, 0.4px) rotateX(0deg) scaleY(1);
+  --mouth-flap-opacity: 0;
+  --mouth-flap-transform: translate3d(0, 0, 0.6px) scaleY(1);
+  --back-flap-opacity: 0;
+  --back-flap-transform: translate3d(0, 12%, -0.4px) rotateX(-84deg) scaleY(0.3);
+  --liner-opacity: 0;
 }
 
 .card {
   position: absolute;
   top: 0;
   left: 50%;
-  z-index: 2;
+  z-index: var(--card-layer);
   width: 100%;
   aspect-ratio: 1 / 1;
-  opacity: 0;
-  transform: translate(-50%, 54%) scale(0.62);
+  opacity: var(--card-opacity);
+  clip-path: inset(0 0 var(--card-clip-bottom) 0);
+  transform: translate3d(calc(-50% + var(--card-x)), var(--card-y), 0) scale(var(--card-scale));
+  transform-origin: 50% 0;
   transform-style: preserve-3d;
-  filter: drop-shadow(0 28px 38px rgba(41, 29, 20, 0.25));
-  transition:
-    opacity 240ms ease,
-    transform 700ms cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.stageOpen .card {
-  z-index: 3;
-  opacity: 1;
-  transform: translate(-50%, 49%) scale(0.62);
-}
-
-.stagePeeking .card {
-  z-index: 3;
-  opacity: 1;
-  transform: translate(-50%, 29%) scale(0.62);
-}
-
-.stageExtracted .card {
-  z-index: 6;
-  opacity: 1;
-  transform: translate(-50%, 7%) scale(0.68);
-}
-
-.stageFront .card,
-.stageBack .card {
-  z-index: 6;
-  opacity: 1;
-  transform: translate(-50%, 0) scale(0.9);
+  filter: drop-shadow(var(--card-shadow));
+  will-change: filter, opacity, transform;
 }
 
 .cardRotator {
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  transition: transform 760ms cubic-bezier(0.32, 0.72, 0, 1);
+  transform: rotateY(var(--card-rotate));
+  transition: var(--card-rotate-transition);
   will-change: transform;
 }
 
-.stageBack .cardRotator {
-  transform: rotateY(180deg);
+.cardRotator::after {
+  content: "";
+  position: absolute;
+  top: 1.6%;
+  right: -4px;
+  width: 8px;
+  height: 96.8%;
+  background: linear-gradient(90deg, rgba(92, 28, 34, 0.44), rgba(255, 255, 255, 0.1));
+  transform: rotateY(90deg);
+  transform-origin: 0 50%;
+  backface-visibility: hidden;
 }
 
 .cardFace {
@@ -269,6 +275,7 @@
   overflow: hidden;
   background: #fff;
   backface-visibility: hidden;
+  box-shadow: inset 0 0 0 1px rgba(70, 30, 24, 0.08);
   transform-style: preserve-3d;
 }
 
@@ -288,7 +295,7 @@
 }
 
 .cardBackImage {
-  object-fit: contain;
+  object-fit: cover;
   background: #fdf9f0;
 }
 
@@ -296,19 +303,19 @@
 .envelopeFront {
   position: absolute;
   left: 50%;
-  top: 0;
-  width: 59.6%;
-  height: 100%;
-  transform: translate(-50%, 36%) scale(0.84);
+  top: 15%;
+  width: 78%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  opacity: var(--envelope-opacity);
+  transform: translate3d(calc(-50% + var(--envelope-x)), var(--envelope-y), 0) scale(var(--envelope-scale));
   transform-style: preserve-3d;
-  transition:
-    opacity 130ms ease,
-    transform 720ms cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: opacity, transform;
 }
 
 .envelopeBack {
   z-index: 1;
-  filter: drop-shadow(0 28px 48px rgba(45, 12, 22, 0.26));
+  filter: drop-shadow(3px 3px 8px rgba(0, 0, 0, 0.25));
 }
 
 .envelopeFront {
@@ -320,140 +327,95 @@
 .envelopeBase,
 .envelopeLiner,
 .envelopeCover,
+.envelopeMouthFlap,
+.envelopeClosedBack,
+.envelopeClosedFace,
 .envelopeFrontFlap {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle at 38% 26%, rgba(255, 255, 255, 0.035), transparent 24%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 36%),
-    var(--envelope-burgundy);
+  background: transparent;
+}
+
+.envelopeImage {
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
 }
 
 .envelopeBackFlap {
   z-index: 3;
-  overflow: hidden;
-  transform-origin: 50% 40%;
-  clip-path: polygon(50% 0, 100% 44%, 0 44%);
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.035), transparent 38%),
-    var(--envelope-burgundy);
-  opacity: 0;
-  transform: translateY(15%) translateZ(-0.4px) scaleY(0.18);
-  transition:
-    opacity 190ms ease,
-    transform 720ms 60ms cubic-bezier(0.32, 0.72, 0, 1);
+  top: auto;
+  bottom: 100%;
+  height: 68%;
+  overflow: visible;
+  transform-origin: 50% 100%;
+  background: transparent;
+  clip-path: none;
+  opacity: var(--back-flap-opacity);
+  transform: var(--back-flap-transform);
+  will-change: opacity, transform;
 }
 
-.envelopeBackFlap::before {
-  content: "";
-  position: absolute;
-  top: 14px;
-  right: 16px;
-  left: 16px;
-  height: calc(44% - 14px);
-  clip-path: polygon(50% 0, 100% 100%, 0 100%);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(232, 226, 213, 0.99)),
-    var(--envelope-paper);
+.envelopeBackFlap .envelopeImage {
+  object-fit: contain;
+  object-position: center bottom;
 }
 
 .envelopeBase {
   z-index: 1;
-  clip-path: polygon(0 20%, 100% 20%, 100% 100%, 0 100%);
   opacity: 1;
-  transition: opacity 180ms ease;
 }
 
 .envelopeLiner {
   z-index: 2;
-  clip-path: polygon(50% 17%, 100% 45%, 50% 72%, 0 45%);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(232, 226, 213, 0.94)),
-    var(--envelope-paper);
-  opacity: 0;
-  transition: opacity 260ms 110ms ease;
+  opacity: var(--liner-opacity);
+  filter: drop-shadow(0 -1px 1px rgba(53, 41, 31, 0.16));
 }
 
 .envelopeCover {
   z-index: 4;
-  background:
-    linear-gradient(43deg, transparent 49.4%, rgba(255, 255, 255, 0.06) 50%, transparent 50.8%) 0 36% / 50% 64% no-repeat,
-    linear-gradient(-43deg, transparent 49.4%, rgba(255, 255, 255, 0.06) 50%, transparent 50.8%) 100% 36% / 50% 64% no-repeat,
-    linear-gradient(120deg, rgba(255, 255, 255, 0.035), transparent 34%),
-    linear-gradient(240deg, rgba(0, 0, 0, 0.075), transparent 38%),
-    var(--envelope-burgundy);
-  clip-path: polygon(0 36%, 50% 64%, 100% 36%, 100% 100%, 0 100%);
+  overflow: hidden;
   opacity: 1;
-  transition: opacity 220ms ease;
+}
+
+.envelopeMouthFlap {
+  z-index: 5;
+  opacity: var(--mouth-flap-opacity);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 7%, rgba(0, 0, 0, 0.08) 100%),
+    url("/assets/collazzi/paperless-envelope-back-cover-square.png") center / cover no-repeat,
+    #540018;
+  clip-path: polygon(0 0, 100% 0, 50% 60%);
+  transform: var(--mouth-flap-transform);
+  transform-origin: 50% 0;
+  will-change: opacity, transform;
+}
+
+.envelopeClosedBack {
+  z-index: 6;
+  opacity: var(--closed-back-opacity);
+  background:
+    url("/assets/collazzi/paperless-envelope-back-cover-square.png") center / cover no-repeat,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 7%, rgba(0, 0, 0, 0.08) 100%),
+    radial-gradient(circle at 48% 70%, rgba(32, 0, 12, 0.22), rgba(32, 0, 12, 0) 34%),
+    #540018;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.envelopeClosedFace {
+  z-index: 6;
+  opacity: var(--front-flap-opacity);
+  will-change: opacity;
 }
 
 .envelopeFrontFlap {
-  z-index: 5;
-  background:
-    linear-gradient(34deg, transparent 49.4%, rgba(255, 255, 255, 0.055) 50%, transparent 50.8%),
-    linear-gradient(-34deg, transparent 49.4%, rgba(0, 0, 0, 0.09) 50%, transparent 50.8%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.035), transparent 38%),
-    var(--envelope-burgundy);
-  clip-path: polygon(0 20%, 100% 20%, 50% 54%);
-  transform: translateY(0%) translateZ(0.4px) rotateX(0deg);
-  transform-origin: 50% 40%;
-  transition:
-    opacity 220ms ease,
-    transform 720ms cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.stageOpen .envelopeBack,
-.stageOpen .envelopeFront,
-.stagePeeking .envelopeBack,
-.stagePeeking .envelopeFront,
-.stageExtracted .envelopeBack,
-.stageExtracted .envelopeFront,
-.stageFront .envelopeBack,
-.stageBack .envelopeBack,
-.stageFront .envelopeFront,
-.stageBack .envelopeFront {
-  transform: translate(-50%, 56%) scale(1.04);
-}
-
-.stageOpen .envelopeBackFlap {
-  opacity: 1;
-  transform: translateY(-9%) translateZ(-0.4px) scaleY(1.18);
-}
-
-.stagePeeking .envelopeBackFlap {
-  opacity: 1;
-  transform: translateY(-9%) translateZ(-0.4px) scaleY(1.18);
-}
-
-.stageOpen .envelopeLiner,
-.stagePeeking .envelopeLiner {
-  opacity: 1;
-}
-
-.stageExtracted .envelopeBackFlap,
-.stageFront .envelopeBackFlap,
-.stageBack .envelopeBackFlap {
-  opacity: 0;
-  transform: translateY(-8%) translateZ(-0.4px) scaleY(0.72);
-}
-
-.stageExtracted .envelopeLiner,
-.stageFront .envelopeLiner,
-.stageBack .envelopeLiner {
-  opacity: 1;
-}
-
-.stageOpen .envelopeFrontFlap,
-.stagePeeking .envelopeFrontFlap,
-.stageExtracted .envelopeFrontFlap {
-  opacity: 0;
-  transform: translateY(-20%) translateZ(0.4px) rotateX(78deg) scaleY(0.32);
-}
-
-.stageFront .envelopeFrontFlap,
-.stageBack .envelopeFrontFlap {
-  opacity: 0;
-  transform: translateY(-26%) translateZ(0.4px) rotateX(80deg) scaleY(0.3);
+  z-index: 7;
+  opacity: var(--front-flap-opacity);
+  transform: var(--front-flap-transform);
+  transform-origin: 50% 38%;
+  will-change: opacity, transform;
 }
 
 .block {
@@ -498,30 +460,46 @@
 }
 
 .eventTitle {
-  margin: 0 0 20px;
+  margin: 0;
   color: #333;
-  font-size: clamp(38px, 4.4vw, 58px);
+  font-family: "400 normal-Plantin MT STD", Plantin, Georgia, serif;
+  font-size: clamp(34px, 8vw, 40.8759px);
   font-weight: 400;
-  line-height: 1.08;
+  line-height: 49.0511px;
+}
+
+.recipient {
+  margin: 40px 0 80px;
+  color: #333;
+  font-family: "400 normal-Plantin Cyrillic", Plantin, Georgia, serif;
+  font-size: 18.9px;
+  font-weight: 400;
+  line-height: 24.57px;
+}
+
+.recipientLabel,
+.recipientName {
+  display: inline;
 }
 
 .rsvpButtons {
   display: flex;
   justify-content: center;
-  gap: 24px;
-  margin-top: 6px;
+  gap: 18px;
+  margin-top: 0;
 }
 
 .rsvpButton {
-  min-width: 180px;
-  height: 58px;
+  min-width: 186px;
+  height: 44.2188px;
   border: 2px solid #333;
   border-radius: 0;
   background: transparent;
   color: #333;
-  font-family: "Basis PP", var(--font-sans), sans-serif;
-  font-size: 11px;
-  font-weight: 700;
+  font-family: "700 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 12.6px;
+  font-weight: 400;
+  line-height: 25.2px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   transition:
@@ -555,11 +533,11 @@
   display: block;
   padding-bottom: 20px;
   color: #333;
-  font-family: "Basis PP", var(--font-sans), sans-serif;
-  font-size: 10px;
-  font-weight: 700;
+  font-family: "700 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 12.8333px;
+  font-weight: 400;
   letter-spacing: 0.25em;
-  line-height: 1.2;
+  line-height: 15.4px;
   text-transform: uppercase;
 }
 
@@ -567,8 +545,10 @@
 .infoLineStrong {
   display: block;
   color: #333;
-  font-size: 21px;
-  line-height: 1.45;
+  font-family: "500 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 19.8333px;
+  font-weight: 400;
+  line-height: 39.6667px;
 }
 
 .infoLine {
@@ -590,15 +570,18 @@
 }
 
 .blockHeader {
-  margin-bottom: 46px;
+  margin-bottom: 40px;
 }
 
 .blockTitle {
   margin: 0;
   color: #333;
-  font-size: clamp(42px, 6vw, 72px);
+  font-family: "700 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 14.2333px;
   font-weight: 400;
-  line-height: 1.1;
+  line-height: 17.08px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
 }
 
 .travelItems {
@@ -649,8 +632,10 @@
 .locationVenue,
 .locationAddress {
   display: inline;
-  font-size: 24px;
-  line-height: 1.4;
+  font-family: "500 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 19.8333px;
+  font-weight: 400;
+  line-height: 39.6667px;
   text-decoration: underline;
   text-decoration-color: #a66a29;
   text-decoration-thickness: 1px;
@@ -658,28 +643,30 @@
 }
 
 .locationVenue {
-  font-size: 28px;
+  font-size: 19.8333px;
 }
 
 .locationVenueCompact {
-  font-size: 24px;
+  font-size: 19.8333px;
 }
 
 .itemLabel {
   margin: 0 0 20px;
-  font-family: "Basis PP", var(--font-sans), sans-serif;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.25em;
-  line-height: 1.2;
+  font-family: "700 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 12.8333px;
+  font-weight: 400;
+  letter-spacing: 2.5px;
+  line-height: 15.4px;
   text-transform: uppercase;
 }
 
 .itemNote {
   margin: 20px 0 0;
   color: #333;
-  font-size: 26px;
-  line-height: 1.95;
+  font-family: "400 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 18.9px;
+  font-weight: 400;
+  line-height: 34.02px;
   white-space: normal;
 }
 
@@ -701,23 +688,18 @@
 }
 
 .accommodationHeaderInner {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-}
-
-.accommodationIcon {
-  width: 48px;
-  height: 48px;
+  display: block;
 }
 
 .accommodationTitle {
   margin: 0;
   color: #333;
-  font-size: clamp(42px, 6vw, 72px);
+  font-family: "700 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 14.2333px;
   font-weight: 400;
-  line-height: 1.1;
+  line-height: 17.08px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
 }
 
 .accommodationViewport {
@@ -726,19 +708,19 @@
 
 .accommodationCard {
   display: grid;
-  max-width: 690px;
-  min-height: 440px;
+  max-width: 620px;
   margin: 0 auto;
-  padding: 42px 42px 32px;
+  padding: 32px;
   border: 2px solid #333;
   background: #fff;
+  gap: 24px;
 }
 
 .accommodationImageFrame {
   position: relative;
-  width: 220px;
-  height: 220px;
-  margin: 0 auto 28px;
+  width: 180px;
+  height: 180px;
+  margin: 0 auto;
   overflow: hidden;
   border-radius: 999px;
 }
@@ -747,12 +729,21 @@
   object-fit: cover;
 }
 
+.accommodationDetails {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  justify-items: center;
+}
+
 .accommodationVenue {
   display: block;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   color: #333;
-  font-size: 24px;
-  line-height: 1.3;
+  font-family: "500 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 18.9px;
+  font-weight: 400;
+  line-height: 28px;
   text-decoration: underline;
   text-decoration-color: #a66a29;
   text-decoration-thickness: 1px;
@@ -763,8 +754,10 @@
 .accommodationPhone {
   display: block;
   color: #333;
-  font-size: 20px;
-  line-height: 1.5;
+  font-family: "500 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 18.9px;
+  font-weight: 400;
+  line-height: 28px;
   text-decoration: underline;
   text-decoration-color: #a66a29;
   text-decoration-thickness: 1px;
@@ -772,26 +765,27 @@
 }
 
 .accommodationPhone {
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .linkButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 190px;
+  width: min(100%, 256px);
   min-height: 48px;
-  margin-top: 32px;
-  padding: 10px 22px;
+  margin-top: 22px;
+  padding: 12px 16px;
   border: 2px solid #333;
   color: #333;
-  font-family: "Basis PP", var(--font-sans), sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.25em;
-  line-height: 2;
+  font-family: "700 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 11.4333px;
+  font-weight: 400;
+  letter-spacing: 2.5px;
+  line-height: 22.8667px;
   text-decoration: none;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
 .carouselArrow {
@@ -849,7 +843,7 @@
 
 @media (min-width: 760px) {
   .accommodationCard {
-    grid-template-columns: 250px 1fr;
+    grid-template-columns: 190px minmax(0, 1fr);
     align-items: center;
     text-align: center;
   }
@@ -860,27 +854,14 @@
 }
 
 @media (max-width: 760px) {
-  .headerLogo {
-    padding-top: 28px;
-  }
-
   .blockContainer {
     padding-right: 20px;
     padding-left: 20px;
   }
 
   .mediaInner {
-    height: min(112vw, 620px);
-    min-height: 430px;
-  }
-
-  .card {
-    width: 100%;
-  }
-
-  .envelopeBack,
-  .envelopeFront {
-    width: 59.6%;
+    height: min(132vw, 690px);
+    min-height: 560px;
   }
 
   .controlRail {
@@ -897,6 +878,11 @@
 
   .eventBlock {
     display: block;
+  }
+
+  .recipient {
+    margin: 52px 0 64px;
+    font-size: 18.9px;
   }
 
   .rsvpButtons {
@@ -935,25 +921,30 @@
   .infoLine,
   .infoLineStrong,
   .itemNote {
-    font-size: 20px;
+    font-size: 18.9px;
   }
 
   .locationVenue,
   .locationAddress {
-    font-size: 20px;
+    font-size: 19.8333px;
   }
 
   .blockHr {
     width: calc(100% - 40px);
   }
 
-  .accommodationHeaderInner {
-    flex-direction: column;
-    gap: 12px;
+  .accommodationCard {
+    gap: 18px;
+    padding: 28px 18px;
   }
 
-  .accommodationCard {
-    padding: 30px 22px;
+  .accommodationImageFrame {
+    width: 160px;
+    height: 160px;
+  }
+
+  .linkButton {
+    width: 100%;
   }
 
   .carouselArrow {

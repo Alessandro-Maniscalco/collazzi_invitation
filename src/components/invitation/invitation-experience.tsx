@@ -1,6 +1,14 @@
 "use client";
 
-import { Fragment, useEffect, useState, useTransition, type FormEvent } from "react";
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+  type CSSProperties,
+  type FormEvent,
+} from "react";
 
 import Image from "next/image";
 import { Play, RefreshCw } from "lucide-react";
@@ -17,6 +25,132 @@ import type {
 } from "@/lib/types";
 
 import styles from "./invitation-experience.module.css";
+
+const OPENING_DURATION_MS = 2_350;
+
+type SceneSide = "auto" | "front" | "back";
+type SceneStyle = CSSProperties & Record<`--${string}`, string | number>;
+
+function clamp(value: number, min = 0, max = 1) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function interval(progress: number, start: number, end: number) {
+  return clamp((progress - start) / (end - start));
+}
+
+function mix(start: number, end: number, progress: number) {
+  return start + (end - start) * progress;
+}
+
+function easeOutCubic(value: number) {
+  const inverse = 1 - clamp(value);
+  return 1 - inverse * inverse * inverse;
+}
+
+function easeInOutCubic(value: number) {
+  const progress = clamp(value);
+
+  return progress < 0.5
+    ? 4 * progress * progress * progress
+    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+}
+
+function stageFromProgress(progress: number) {
+  if (progress < 0.14) return 0;
+  if (progress < 0.28) return 1;
+  if (progress < 0.48) return 2;
+  if (progress < 0.68) return 3;
+  if (progress < 0.84) return 4;
+
+  return 5;
+}
+
+function debugSceneFromLocation(): { progress: number; side: SceneSide } | null {
+  if (process.env.NODE_ENV === "production" || typeof window === "undefined") {
+    return null;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const rawProgress = params.get("progress");
+
+  if (!rawProgress) return null;
+
+  const progress = Number(rawProgress);
+
+  if (!Number.isFinite(progress)) return null;
+
+  const rawSide = params.get("side");
+  const side: SceneSide =
+    rawSide === "front" || rawSide === "back" || rawSide === "auto" ? rawSide : "front";
+
+  return { progress: clamp(progress), side };
+}
+
+function buildSceneStyle(progress: number, side: SceneSide): SceneStyle {
+  const boundedProgress = clamp(progress);
+  const cardPeek = easeOutCubic(interval(boundedProgress, 0.04, 0.075));
+  const flapOpen = easeInOutCubic(interval(boundedProgress, 0.075, 0.14));
+  const envelopeDrop = easeInOutCubic(interval(boundedProgress, 0.42, 0.66));
+  const cardSlide = easeInOutCubic(interval(boundedProgress, 0.075, 0.64));
+  const cardUncover = easeOutCubic(interval(boundedProgress, 0.12, 0.64));
+  const cardRelease = easeInOutCubic(interval(boundedProgress, 0.66, 0.72));
+  const cardEnlarge = easeInOutCubic(interval(boundedProgress, 0.72, 0.86));
+  const cardFlip = easeInOutCubic(interval(boundedProgress, 0.9, 0.99));
+  const cardY = mix(mix(mix(42, 26, cardPeek), -5, cardSlide), -2, cardEnlarge);
+  const cardScale = mix(0.64, 0.9, cardEnlarge);
+  const cardX = 0;
+  const cardOpacity = interval(boundedProgress, 0.04, 0.06);
+  const envelopeX = 0;
+  const envelopeY = mix(0, 60, envelopeDrop);
+  const envelopeScale = 0.9;
+  const backFlapOpacity = interval(boundedProgress, 0.075, 0.12);
+  const mouthFlapOpen = easeOutCubic(interval(boundedProgress, 0.055, 0.14));
+  const mouthFlapOpacity = 1 - interval(boundedProgress, 0.04, 0.105);
+  const linerOpacity = interval(boundedProgress, 0.04, 0.1);
+  const closedBackOpacity = 1 - interval(boundedProgress, 0.04, 0.065);
+  const frontFlapOpacity = 0;
+  const finalSideIsBack = side === "auto" ? true : side === "back";
+  const cardRotate = boundedProgress < 1 ? mix(0, 180, cardFlip) : finalSideIsBack ? 180 : 0;
+
+  return {
+    "--card-y": `${cardY}%`,
+    "--card-x": `${cardX}%`,
+    "--card-scale": cardScale.toFixed(4),
+    "--card-opacity": cardOpacity.toFixed(4),
+    "--card-clip-bottom": `${mix(12, 0, cardUncover).toFixed(3)}%`,
+    "--card-layer": cardRelease < 1 ? 3 : 6,
+    "--card-rotate": `${cardRotate.toFixed(3)}deg`,
+    "--card-shadow":
+      boundedProgress < 0.65
+        ? "3px 3px 8px rgba(0, 0, 0, 0.14)"
+        : "3px 3px 12px rgba(0, 0, 0, 0.26)",
+    "--card-rotate-transition": boundedProgress < 1 ? "none" : "transform 820ms var(--flip-ease)",
+    "--envelope-opacity": "1",
+    "--envelope-x": `${envelopeX}%`,
+    "--envelope-y": `${envelopeY.toFixed(3)}%`,
+    "--envelope-scale": envelopeScale.toFixed(4),
+    "--envelope-crop": "0%",
+    "--closed-back-opacity": closedBackOpacity.toFixed(4),
+    "--front-flap-opacity": frontFlapOpacity.toFixed(4),
+    "--front-flap-transform": `translate3d(0, ${mix(0, -23, flapOpen).toFixed(3)}%, 0.4px) rotateX(${mix(
+      0,
+      84,
+      flapOpen,
+    ).toFixed(3)}deg) scaleY(${mix(1, 0.28, flapOpen).toFixed(4)})`,
+    "--mouth-flap-opacity": mouthFlapOpacity.toFixed(4),
+    "--mouth-flap-transform": `translate3d(0, ${mix(0, -4, mouthFlapOpen).toFixed(
+      3,
+    )}%, 0.6px) scaleY(${mix(1, 0.55, mouthFlapOpen).toFixed(4)})`,
+    "--back-flap-opacity": backFlapOpacity.toFixed(4),
+    "--back-flap-transform": `translate3d(0, 0, -0.4px) rotateX(${mix(
+      -84,
+      0,
+      flapOpen,
+    ).toFixed(3)}deg)`,
+    "--liner-opacity": linerOpacity.toFixed(4),
+  };
+}
 
 function MultilineText({ text, className }: { text: string; className?: string }) {
   return (
@@ -58,6 +192,43 @@ function LocationLink({
       </a>
     </address>
   );
+}
+
+function EnvelopeLayer({ src }: { src: string }) {
+  return (
+    <Image
+      src={src}
+      alt=""
+      fill
+      sizes="(min-width: 768px) 440px, 78vw"
+      className={styles.envelopeImage}
+      unoptimized
+    />
+  );
+}
+
+function EnvelopeBackFlap() {
+  return <EnvelopeLayer src="/assets/collazzi/paperless-envelope-back-flap-open.png" />;
+}
+
+function EnvelopeBase() {
+  return <EnvelopeLayer src="/assets/collazzi/paperless-envelope-back-base-square.png" />;
+}
+
+function EnvelopeLiner() {
+  return null;
+}
+
+function EnvelopeCover() {
+  return <EnvelopeLayer src="/assets/collazzi/paperless-envelope-back-cover-square.png" />;
+}
+
+function EnvelopeClosedFace() {
+  return <EnvelopeLayer src="/assets/collazzi/paperless-envelope-front-base.png" />;
+}
+
+function EnvelopeFrontFlap() {
+  return <EnvelopeLayer src="/assets/collazzi/paperless-envelope-front-flap.png" />;
 }
 
 function TravelSubItem({ item }: { item: ItinerarySubItem }) {
@@ -122,8 +293,9 @@ function TravelBlock({ item }: { item: ItineraryItem }) {
 }
 
 export function InvitationExperience({ invitation }: { invitation: InvitationView }) {
-  const [stage, setStage] = useState(0);
+  const [progress, setProgress] = useState(0);
   const [sequenceKey, setSequenceKey] = useState(0);
+  const [sceneSide, setSceneSide] = useState<SceneSide>("auto");
   const [modalOpen, setModalOpen] = useState(false);
   const [preferredStatus, setPreferredStatus] = useState<AttendanceStatus | undefined>(undefined);
   const [response, setResponse] = useState<PartyResponse | undefined>(invitation.party.response);
@@ -135,30 +307,37 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
   const hasGuestEmail = Boolean(savedGuestEmail.trim());
   const showEmailCapture = !hasGuestEmail || emailSaved;
   const party = { ...invitation.party, email: savedGuestEmail || undefined, response };
-  const stageClass =
-    stage === 0
-      ? styles.stageClosed
-      : stage === 1
-        ? styles.stageOpen
-        : stage === 2
-          ? styles.stagePeeking
-          : stage === 3
-            ? styles.stageExtracted
-            : stage === 4
-              ? styles.stageFront
-              : styles.stageBack;
+  const stage = stageFromProgress(progress);
+  const sceneStyle = useMemo(() => buildSceneStyle(progress, sceneSide), [progress, sceneSide]);
 
   useEffect(() => {
-    setStage(0);
-    const timers = [
-      window.setTimeout(() => setStage(1), 360),
-      window.setTimeout(() => setStage(2), 1120),
-      window.setTimeout(() => setStage(3), 1820),
-      window.setTimeout(() => setStage(4), 2520),
-      window.setTimeout(() => setStage(5), 4400),
-    ];
+    const debugScene = debugSceneFromLocation();
 
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
+    if (debugScene) {
+      setProgress(debugScene.progress);
+      setSceneSide(debugScene.side);
+      return;
+    }
+
+    let frame = 0;
+    const startedAt = window.performance.now();
+
+    setProgress(0);
+    setSceneSide("auto");
+
+    function tick(now: number) {
+      const nextProgress = clamp((now - startedAt) / OPENING_DURATION_MS);
+
+      setProgress(nextProgress);
+
+      if (nextProgress < 1) {
+        frame = window.requestAnimationFrame(tick);
+      }
+    }
+
+    frame = window.requestAnimationFrame(tick);
+
+    return () => window.cancelAnimationFrame(frame);
   }, [sequenceKey]);
 
   function openRsvp(status?: AttendanceStatus) {
@@ -171,7 +350,9 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
   }
 
   function flipCard() {
-    setStage((current) => (current === 5 ? 4 : 5));
+    if (progress < 1) return;
+
+    setSceneSide((current) => (current === "back" || current === "auto" ? "front" : "back"));
   }
 
   function saveEmail(event: FormEvent<HTMLFormElement>) {
@@ -205,16 +386,12 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
 
   return (
     <main className={styles.shell}>
-      <div className={styles.headerLogo} data-testid="custom-header-logo" aria-hidden="true">
-        <div className={styles.logoBorder}>BA</div>
-      </div>
-
       <section data-block-type="primary_media" className={styles.primaryMedia}>
         <div className={styles.mediaContainer}>
           <figure
             data-test="editor-media-modify-button"
             data-stage={stage}
-            className={cn(styles.mediaInner, stageClass)}
+            className={styles.mediaInner}
           >
             <div className={styles.controlRail}>
               <button
@@ -235,11 +412,21 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
               </button>
             </div>
 
-            <div className={styles.stack}>
+            <div
+              key={sequenceKey}
+              className={styles.stack}
+              style={sceneStyle}
+            >
               <div className={styles.envelopeBack}>
-                <div className={styles.envelopeBackFlap} />
-                <div className={styles.envelopeBase} />
-                <div className={styles.envelopeLiner} />
+                <div className={styles.envelopeBackFlap}>
+                  <EnvelopeBackFlap />
+                </div>
+                <div className={styles.envelopeBase}>
+                  <EnvelopeBase />
+                </div>
+                <div className={styles.envelopeLiner}>
+                  <EnvelopeLiner />
+                </div>
               </div>
 
               <div className={styles.card}>
@@ -267,8 +454,17 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
               </div>
 
               <div className={styles.envelopeFront}>
-                <div className={styles.envelopeCover} />
-                <div className={styles.envelopeFrontFlap} />
+                <div className={styles.envelopeCover}>
+                  <EnvelopeCover />
+                </div>
+                <div className={styles.envelopeMouthFlap} />
+                <div className={styles.envelopeClosedBack} />
+                <div className={styles.envelopeClosedFace}>
+                  <EnvelopeClosedFace />
+                </div>
+                <div className={styles.envelopeFrontFlap}>
+                  <EnvelopeFrontFlap />
+                </div>
               </div>
             </div>
           </figure>
@@ -317,6 +513,15 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
                 <h1 data-test="event-title" className={styles.eventTitle}>
                   {invitation.event.summaryName}
                 </h1>
+                <p
+                  id="recipient_name"
+                  data-testid="recipient-to-name"
+                  aria-label={`To: ${party.label}`}
+                  className={styles.recipient}
+                >
+                  <span className={styles.recipientLabel}>To: </span>
+                  <span className={styles.recipientName}>{party.label}</span>
+                </p>
                 <div className={styles.rsvpButtons}>
                   <button
                     type="button"

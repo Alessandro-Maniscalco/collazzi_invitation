@@ -34,6 +34,7 @@ describe("renderInvitationEmail", () => {
     expect(email.html).toContain("background:#660033");
     expect(email.html).toContain("https://bonaalessandro.ink/api/invite-card?");
     expect(email.html).toContain("name=Alessandro+Maniscalco");
+    expect(email.html).toContain("v=3");
     expect(email.html).not.toContain("background=\"");
     expect(email.html).not.toContain("maniscalco-post-envelope-bg.jpg");
     expect(email.html).toContain("Villa I Collazzi");
@@ -53,4 +54,5 @@ describe("renderInvitationEmail", () => {
     expect(email.bodyPreview).toContain("Reminder to RSVP");
     expect(email.text).toContain("Reminder to view the invitation and RSVP");
   });
+
 });

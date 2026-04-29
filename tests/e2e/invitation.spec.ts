@@ -6,6 +6,7 @@ test("guest preview invitation renders and accepts RSVP edits", async ({ page })
   await page.goto("/i/preview-couple");
   await expect(page.getByRole("button", { name: "Will attend" }).first()).toBeVisible();
   await expect(page.getByText("Bona and Alessandro Maniscalco").first()).toBeVisible();
+  await expect(page.getByTestId("recipient-to-name")).toHaveText("To: Taylor & Jordan Russo");
   await expect(page.getByRole("heading", { name: "Thursday, August 27th" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Friday, August 28th" })).toBeVisible();
   await expect(page.getByLabel("Please enter your email:")).toHaveCount(0);
