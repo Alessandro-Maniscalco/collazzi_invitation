@@ -43,7 +43,7 @@ import type {
 
 const ACTIVITY_SHEET_TITLE = "Activity";
 const ACTIVITY_HEADERS = ["id", "type", "created_at", "actor", "message"];
-const PARTY_ONLY_BACK_IMAGE_SRC = "/assets/collazzi/invito-save-date.jpg";
+const PARTY_ONLY_BACK_IMAGE_SRC = "/assets/collazzi/party-only-back.png";
 const CHECKBOX_HEADERS: GuestSheetHeader[] = [
   "token_active",
   "invited_by_ale",

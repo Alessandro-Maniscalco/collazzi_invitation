@@ -67,6 +67,7 @@
   max-height: 620px;
   margin: 0;
   overflow: hidden;
+  overflow: clip;
   background: transparent;
   contain: layout;
 }
@@ -201,6 +202,7 @@
   max-height: 100%;
   margin: 0 auto;
   perspective: 100vh;
+  isolation: isolate;
   transform-style: preserve-3d;
   --envelope-burgundy: #4b0015;
   --envelope-burgundy-dark: #3f0012;
@@ -244,6 +246,7 @@
   transform-origin: 50% 0;
   transform-style: preserve-3d;
   filter: drop-shadow(var(--card-shadow));
+  backface-visibility: hidden;
   will-change: filter, opacity, transform;
 }
 
@@ -251,7 +254,7 @@
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  transform: rotateY(var(--card-rotate));
+  transform: rotateY(var(--card-rotate)) translateZ(0);
   transition: var(--card-rotate-transition);
   will-change: transform;
 }
@@ -860,8 +863,15 @@
   }
 
   .mediaInner {
-    height: min(132vw, 690px);
+    height: clamp(560px, 132vw, 690px);
     min-height: 560px;
+  }
+
+  .stack {
+    top: clamp(46px, 12vw, 58px);
+    width: min(96vw, 560px);
+    height: min(96vw, 560px);
+    perspective: 1100px;
   }
 
   .controlRail {

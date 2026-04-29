@@ -1,5 +1,9 @@
 "use client";
 
+/*
+ * The envelope starts closed and centered on the tan paper background. Its top flap opens upward smoothly while the card stays tucked inside at a constant, slightly smaller-than-envelope size. The card then slides straight up without drifting sideways, while the envelope itself moves downward, so the card physically clears the pocket instead of looking like it passes through it. The back/top triangle of the envelope remains visible during this motion and does not disappear midway. Only after the full card has escaped the envelope does the card move in front, enlarge, and settle into the final viewing position. At the end, the card flips over with the same smooth turn as before, while the lower part of the envelope is cropped off-screen so the focus stays on the card.
+ */
+
 import {
   Fragment,
   useEffect,
@@ -26,7 +30,8 @@ import type {
 
 import styles from "./invitation-experience.module.css";
 
-const OPENING_DURATION_MS = 2_350;
+const OPENING_DURATION_MS = 3_800;
+const CARD_FLIP_TRANSITION_MS = 2_460;
 
 type SceneSide = "auto" | "front" | "back";
 type SceneStyle = CSSProperties & Record<`--${string}`, string | number>;
@@ -48,20 +53,16 @@ function easeOutCubic(value: number) {
   return 1 - inverse * inverse * inverse;
 }
 
-function easeInOutCubic(value: number) {
-  const progress = clamp(value);
-
-  return progress < 0.5
-    ? 4 * progress * progress * progress
-    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+function easeInOutSine(value: number) {
+  return -(Math.cos(Math.PI * clamp(value)) - 1) / 2;
 }
 
 function stageFromProgress(progress: number) {
-  if (progress < 0.14) return 0;
-  if (progress < 0.28) return 1;
-  if (progress < 0.48) return 2;
-  if (progress < 0.68) return 3;
-  if (progress < 0.84) return 4;
+  if (progress < 0.18) return 0;
+  if (progress < 0.34) return 1;
+  if (progress < 0.56) return 2;
+  if (progress < 0.72) return 3;
+  if (progress < 0.86) return 4;
 
   return 5;
 }
@@ -89,26 +90,26 @@ function debugSceneFromLocation(): { progress: number; side: SceneSide } | null 
 
 function buildSceneStyle(progress: number, side: SceneSide): SceneStyle {
   const boundedProgress = clamp(progress);
-  const cardPeek = easeOutCubic(interval(boundedProgress, 0.04, 0.075));
-  const flapOpen = easeInOutCubic(interval(boundedProgress, 0.075, 0.14));
-  const envelopeDrop = easeInOutCubic(interval(boundedProgress, 0.42, 0.66));
-  const cardSlide = easeInOutCubic(interval(boundedProgress, 0.075, 0.64));
-  const cardUncover = easeOutCubic(interval(boundedProgress, 0.12, 0.64));
-  const cardRelease = easeInOutCubic(interval(boundedProgress, 0.66, 0.72));
-  const cardEnlarge = easeInOutCubic(interval(boundedProgress, 0.72, 0.86));
-  const cardFlip = easeInOutCubic(interval(boundedProgress, 0.9, 0.99));
-  const cardY = mix(mix(mix(42, 26, cardPeek), -5, cardSlide), -2, cardEnlarge);
-  const cardScale = mix(0.64, 0.9, cardEnlarge);
+  const cardPeek = easeOutCubic(interval(boundedProgress, 0.04, 0.11));
+  const flapOpen = easeInOutSine(interval(boundedProgress, 0.08, 0.22));
+  const envelopeDrop = easeInOutSine(interval(boundedProgress, 0.56, 0.76));
+  const cardSlide = easeInOutSine(interval(boundedProgress, 0.12, 0.58));
+  const cardUncover = easeInOutSine(interval(boundedProgress, 0.16, 0.58));
+  const cardRelease = easeInOutSine(interval(boundedProgress, 0.58, 0.66));
+  const cardEnlarge = easeInOutSine(interval(boundedProgress, 0.66, 0.8));
+  const cardFlip = easeInOutSine(interval(boundedProgress, 0.78, 0.95));
+  const cardY = mix(mix(mix(42, 26, cardPeek), -7, cardSlide), -8, cardEnlarge);
+  const cardScale = mix(0.64, 0.84, cardEnlarge);
   const cardX = 0;
   const cardOpacity = interval(boundedProgress, 0.04, 0.06);
   const envelopeX = 0;
-  const envelopeY = mix(0, 60, envelopeDrop);
+  const envelopeY = mix(0, 84, envelopeDrop);
   const envelopeScale = 0.9;
-  const backFlapOpacity = interval(boundedProgress, 0.075, 0.12);
-  const mouthFlapOpen = easeOutCubic(interval(boundedProgress, 0.055, 0.14));
-  const mouthFlapOpacity = 1 - interval(boundedProgress, 0.04, 0.105);
-  const linerOpacity = interval(boundedProgress, 0.04, 0.1);
-  const closedBackOpacity = 1 - interval(boundedProgress, 0.04, 0.065);
+  const backFlapOpacity = interval(boundedProgress, 0.08, 0.2);
+  const mouthFlapOpen = easeInOutSine(interval(boundedProgress, 0.06, 0.2));
+  const mouthFlapOpacity = 1 - interval(boundedProgress, 0.04, 0.16);
+  const linerOpacity = interval(boundedProgress, 0.04, 0.14);
+  const closedBackOpacity = 1 - interval(boundedProgress, 0.04, 0.12);
   const frontFlapOpacity = 0;
   const finalSideIsBack = side === "auto" ? true : side === "back";
   const cardRotate = boundedProgress < 1 ? mix(0, 180, cardFlip) : finalSideIsBack ? 180 : 0;
@@ -125,7 +126,8 @@ function buildSceneStyle(progress: number, side: SceneSide): SceneStyle {
       boundedProgress < 0.65
         ? "3px 3px 8px rgba(0, 0, 0, 0.14)"
         : "3px 3px 12px rgba(0, 0, 0, 0.26)",
-    "--card-rotate-transition": boundedProgress < 1 ? "none" : "transform 820ms var(--flip-ease)",
+    "--card-rotate-transition":
+      boundedProgress < 1 ? "none" : `transform ${CARD_FLIP_TRANSITION_MS}ms var(--flip-ease)`,
     "--envelope-opacity": "1",
     "--envelope-x": `${envelopeX}%`,
     "--envelope-y": `${envelopeY.toFixed(3)}%`,
