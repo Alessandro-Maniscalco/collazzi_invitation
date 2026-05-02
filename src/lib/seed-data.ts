@@ -42,15 +42,15 @@ export function createSeedState(): AppState {
       summaryAddressName: "Villa I Collazzi",
       summaryAddressLabel: "Via Volterrana, 4A, 50018 Scandicci FI",
       introduction: "",
-      dressCode: "Black Tie and Long Dress",
-      rsvpDeadline: "2026-07-28T18:00:00.000Z",
+      dressCode: "Black tie e abito lungo",
+      rsvpDeadline: "2026-07-15T18:00:00.000Z",
       footerNote: "",
     },
     hosts: SEED_HOSTS.map((host) => ({ ...host })),
     questions: [
       {
         id: "question_walking_dinner",
-        label: "Walking Dinner - Thursday, August 27th, 19h30",
+        label: "Walking dinner - Thursday, August 27th, 19h30",
         type: "checkbox",
       },
       {
@@ -72,12 +72,12 @@ export function createSeedState(): AppState {
         address: "31 Piazza della Signoria Firenze",
         mapUrl:
           "https://www.google.com/maps/search/?api=1&query=Ristorante+Frescobaldi+Firenze",
-        title: "Walking Dinner",
+        title: "Walking dinner",
         datetimeLabel: "Thursday, August 27th, 19h30",
-        dressCode: "Dress code - Casual Chic",
+        dressCode: "Dress Code - Casual Chic",
         description: "",
         imageSrc: "/assets/collazzi/thursday-restaurant.jpeg",
-        note: "Walking Dinner\nThursday, August 27th, 19h30\nDress code - Casual Chic",
+        note: "Walking dinner\nThursday, August 27th, 19h30\nDress Code - Casual Chic",
       },
       {
         id: "itinerary_party",
@@ -88,19 +88,21 @@ export function createSeedState(): AppState {
           "https://www.google.com/maps/search/?api=1&query=Villa+I+Collazzi+Impruneta",
         title: "The Party",
         datetimeLabel: "Friday, August 28th, 19h30",
-        dressCode: "Dress code - Black Tie and Long Dress",
+        dressCode: "Dress Code - Black tie e abito lungo",
         description: "",
         imageSrc: "/assets/collazzi/friday-villa.jpeg",
-        note: "The Party \nFriday, August 28th, 19h30\nDress code - Black Tie and Long Dress",
+        note: "The Party \nFriday, August 28th, 19h30\nDress Code - Black tie e abito lungo",
         subItems: [
           {
             id: "itinerary_party_shuttle",
-            label: "Shuttle",
+            label: "SHUTTLE Service",
             venueName: "Piazza Torquato Tasso",
             address: "Firenze, Toscana 50124",
             mapUrl:
               "https://www.google.com/maps/search/?api=1&query=Piazza+Torquato+Tasso+Firenze",
-            note: "Departure Times \nFrom 19h to 20h\n\nReturn to Florence Times \n2h30 - 3h30 - 4h15 - 5h",
+            note: "A complimentary shuttle service will be available to and from",
+            hours:
+              "Departure Times \nFrom 19h to 20h\n\nReturn to Florence Times \n2h30 - 3h30 - 4h15 - 5h",
           },
         ],
       },

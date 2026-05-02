@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 
+import { ProtectedTranslationText } from "@/components/invitation/protected-translation-text";
 import type { AttendanceStatus, Guest, PartyResponse, Question } from "@/lib/types";
 
 interface RsvpModalProps {
@@ -278,7 +279,9 @@ export function RsvpModal({
                           }
                           className="h-4 w-4 rounded border-stone-300 text-[var(--app-wine)]"
                         />
-                        <span>{question.label}</span>
+                        <span>
+                          <ProtectedTranslationText text={question.label} />
+                        </span>
                       </label>
                     ))}
                   </div>

@@ -480,6 +480,14 @@ export function toSheetBoolean(value: boolean) {
   return value ? "TRUE" : "FALSE";
 }
 
+export const NEW_GUEST_RSVP_DEFAULTS = {
+  coming_to_walking_dinner: toSheetBoolean(false),
+  coming_to_party: toSheetBoolean(false),
+  guest_2_coming_to_party: toSheetBoolean(false),
+  transfer_needed: toSheetBoolean(false),
+  not_coming: toSheetBoolean(false),
+} satisfies Partial<Record<GuestSheetHeader, string>>;
+
 function normalizeAliases(headers: string[]) {
   let changed = false;
   const aliasMap = createAliasMap();

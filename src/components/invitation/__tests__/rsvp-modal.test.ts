@@ -12,7 +12,7 @@ import type { Question } from "@/lib/types";
 const walkingDinnerQuestions = [
   {
     id: "question_walking_dinner",
-    label: "Walking Dinner - Thursday, August 27th, 19h30",
+    label: "Walking dinner - Thursday, August 27th, 19h30",
     type: "checkbox",
   },
   {

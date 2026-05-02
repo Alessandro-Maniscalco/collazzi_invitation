@@ -20,7 +20,7 @@ test("guest preview invitation renders and accepts RSVP edits", async ({ page })
   await expect(dialog.getByText("Who will attend?")).toBeVisible();
   await expect(dialog.getByLabel("Taylor Russo")).toBeChecked();
   await expect(dialog.getByLabel("Jordan Russo")).toBeChecked();
-  await dialog.getByLabel("Walking Dinner - Thursday, August 27th, 19h30").check();
+  await dialog.getByLabel("Walking dinner - Thursday, August 27th, 19h30").check();
   await dialog.getByLabel("The Party - Friday, August 28th, 19h30").check();
   await expect(dialog.getByLabel("Transfer needed for the party")).toBeVisible();
   await dialog.getByPlaceholder("Private message to host (optional)").fill("See you there.");

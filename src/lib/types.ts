@@ -97,6 +97,7 @@ export interface ItinerarySubItem {
   address?: string;
   mapUrl?: string;
   note?: string;
+  hours?: string;
 }
 
 export interface ItineraryItem {
@@ -216,6 +217,9 @@ export interface SendBatchInput {
   kind: DeliveryKind;
   filter?: "all" | "awaiting_response" | "attending" | "not_attending";
   source?: string;
+  sources?: string[];
+  comingToParty?: boolean;
+  lastDeliveryStatus?: DeliveryStatus | "none";
 }
 
 export interface HostContentUpdate {

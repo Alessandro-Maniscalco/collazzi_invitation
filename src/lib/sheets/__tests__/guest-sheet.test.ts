@@ -6,6 +6,7 @@ import {
   findGuestSheetIntegrityErrors,
   GUEST_SHEET_HEADERS,
   labelForSheetGuest,
+  NEW_GUEST_RSVP_DEFAULTS,
   parseGuestSheet,
   sheetGuestResponse,
   sheetGuestMembers,
@@ -273,6 +274,42 @@ describe("parseGuestSheet", () => {
     );
 
     expect(table.guests[0].willInviteToWalkingDinner).toBe(true);
+  });
+
+  it("keeps explicit new guest RSVP defaults pending", () => {
+    expect(NEW_GUEST_RSVP_DEFAULTS).toEqual({
+      coming_to_walking_dinner: "FALSE",
+      coming_to_party: "FALSE",
+      guest_2_coming_to_party: "FALSE",
+      transfer_needed: "FALSE",
+      not_coming: "FALSE",
+    });
+
+    const table = parseGuestSheet(
+      [
+        [...GUEST_SHEET_HEADERS],
+        rowFromRecord({
+          ...NEW_GUEST_RSVP_DEFAULTS,
+          guest_id: "guest_1",
+          token: "guest_token",
+          first_name: "Dev",
+          last_name: "Karpe",
+          will_invite_to_walking_dinner: "TRUE",
+        }),
+      ],
+      "http://localhost:3000",
+    );
+
+    expect(table.guests[0]).toMatchObject({
+      willInviteToWalkingDinner: true,
+      comingToWalkingDinner: false,
+      comingToParty: false,
+      guest2ComingToParty: false,
+      transferNeeded: false,
+      notComing: false,
+      hasResponse: false,
+    });
+    expect(sheetGuestResponse(table.guests[0])).toBeUndefined();
   });
 
   it("excludes rows marked not invited with counted 0", () => {

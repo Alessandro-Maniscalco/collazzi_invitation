@@ -6,13 +6,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import {
+  cn,
   deliveryStatusTone,
   formatDeadline,
   formatRelative,
   latestDelivery,
   partyAttendanceSummary,
 } from "@/lib/formatters";
-import type { DashboardSnapshot, HostUser, Party } from "@/lib/types";
+import type { DashboardSnapshot, DeliveryStatus, HostUser, Party } from "@/lib/types";
 
 const emptyNewGuestForm = {
   last_name: "",
@@ -31,6 +32,25 @@ const emptyNewGuestForm = {
 };
 
 type NewGuestForm = typeof emptyNewGuestForm;
+type InviteComingToPartyFilter = "all" | "yes" | "no";
+type InviteDeliveryStatusFilter = "any" | "none" | DeliveryStatus;
+
+const COMING_TO_PARTY_OPTIONS: Array<{ value: InviteComingToPartyFilter; label: string }> = [
+  { value: "all", label: "Any" },
+  { value: "yes", label: "TRUE" },
+  { value: "no", label: "FALSE" },
+];
+
+const DELIVERY_STATUS_OPTIONS: Array<{ value: InviteDeliveryStatusFilter; label: string }> = [
+  { value: "any", label: "Any" },
+  { value: "none", label: "Blank" },
+  { value: "sandbox", label: "Sandbox" },
+  { value: "queued", label: "Queued" },
+  { value: "sent", label: "Sent" },
+  { value: "delivered", label: "Delivered" },
+  { value: "opened", label: "Opened" },
+  { value: "failed", label: "Failed" },
+];
 
 const SYSTEM_PARTY_TAGS = new Set([
   "invited_by_ale",
@@ -54,6 +74,56 @@ function sourceForParty(party: DashboardSnapshot["parties"][number]) {
   return party.tags.find((tag) => !SYSTEM_PARTY_TAGS.has(tag))?.trim() ?? "";
 }
 
+function normalizeSource(source: string) {
+  return source.trim().toLocaleLowerCase();
+}
+
+function toggleButtonClass(active: boolean, className?: string) {
+  return cn(
+    "rounded-full border px-4 py-2 text-sm font-semibold transition disabled:opacity-50",
+    active
+      ? "border-[var(--app-wine)] bg-[var(--app-wine)] text-white shadow-[0_8px_20px_rgba(102,0,51,0.18)]"
+      : "border-[var(--app-line)] bg-white text-stone-800 hover:border-stone-400",
+    className,
+  );
+}
+
+function partyComingToParty(party: DashboardSnapshot["parties"][number]) {
+  return Boolean(party.response && Object.values(party.response.guestSelections).some(Boolean));
+}
+
+function partyMatchesInviteFilters(
+  party: DashboardSnapshot["parties"][number],
+  comingToParty: InviteComingToPartyFilter,
+  lastDeliveryStatus: InviteDeliveryStatusFilter,
+) {
+  if (comingToParty !== "all") {
+    const matchesComingToParty = partyComingToParty(party);
+    if (matchesComingToParty !== (comingToParty === "yes")) {
+      return false;
+    }
+  }
+
+  if (lastDeliveryStatus !== "any") {
+    const status = latestDelivery(party.deliveries)?.status;
+    if (lastDeliveryStatus === "none") {
+      return !status;
+    }
+
+    return status === lastDeliveryStatus;
+  }
+
+  return true;
+}
+
+function selectedSourcesLabel(sources: string[]) {
+  if (sources.length === 1) {
+    return sources[0];
+  }
+
+  return `${sources.length} sources`;
+}
+
 export function HostDashboard({
   initialData,
   host,
@@ -72,7 +142,12 @@ export function HostDashboard({
   const [reminderFilter, setReminderFilter] = useState<
     "awaiting_response" | "attending" | "not_attending" | "all"
   >("awaiting_response");
-  const [inviteSource, setInviteSource] = useState("");
+  const [inviteSources, setInviteSources] = useState<string[]>([]);
+  const [showInviteFilters, setShowInviteFilters] = useState(false);
+  const [inviteComingToParty, setInviteComingToParty] =
+    useState<InviteComingToPartyFilter>("all");
+  const [inviteLastDeliveryStatus, setInviteLastDeliveryStatus] =
+    useState<InviteDeliveryStatusFilter>("any");
 
   const deferredCsv = useDeferredValue(csvText);
   const previewCount = useMemo(() => {
@@ -86,9 +161,19 @@ export function HostDashboard({
       ).sort((left, right) => left.localeCompare(right)),
     [initialData.parties],
   );
-  const selectedSourceCount = inviteSource
-    ? initialData.parties.filter((party) => sourceForParty(party) === inviteSource).length
+  const selectedSourceSet = useMemo(
+    () => new Set(inviteSources.map(normalizeSource)),
+    [inviteSources],
+  );
+  const selectedSourceCount = inviteSources.length
+    ? initialData.parties.filter(
+        (party) =>
+          selectedSourceSet.has(normalizeSource(sourceForParty(party))) &&
+          partyMatchesInviteFilters(party, inviteComingToParty, inviteLastDeliveryStatus),
+      ).length
     : 0;
+  const inviteFiltersActive =
+    inviteComingToParty !== "all" || inviteLastDeliveryStatus !== "any";
 
   async function importCsv() {
     const response = await fetch("/api/host/import", {
@@ -144,6 +229,17 @@ export function HostDashboard({
 
   function updateNewGuest<K extends keyof NewGuestForm>(field: K, value: NewGuestForm[K]) {
     setNewGuest((current) => ({ ...current, [field]: value }));
+  }
+
+  function toggleInviteSource(source: string) {
+    setInviteSources((current) => {
+      const normalized = normalizeSource(source);
+      if (current.some((value) => normalizeSource(value) === normalized)) {
+        return current.filter((value) => normalizeSource(value) !== normalized);
+      }
+
+      return [...current, source];
+    });
   }
 
   async function sendRequest(path: "/api/send" | "/api/reminders", body: Record<string, unknown>, success: string) {
@@ -230,8 +326,8 @@ export function HostDashboard({
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
           {[
             ["Invited parties", stats.invitedParties],
-            ["Messages", stats.deliveredMessages],
-            ["Opened", stats.openedInvites],
+            ["Email sends", stats.deliveredMessages],
+            ["Opened links", stats.openedInvites],
             ["Attending guests", stats.attendingGuests],
             ["Declined guests", stats.declinedGuests],
             ["Pending parties", stats.pendingParties],
@@ -255,7 +351,7 @@ export function HostDashboard({
                 Email delivery runs in sandbox mode until Resend environment variables are configured.
               </p>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex w-full flex-col gap-4 lg:w-[42rem]">
               <button
                 type="button"
                 onClick={() =>
@@ -270,40 +366,116 @@ export function HostDashboard({
               >
                 {sending === "/api/send" ? "Sending..." : "Send all email invitations"}
               </button>
-              <div className="flex flex-wrap items-center gap-2">
-                <select
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-sm font-semibold text-stone-800">Choose source</div>
+                  {inviteSources.length ? (
+                    <span className="text-sm text-stone-600">
+                      {selectedSourceCount} parties
+                    </span>
+                  ) : null}
+                </div>
+                <div
+                  role="group"
                   aria-label="Invitation source"
-                  value={inviteSource}
-                  onChange={(event) => setInviteSource(event.target.value)}
-                  className="rounded-full border border-[var(--app-line)] bg-white px-4 py-3 text-sm"
+                  className="flex max-h-36 flex-wrap gap-2 overflow-y-auto rounded-2xl border border-[var(--app-line)] bg-white/70 p-2"
                 >
-                  <option value="">Choose source</option>
-                  {sourceOptions.map((source) => (
-                    <option key={source} value={source}>
-                      {source}
-                    </option>
-                  ))}
-                </select>
+                  {sourceOptions.map((source) => {
+                    const active = selectedSourceSet.has(normalizeSource(source));
+
+                    return (
+                      <button
+                        key={source}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => toggleInviteSource(source)}
+                        className={toggleButtonClass(active)}
+                      >
+                        {source}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  aria-pressed={showInviteFilters || inviteFiltersActive}
+                  onClick={() => setShowInviteFilters((current) => !current)}
+                  className={toggleButtonClass(showInviteFilters || inviteFiltersActive, "px-5 py-3")}
+                >
+                  {inviteFiltersActive ? "Filters on" : "Filters"}
+                </button>
                 <button
                   type="button"
                   onClick={() =>
                     sendRequest(
                       "/api/send",
-                      { channels: ["email"], source: inviteSource },
-                      `Sent invitations for ${inviteSource}.`,
+                      {
+                        channels: ["email"],
+                        sources: inviteSources,
+                        ...(inviteComingToParty !== "all"
+                          ? { coming_to_party: inviteComingToParty === "yes" }
+                          : {}),
+                        ...(inviteLastDeliveryStatus !== "any"
+                          ? { last_delivery_status: inviteLastDeliveryStatus }
+                          : {}),
+                      },
+                      `Sent invitations for ${selectedSourcesLabel(inviteSources)}.`,
                     )
                   }
-                  disabled={Boolean(sending) || !inviteSource}
+                  disabled={Boolean(sending) || inviteSources.length === 0}
                   className="rounded-full border border-[var(--app-line)] bg-white px-5 py-3 text-sm font-semibold text-stone-800 disabled:opacity-50"
                 >
                   {sending === "/api/send" ? "Sending..." : "Send source invitations"}
                 </button>
-                {inviteSource ? (
-                  <span className="text-sm text-stone-600">
-                    {selectedSourceCount} parties
-                  </span>
-                ) : null}
               </div>
+              {showInviteFilters ? (
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <div className="mb-2 text-sm font-semibold text-stone-800">coming_to_party</div>
+                    <div
+                      role="group"
+                      aria-label="coming_to_party filter"
+                      className="flex flex-wrap gap-2"
+                    >
+                      {COMING_TO_PARTY_OPTIONS.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          aria-pressed={inviteComingToParty === option.value}
+                          onClick={() => setInviteComingToParty(option.value)}
+                          className={toggleButtonClass(inviteComingToParty === option.value)}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mb-2 text-sm font-semibold text-stone-800">
+                      last_delivery_status
+                    </div>
+                    <div
+                      role="group"
+                      aria-label="last_delivery_status filter"
+                      className="flex flex-wrap gap-2"
+                    >
+                      {DELIVERY_STATUS_OPTIONS.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          aria-pressed={inviteLastDeliveryStatus === option.value}
+                          onClick={() => setInviteLastDeliveryStatus(option.value)}
+                          className={toggleButtonClass(inviteLastDeliveryStatus === option.value)}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
               <div className="flex items-center gap-2">
                 <select
                   aria-label="Reminder audience"

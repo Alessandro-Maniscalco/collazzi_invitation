@@ -21,28 +21,21 @@ export interface InvitationEmail {
   html: string;
 }
 
-const BORDEAUX = "#660033";
 const TEXT_COLOR = "#2f2721";
-const CARD_IMAGE_VERSION = "3";
+const COUPLE_NAME = "Bona and Alessandro";
 
 export function renderInvitationEmail(input: InvitationEmailInput): InvitationEmail {
-  const coupleName = "Bona and Alessandro Maniscalco";
-  const envelopeCardUrl = inviteCardImageUrl(input.appUrl, input.partyLabel);
   const dateParts = splitDateLabel(input.summaryDateLabel);
-  const dateLine = [dateParts.date, dateParts.time].filter(Boolean).join(", ");
-  const timeLineHtml = dateParts.time
-    ? `<div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:${TEXT_COLOR};">${escapeHtml(dateParts.time)}</div>`
-    : "";
-  const addressName = input.summaryAddressName || "Villa I Collazzi";
-  const addressLabel = input.summaryAddressLabel || "Scandicci (Firenze), Italia";
+  const eventLine = formatEventLine(dateParts, input.summaryAddressName);
   const rsvpLabel = formatRsvpDeadline(input.rsvpDeadline);
+  const greetingName = greetingNameForLabel(input.partyLabel);
   const isReminder = input.kind === "reminder";
   const subjectLine = isReminder
-    ? `Reminder: ${input.eventTitle}`
-    : `${input.eventTitle} invitation`;
+    ? `Reminder: ${COUPLE_NAME} - invitation for ${input.partyLabel}`
+    : `${COUPLE_NAME} - invitation for ${input.partyLabel}`;
   const bodyPreview = isReminder
-    ? `Reminder to RSVP for ${input.eventTitle}.`
-    : `Private invitation for ${input.partyLabel}.`;
+    ? `Reminder to RSVP for ${COUPLE_NAME}.`
+    : `Here is the invitation link for ${input.partyLabel}.`;
 
   const html = `<!doctype html>
 <html>
@@ -55,87 +48,27 @@ export function renderInvitationEmail(input: InvitationEmailInput): InvitationEm
     <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
       ${escapeHtml(bodyPreview)}
     </div>
-    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background:#ffffff;">
-      <tr>
-        <td align="center" style="padding:0;">
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:640px;background:#ffffff;">
-            <tr>
-              <td align="center" style="padding:28px 20px 24px;">
-                <div style="font-family:Georgia,serif;font-size:24px;line-height:28px;color:${TEXT_COLOR};">
-                  ${escapeHtml(coupleName)}
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding:0 60px 24px;">
-                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:${TEXT_COLOR};">
-                  For: ${escapeHtml(input.partyLabel)}
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding:0 60px 20px;">
-                <a href="${escapeAttribute(input.inviteUrl)}" target="_blank" style="display:inline-block;border-bottom:1px solid ${TEXT_COLOR};color:${TEXT_COLOR};font-family:Arial,sans-serif;font-size:12px;font-weight:bold;letter-spacing:2.6px;line-height:20px;text-decoration:none;text-transform:uppercase;">
-                  OPEN INVITE
-                </a>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding:0 16px 30px;">
-                <a href="${escapeAttribute(input.inviteUrl)}" target="_blank" style="display:block;text-decoration:none;">
-                  <img src="${escapeAttribute(envelopeCardUrl)}" width="604" height="453" alt="Private invitation for ${escapeAttribute(input.partyLabel)}" style="border:0;display:block;outline:none;text-decoration:none;width:100%;max-width:604px;height:auto;background:${BORDEAUX};font-size:16px;color:${TEXT_COLOR};" />
-                </a>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding:0 40px;">
-                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:${TEXT_COLOR};">${escapeHtml(dateParts.date)}</div>
-                ${timeLineHtml}
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding:30px 40px 26px;">
-                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:${TEXT_COLOR};">
-                  Please RSVP before ${escapeHtml(rsvpLabel)}
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding:0 40px;">
-                <div style="font-family:Arial,sans-serif;font-size:16px;font-weight:bold;line-height:28px;color:${TEXT_COLOR};">${escapeHtml(addressName)}</div>
-                <div style="font-family:Arial,sans-serif;font-size:16px;line-height:24px;color:${TEXT_COLOR};">${escapeHtml(addressLabel)}</div>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding:32px 40px 38px;">
-                <div style="font-family:Arial,sans-serif;font-size:12px;line-height:18px;color:#6f625b;">
-                  This private link is for ${escapeHtml(input.partyLabel)}.
-                </div>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
+    <div style="font-family:Arial,sans-serif;font-size:16px;font-weight:400;line-height:24px;color:${TEXT_COLOR};text-align:left;">
+      <p style="margin:0 0 18px;">Hi ${escapeHtml(greetingName)},</p>
+      <p style="margin:0 0 18px;">Here is your invitation link: <a href="${escapeAttribute(input.inviteUrl)}" target="_blank" style="color:${TEXT_COLOR};text-decoration:underline;">${escapeHtml(input.inviteUrl)}</a>!</p>
+      <p style="margin:0 0 18px;">${escapeHtml(eventLine)}</p>
+      <p style="margin:0 0 18px;">Please RSVP by ${escapeHtml(rsvpLabel)}.</p>
+      <p style="margin:0;">Best,<br />${escapeHtml(COUPLE_NAME)}</p>
+    </div>
   </body>
 </html>`;
 
   const text = [
-    coupleName,
+    `Hi ${greetingName},`,
     "",
-    `For: ${input.partyLabel}`,
+    `Here is your invitation link: ${input.inviteUrl}!`,
     "",
-    isReminder ? "Reminder to view the invitation and RSVP:" : "Open the invitation:",
-    input.inviteUrl,
+    eventLine,
     "",
-    dateLine,
+    `Please RSVP by ${rsvpLabel}.`,
     "",
-    `Please RSVP before ${rsvpLabel}`,
-    "",
-    addressName,
-    addressLabel,
-    "",
-    `This private link is for ${input.partyLabel}.`,
+    "Best,",
+    COUPLE_NAME,
   ].join("\n");
 
   return {
@@ -146,12 +79,31 @@ export function renderInvitationEmail(input: InvitationEmailInput): InvitationEm
   };
 }
 
-function inviteCardImageUrl(appUrl: string, partyLabel: string) {
-  const params = new URLSearchParams({
-    name: partyLabel,
-    v: CARD_IMAGE_VERSION,
-  });
-  return `${appUrl.replace(/\/$/, "")}/api/invite-card?${params.toString()}`;
+function greetingNameForLabel(label: string) {
+  const normalized = label.trim().replace(/\s+/g, " ");
+  if (!normalized) {
+    return "there";
+  }
+
+  const connectorMatch = normalized.match(/\s+(e|and|&)\s+/i);
+  if (!connectorMatch) {
+    return firstGivenName(normalized);
+  }
+
+  const connector = connectorMatch[1];
+  return normalized
+    .split(new RegExp(`\\s+${escapeRegExp(connector)}\\s+`, "i"))
+    .map(firstGivenName)
+    .filter(Boolean)
+    .join(` ${connector} `);
+}
+
+function firstGivenName(name: string) {
+  return name.trim().split(/\s+/)[0] ?? "";
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function splitDateLabel(label?: string) {
@@ -184,9 +136,24 @@ function splitDateLabel(label?: string) {
   };
 }
 
+function formatEventLine(
+  dateParts: {
+    date: string;
+    time: string;
+  },
+  addressName?: string,
+) {
+  const date = /\b\d{4}\b/.test(dateParts.date) ? dateParts.date : `${dateParts.date}, 2026`;
+  const time = dateParts.time.replace(/^(\d{1,2})h(\d{2})$/i, "$1:$2");
+  const dateTime = [date, time].filter(Boolean).join(", ");
+  const venue = addressName || "Villa I Collazzi";
+
+  return `${dateTime}. ${venue}, Florence.`;
+}
+
 function formatRsvpDeadline(value?: string) {
   if (!value) {
-    return "July 28th";
+    return "July 15th";
   }
 
   const date = new Date(value);

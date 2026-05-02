@@ -18,6 +18,9 @@
 
 # local data
 /.data
+/local_automation_send/wa_profile/
+/local_automation_send/ig_profile/
+/local_automation_send/*.json
 
 # next.js
 /.next/

@@ -165,16 +165,44 @@ function coupleLabel(primaryLabel: string, guest2Label: string, input: AddGuestI
   return `${primaryLabel} e ${guest2Label}`;
 }
 
+function partyComingToParty(party: Party) {
+  return Boolean(party.response && Object.values(party.response.guestSelections).some(Boolean));
+}
+
+function lastDeliveryStatusForParty(state: AppState, partyId: string) {
+  return deliveriesForParty(state, partyId)
+    .slice()
+    .sort((left, right) => right.sentAt.localeCompare(left.sentAt))[0]?.status;
+}
+
+function sourcesForBatch(input: SendBatchInput) {
+  const sources = input.sources?.length ? input.sources : input.source ? [input.source] : [];
+  return new Set(sources.map((source) => source.trim().toLocaleLowerCase()).filter(Boolean));
+}
+
 function filterParties(state: AppState, input: SendBatchInput) {
   let selected = input.partyIds?.length
     ? state.parties.filter((party) => input.partyIds?.includes(party.id))
     : state.parties;
+  const sources = sourcesForBatch(input);
 
-  if (input.source) {
-    const source = input.source.trim().toLocaleLowerCase();
+  if (sources.size) {
     selected = selected.filter(
-      (party) => sourceForParty(party).toLocaleLowerCase() === source,
+      (party) => sources.has(sourceForParty(party).trim().toLocaleLowerCase()),
     );
+  }
+
+  if (typeof input.comingToParty === "boolean") {
+    selected = selected.filter((party) => partyComingToParty(party) === input.comingToParty);
+  }
+
+  if (input.lastDeliveryStatus) {
+    selected = selected.filter((party) => {
+      const status = lastDeliveryStatusForParty(state, party.id);
+      return input.lastDeliveryStatus === "none"
+        ? !status
+        : status === input.lastDeliveryStatus;
+    });
   }
 
   if (!input.filter || input.filter === "all") {

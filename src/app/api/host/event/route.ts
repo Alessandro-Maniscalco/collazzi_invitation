@@ -56,6 +56,7 @@ const payloadSchema = z.object({
             address: z.string().optional(),
             mapUrl: z.string().optional(),
             note: z.string().optional(),
+            hours: z.string().optional(),
           }),
         )
         .optional(),

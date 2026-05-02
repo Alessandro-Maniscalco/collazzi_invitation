@@ -20,14 +20,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  if (payload.type.includes("opened") || payload.type.includes("clicked")) {
+    return NextResponse.json({ ok: true });
+  }
+
   const status =
-    payload.type.includes("opened")
-      ? "opened"
-      : payload.type.includes("delivered")
-        ? "delivered"
-        : payload.type.includes("sent")
-          ? "sent"
-          : "failed";
+    payload.type.includes("delivered")
+      ? "delivered"
+      : payload.type.includes("sent")
+        ? "sent"
+        : "failed";
 
   await updateDeliveryStatusFromWebhook(messageId, status);
   return NextResponse.json({ ok: true });

@@ -15,6 +15,7 @@ import {
   findGuestSheetIntegrityErrors,
   labelForName,
   labelForSheetGuest,
+  NEW_GUEST_RSVP_DEFAULTS,
   parseGuestSheet,
   sheetGuestResponse,
   sheetGuestMembers,
@@ -334,6 +335,7 @@ export async function importSheetPartiesFromCsv(csv: string, actor: string) {
 
       appendRows.push(
         rowValuesFromRecord(loaded.table.headers, {
+          ...NEW_GUEST_RSVP_DEFAULTS,
           guest_id: guestId,
           token,
           token_active: "TRUE",
@@ -378,6 +380,7 @@ export async function addSheetGuest(input: AddGuestInput, actor: string) {
 
   await store.appendGuestRows(loaded.tabTitle, loaded.table, [
     rowValuesFromRecord(loaded.table.headers, {
+      ...NEW_GUEST_RSVP_DEFAULTS,
       last_name: input.lastName,
       first_name: input.firstName,
       email: input.email ?? "",
@@ -958,12 +961,27 @@ function filterSheetGuests(guests: SheetGuest[], input: SendBatchInput) {
   let selected = input.partyIds?.length
     ? guests.filter((guest) => input.partyIds?.includes(guest.guestId))
     : guests;
+  const sources = sourcesForSheetBatch(input);
 
-  if (input.source) {
-    const source = input.source.trim().toLocaleLowerCase();
+  if (sources.size) {
     selected = selected.filter(
-      (guest) => (guest.source ?? "").trim().toLocaleLowerCase() === source,
+      (guest) => sources.has((guest.source ?? "").trim().toLocaleLowerCase()),
     );
+  }
+
+  if (typeof input.comingToParty === "boolean") {
+    selected = selected.filter(
+      (guest) => sheetGuestComingToParty(guest) === input.comingToParty,
+    );
+  }
+
+  if (input.lastDeliveryStatus) {
+    selected = selected.filter((guest) => {
+      const status = lastDeliveryStatusForSheetGuest(guest);
+      return input.lastDeliveryStatus === "none"
+        ? !status
+        : status === input.lastDeliveryStatus;
+    });
   }
 
   if (!input.filter || input.filter === "all") {
@@ -978,6 +996,19 @@ function filterSheetGuests(guests: SheetGuest[], input: SendBatchInput) {
 
     return response?.status === input.filter;
   });
+}
+
+function sourcesForSheetBatch(input: SendBatchInput) {
+  const sources = input.sources?.length ? input.sources : input.source ? [input.source] : [];
+  return new Set(sources.map((source) => source.trim().toLocaleLowerCase()).filter(Boolean));
+}
+
+function sheetGuestComingToParty(guest: SheetGuest) {
+  return guest.comingToParty || guest.guest2ComingToParty;
+}
+
+function lastDeliveryStatusForSheetGuest(guest: SheetGuest) {
+  return guest.lastDeliveryStatus ?? (guest.sentInviteMarked ? "sent" : undefined);
 }
 
 function partyFromSheetGuest(guest: SheetGuest): Party {

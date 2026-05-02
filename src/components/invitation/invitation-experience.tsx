@@ -18,6 +18,7 @@ import Image from "next/image";
 import { Play, RefreshCw } from "lucide-react";
 
 import { AccommodationCarousel } from "@/components/invitation/accommodation-carousel";
+import { ProtectedTranslationText } from "@/components/invitation/protected-translation-text";
 import { RsvpModal } from "@/components/invitation/rsvp-modal";
 import { cn } from "@/lib/formatters";
 import type {
@@ -159,7 +160,7 @@ function MultilineText({ text, className }: { text: string; className?: string }
     <p className={className}>
       {text.split("\n").map((line, index, lines) => (
         <Fragment key={`${line}-${index}`}>
-          {line}
+          <ProtectedTranslationText text={line} />
           {index < lines.length - 1 ? <br /> : null}
         </Fragment>
       ))}
@@ -172,15 +173,17 @@ function LocationLink({
   address,
   mapUrl,
   compact = false,
+  showRule = true,
 }: {
   venueName: string;
   address: string;
   mapUrl: string;
   compact?: boolean;
+  showRule?: boolean;
 }) {
   return (
     <address className={styles.locationBlock}>
-      <hr className={styles.locationRule} />
+      {showRule ? <hr className={styles.locationRule} /> : null}
       <a
         href={mapUrl}
         target="_blank"
@@ -236,16 +239,19 @@ function EnvelopeFrontFlap() {
 function TravelSubItem({ item }: { item: ItinerarySubItem }) {
   return (
     <div className={styles.travelTextItem}>
+      <hr className={styles.locationRule} />
       {item.label ? <h4 className={styles.itemLabel}>{item.label}</h4> : null}
+      {item.note ? <MultilineText text={item.note} className={styles.itemNote} /> : null}
       {item.venueName && item.address && item.mapUrl ? (
         <LocationLink
           venueName={item.venueName}
           address={item.address}
           mapUrl={item.mapUrl}
           compact
+          showRule={false}
         />
       ) : null}
-      {item.note ? <MultilineText text={item.note} className={styles.itemNote} /> : null}
+      {item.hours ? <MultilineText text={item.hours} className={styles.itemNote} /> : null}
     </div>
   );
 }
