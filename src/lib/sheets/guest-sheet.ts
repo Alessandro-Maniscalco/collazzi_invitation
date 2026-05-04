@@ -16,7 +16,7 @@ export const GUEST_SHEET_HEADERS = [
   "invited_by_mum",
   "counted",
   "source",
-  "will_invite_to_walking_dinner",
+  "will_invite_to_Florence_dinner",
   "sent_whatsapp_save_the_date",
   "sent_instagram_save_the_date",
   "spazio",
@@ -26,7 +26,7 @@ export const GUEST_SHEET_HEADERS = [
   "invite_url",
   "sent_invite_at",
   "invite_opened_at",
-  "coming_to_walking_dinner",
+  "Florence_dinner",
   "coming_to_party",
   "guest_2_coming_to_party",
   "transfer_needed",
@@ -160,14 +160,24 @@ const FIELD_ALIASES: Partial<Record<GuestSheetHeader, string[]>> = {
     "sent instagram save the date",
     "instagram save the date",
   ],
-  will_invite_to_walking_dinner: [
+  will_invite_to_Florence_dinner: [
+    "will_invite_to_walking_dinner",
     "will invite to walking dinner",
     "invite to walking dinner",
     "invited to walking dinner",
+    "will invite to Florence dinner",
+    "invite to Florence dinner",
+    "invited to Florence dinner",
   ],
   sent_invite_at: ["sent invite", "sent invitation", "invite sent"],
   invite_opened_at: ["opened invite", "invite opened"],
-  coming_to_walking_dinner: ["coming to walking dinner", "walking dinner"],
+  Florence_dinner: [
+    "coming_to_walking_dinner",
+    "coming to walking dinner",
+    "walking dinner",
+    "coming to Florence dinner",
+    "Florence dinner",
+  ],
   coming_to_party: ["coming to party", "party"],
   guest_2_coming_to_party: [
     "guest 2 coming to party",
@@ -197,7 +207,7 @@ const LEGACY_COLUMN_INDEX: Partial<Record<GuestSheetHeader, number>> = {
   sent_instagram_save_the_date: 9,
   spazio: 10,
   sent_invite_at: 11,
-  coming_to_walking_dinner: 12,
+  Florence_dinner: 12,
   coming_to_party: 13,
   transfer_needed: 14,
   not_coming: 15,
@@ -349,7 +359,7 @@ export function buildRsvpColumnUpdates(
 
   const updates: SheetColumnUpdate[] = [
     {
-      header: "coming_to_walking_dinner",
+      header: "Florence_dinner",
       value: toSheetBoolean(!notComing && Boolean(input.answers.question_walking_dinner)),
     },
     {
@@ -481,7 +491,7 @@ export function toSheetBoolean(value: boolean) {
 }
 
 export const NEW_GUEST_RSVP_DEFAULTS = {
-  coming_to_walking_dinner: toSheetBoolean(false),
+  Florence_dinner: toSheetBoolean(false),
   coming_to_party: toSheetBoolean(false),
   guest_2_coming_to_party: toSheetBoolean(false),
   transfer_needed: toSheetBoolean(false),
@@ -570,7 +580,7 @@ function parseGuestRow(
   const rsvpNote = cell(row, columnMap, "rsvp_note");
   const rsvpUpdatedAt = cell(row, columnMap, "rsvp_updated_at");
   const comingToWalkingDinner = parseSheetBoolean(
-    cell(row, columnMap, "coming_to_walking_dinner"),
+    cell(row, columnMap, "Florence_dinner"),
   );
   const comingToParty = parseSheetBoolean(cell(row, columnMap, "coming_to_party"));
   const guest2ComingToParty = parseSheetBoolean(
@@ -620,7 +630,7 @@ function parseGuestRow(
     ),
     spazio: cell(row, columnMap, "spazio") || undefined,
     willInviteToWalkingDinner: parseSheetBoolean(
-      cell(row, columnMap, "will_invite_to_walking_dinner"),
+      cell(row, columnMap, "will_invite_to_Florence_dinner"),
     ),
     sentInviteAt: parseTimestampLike(sentInviteValue),
     sentInviteMarked: Boolean(parseTimestampLike(sentInviteValue)) || parseSheetBoolean(sentInviteValue),

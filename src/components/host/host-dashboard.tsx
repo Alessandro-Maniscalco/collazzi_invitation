@@ -62,6 +62,29 @@ const SYSTEM_PARTY_TAGS = new Set([
   "counted",
 ]);
 
+const buttonBaseClass =
+  "inline-flex cursor-pointer items-center justify-center rounded-full font-semibold transition duration-150 ease-out active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--app-wine)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none";
+
+const primaryButtonClass = cn(
+  buttonBaseClass,
+  "bg-[var(--app-wine)] text-white shadow-[0_12px_26px_rgba(102,0,51,0.2)] hover:-translate-y-0.5 hover:bg-[#7a1245] hover:shadow-[0_16px_30px_rgba(102,0,51,0.25)]",
+);
+
+const secondaryButtonClass = cn(
+  buttonBaseClass,
+  "border border-[var(--app-line)] bg-white text-stone-800 hover:-translate-y-0.5 hover:border-stone-400 hover:bg-stone-50 hover:shadow-sm",
+);
+
+const headerGhostButtonClass = cn(
+  buttonBaseClass,
+  "border border-white/20 text-white hover:-translate-y-0.5 hover:border-white/50 hover:bg-white/10",
+);
+
+const headerLightButtonClass = cn(
+  buttonBaseClass,
+  "bg-white text-stone-950 hover:-translate-y-0.5 hover:bg-stone-100 hover:shadow-md",
+);
+
 function freshNewGuestForm(): NewGuestForm {
   return { ...emptyNewGuestForm };
 }
@@ -80,12 +103,39 @@ function normalizeSource(source: string) {
 
 function toggleButtonClass(active: boolean, className?: string) {
   return cn(
-    "rounded-full border px-4 py-2 text-sm font-semibold transition disabled:opacity-50",
+    buttonBaseClass,
+    "border px-4 py-2 text-sm",
     active
-      ? "border-[var(--app-wine)] bg-[var(--app-wine)] text-white shadow-[0_8px_20px_rgba(102,0,51,0.18)]"
-      : "border-[var(--app-line)] bg-white text-stone-800 hover:border-stone-400",
+      ? "border-[var(--app-wine)] bg-[var(--app-wine)] text-white shadow-[0_8px_20px_rgba(102,0,51,0.18)] hover:-translate-y-0.5 hover:bg-[#7a1245] hover:shadow-[0_12px_24px_rgba(102,0,51,0.2)]"
+      : "border-[var(--app-line)] bg-white text-stone-800 hover:-translate-y-0.5 hover:border-stone-400 hover:bg-stone-50 hover:shadow-sm",
     className,
   );
+}
+
+async function copyTextToClipboard(text: string) {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.top = "0";
+  textarea.style.left = "0";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+
+  try {
+    if (!document.execCommand("copy")) {
+      throw new Error("Copy command failed.");
+    }
+  } finally {
+    document.body.removeChild(textarea);
+  }
 }
 
 function partyComingToParty(party: DashboardSnapshot["parties"][number]) {
@@ -114,6 +164,13 @@ function partyMatchesInviteFilters(
   }
 
   return true;
+}
+
+function inviteBody(body: Record<string, unknown>) {
+  return {
+    last_delivery_status: "none",
+    ...body,
+  };
 }
 
 function selectedSourcesLabel(sources: string[]) {
@@ -148,6 +205,7 @@ export function HostDashboard({
     useState<InviteComingToPartyFilter>("all");
   const [inviteLastDeliveryStatus, setInviteLastDeliveryStatus] =
     useState<InviteDeliveryStatusFilter>("any");
+  const [copiedLinkPartyId, setCopiedLinkPartyId] = useState<string | null>(null);
 
   const deferredCsv = useDeferredValue(csvText);
   const previewCount = useMemo(() => {
@@ -264,23 +322,21 @@ export function HostDashboard({
     startTransition(() => router.refresh());
   }
 
-  async function regenerateToken(partyId: string) {
-    const response = await fetch("/api/host/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ partyId }),
-    });
+  async function copyInviteLink(party: DashboardSnapshot["parties"][number]) {
+    const invitePath = `/i/${party.token.value}`;
+    const inviteUrl = new URL(invitePath, window.location.origin).toString();
 
-    if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-      setStatus(payload?.error ?? "Unable to regenerate token.");
-      return;
+    try {
+      await copyTextToClipboard(inviteUrl);
+      setCopiedLinkPartyId(party.id);
+      setStatus(`Copied invite link for ${party.label}.`);
+      window.setTimeout(() => {
+        setCopiedLinkPartyId((current) => (current === party.id ? null : current));
+      }, 1800);
+    } catch {
+      setCopiedLinkPartyId(null);
+      setStatus("Unable to copy link. Open the invitation and copy the URL manually.");
     }
-
-    setStatus("Regenerated guest link.");
-    startTransition(() => router.refresh());
   }
 
   const stats = initialData.stats;
@@ -301,14 +357,16 @@ export function HostDashboard({
             <div className="flex flex-wrap items-center gap-3">
               <Link
                 href="/"
-                className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white"
+                title="Go to the public home page"
+                className={cn(headerGhostButtonClass, "px-4 py-2 text-sm")}
               >
                 Home
               </Link>
               <form action="/api/host/logout" method="post">
                 <button
                   type="submit"
-                  className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-stone-950"
+                  title="Sign out of the host dashboard"
+                  className={cn(headerLightButtonClass, "px-4 py-2 text-sm")}
                 >
                   Log out
                 </button>
@@ -318,7 +376,11 @@ export function HostDashboard({
         </header>
 
         {status ? (
-          <div className="rounded-[1.5rem] border border-[var(--app-line)] bg-white px-5 py-4 text-sm text-stone-700">
+          <div
+            role="status"
+            aria-live="polite"
+            className="rounded-[1.5rem] border border-[var(--app-line)] bg-white px-5 py-4 text-sm text-stone-700"
+          >
             {status}
           </div>
         ) : null}
@@ -352,20 +414,6 @@ export function HostDashboard({
               </p>
             </div>
             <div className="flex w-full flex-col gap-4 lg:w-[42rem]">
-              <button
-                type="button"
-                onClick={() =>
-                  sendRequest(
-                    "/api/send",
-                    { channels: ["email"], filter: "all" },
-                    "Sent invitation batch.",
-                  )
-                }
-                disabled={Boolean(sending)}
-                className="rounded-full bg-[var(--app-wine)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                {sending === "/api/send" ? "Sending..." : "Send all email invitations"}
-              </button>
               <div className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="text-sm font-semibold text-stone-800">Choose source</div>
@@ -388,6 +436,7 @@ export function HostDashboard({
                         key={source}
                         type="button"
                         aria-pressed={active}
+                        title={`${active ? "Remove" : "Select"} ${source}`}
                         onClick={() => toggleInviteSource(source)}
                         className={toggleButtonClass(active)}
                       >
@@ -401,6 +450,7 @@ export function HostDashboard({
                 <button
                   type="button"
                   aria-pressed={showInviteFilters || inviteFiltersActive}
+                  title={showInviteFilters ? "Hide invitation filters" : "Show invitation filters"}
                   onClick={() => setShowInviteFilters((current) => !current)}
                   className={toggleButtonClass(showInviteFilters || inviteFiltersActive, "px-5 py-3")}
                 >
@@ -411,7 +461,7 @@ export function HostDashboard({
                   onClick={() =>
                     sendRequest(
                       "/api/send",
-                      {
+                      inviteBody({
                         channels: ["email"],
                         sources: inviteSources,
                         ...(inviteComingToParty !== "all"
@@ -420,12 +470,13 @@ export function HostDashboard({
                         ...(inviteLastDeliveryStatus !== "any"
                           ? { last_delivery_status: inviteLastDeliveryStatus }
                           : {}),
-                      },
+                      }),
                       `Sent invitations for ${selectedSourcesLabel(inviteSources)}.`,
                     )
                   }
                   disabled={Boolean(sending) || inviteSources.length === 0}
-                  className="rounded-full border border-[var(--app-line)] bg-white px-5 py-3 text-sm font-semibold text-stone-800 disabled:opacity-50"
+                  title="Send invitations to the selected source group"
+                  className={cn(secondaryButtonClass, "px-5 py-3 text-sm")}
                 >
                   {sending === "/api/send" ? "Sending..." : "Send source invitations"}
                 </button>
@@ -444,6 +495,7 @@ export function HostDashboard({
                           key={option.value}
                           type="button"
                           aria-pressed={inviteComingToParty === option.value}
+                          title={`Filter coming_to_party by ${option.label}`}
                           onClick={() => setInviteComingToParty(option.value)}
                           className={toggleButtonClass(inviteComingToParty === option.value)}
                         >
@@ -466,6 +518,7 @@ export function HostDashboard({
                           key={option.value}
                           type="button"
                           aria-pressed={inviteLastDeliveryStatus === option.value}
+                          title={`Filter last_delivery_status by ${option.label}`}
                           onClick={() => setInviteLastDeliveryStatus(option.value)}
                           className={toggleButtonClass(inviteLastDeliveryStatus === option.value)}
                         >
@@ -502,7 +555,8 @@ export function HostDashboard({
                     )
                   }
                   disabled={Boolean(sending)}
-                  className="rounded-full border border-[var(--app-line)] bg-white px-5 py-3 text-sm font-semibold text-stone-800 disabled:opacity-50"
+                  title="Send reminder emails to the selected audience"
+                  className={cn(secondaryButtonClass, "px-5 py-3 text-sm")}
                 >
                   Email reminders
                 </button>
@@ -604,7 +658,7 @@ export function HostDashboard({
                     }
                     className="h-4 w-4"
                   />
-                  Will invite to walking dinner
+                  Will invite to Dinner in the centre of Florence
                 </label>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
@@ -662,7 +716,8 @@ export function HostDashboard({
                 <button
                   type="submit"
                   disabled={addingGuest}
-                  className="w-fit rounded-full bg-[var(--app-wine)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
+                  title="Add this invited party to the guest list"
+                  className={cn(primaryButtonClass, "w-fit px-5 py-3 text-sm")}
                 >
                   {addingGuest ? "Adding..." : "Add invited party"}
                 </button>
@@ -688,7 +743,8 @@ export function HostDashboard({
               <button
                 type="button"
                 onClick={importCsv}
-                className="mt-5 rounded-full border border-[var(--app-line)] bg-white px-5 py-3 text-sm font-semibold text-stone-900"
+                title="Import the CSV rows into the guest list"
+                className={cn(secondaryButtonClass, "mt-5 px-5 py-3 text-sm")}
               >
                 Import CSV
               </button>
@@ -701,6 +757,9 @@ export function HostDashboard({
               <div className="mt-5 space-y-4">
                 {initialData.parties.map((party) => {
                   const latest = latestDelivery(party.deliveries);
+                  const email = party.email?.trim();
+                  const linkCopied = copiedLinkPartyId === party.id;
+
                   return (
                     <div
                       key={party.id}
@@ -718,14 +777,15 @@ export function HostDashboard({
                             </div>
                           </div>
                           <div className="text-right text-sm text-stone-600">
-                            <div>{party.email ?? "No email"}</div>
+                            <div>{email || "No email"}</div>
                             <div className="mt-2">Last sent {formatRelative(party.lastSentAt)}</div>
                           </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-3 text-sm">
                           <Link
                             href={`/i/${party.token.value}`}
-                            className="rounded-full border border-[var(--app-line)] px-4 py-2 font-semibold"
+                            title={`Open the private invitation for ${party.label}`}
+                            className={cn(secondaryButtonClass, "px-4 py-2")}
                           >
                             Open link
                           </Link>
@@ -738,16 +798,20 @@ export function HostDashboard({
                                 `Sent email invite for ${party.label}.`,
                               )
                             }
-                            className="rounded-full border border-[var(--app-line)] px-4 py-2 font-semibold"
+                            disabled={Boolean(sending)}
+                            title={`Send an email invitation to ${party.label}`}
+                            className={cn(secondaryButtonClass, "px-4 py-2")}
                           >
                             Email
                           </button>
                           <button
                             type="button"
-                            onClick={() => regenerateToken(party.id)}
-                            className="rounded-full border border-[var(--app-line)] px-4 py-2 font-semibold"
+                            aria-label={`Copy the private invitation link for ${party.label}`}
+                            title={`Copy the private invitation link for ${party.label}`}
+                            onClick={() => copyInviteLink(party)}
+                            className={cn(secondaryButtonClass, "px-4 py-2")}
                           >
-                            Regenerate link
+                            {linkCopied ? "Copied" : "Copy link"}
                           </button>
                         </div>
                         {latest ? (

@@ -17,10 +17,15 @@ describe("ProtectedTranslationText", () => {
     expect(dressCode).toHaveClass("notranslate");
   });
 
-  it("protects walking dinner inside longer labels", () => {
-    render(<ProtectedTranslationText text="Walking dinner - Thursday, August 27th, 19h30" />);
+  it("protects the Florence dinner phrase inside longer labels", () => {
+    render(
+      <ProtectedTranslationText text="Dinner in the centre of Florence - Thursday, August 27th, 19h30" />,
+    );
 
-    expect(screen.getByText("Walking dinner")).toHaveAttribute("translate", "no");
+    expect(screen.getByText("Dinner in the centre of Florence")).toHaveAttribute(
+      "translate",
+      "no",
+    );
   });
 
   it("renders the old English dress-code phrase as the preferred mixed wording", () => {

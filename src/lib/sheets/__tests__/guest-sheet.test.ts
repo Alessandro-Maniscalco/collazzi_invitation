@@ -36,7 +36,7 @@ describe("parseGuestSheet", () => {
       "invited_by_mum",
       "counted",
       "source",
-      "will_invite_to_walking_dinner",
+      "will_invite_to_Florence_dinner",
       "sent_whatsapp_save_the_date",
       "sent_instagram_save_the_date",
       "spazio",
@@ -104,7 +104,7 @@ describe("parseGuestSheet", () => {
       "sent_instagram_save_the_date",
       "spazio",
       "sent_invite_at",
-      "coming_to_walking_dinner",
+      "Florence_dinner",
       "coming_to_party",
       "transfer_needed",
       "not_coming",
@@ -127,11 +127,50 @@ describe("parseGuestSheet", () => {
     });
   });
 
+  it("normalizes old dinner headers to the current Florence dinner headers", () => {
+    const table = parseGuestSheet(
+      [
+        [
+          "guest_id",
+          "token",
+          "first_name",
+          "last_name",
+          "will_invite_to_walking_dinner",
+          "coming_to_walking_dinner",
+          "coming_to_party",
+          "rsvp_updated_at",
+        ],
+        [
+          "guest_1",
+          "guest_token",
+          "Dev",
+          "Karpe",
+          "TRUE",
+          "TRUE",
+          "TRUE",
+          "2026-04-25T12:00:00.000Z",
+        ],
+      ],
+      "http://localhost:3000",
+    );
+
+    expect(table.needsHeaderUpdate).toBe(true);
+    expect(table.headers.slice(4, 6)).toEqual([
+      "will_invite_to_Florence_dinner",
+      "Florence_dinner",
+    ]);
+    expect(table.guests[0]).toMatchObject({
+      willInviteToWalkingDinner: true,
+      comingToWalkingDinner: true,
+      comingToParty: true,
+    });
+  });
+
   it("chooses the next explicit append row below the live guest data", () => {
     const table = parseGuestSheet(
       [
-        ["", "", "", 403, 358, 123, 0, "", "Inviti Inviati"],
-        ["", "", "", "", "", "", "", "", 414],
+        ["", "", "", "403", "358", "123", "0", "", "Inviti Inviati"],
+        ["", "", "", "", "", "", "", "", "414"],
         [...GUEST_SHEET_HEADERS],
         rowFromRecord({
           first_name: "Existing",
@@ -157,8 +196,8 @@ describe("parseGuestSheet", () => {
           invite_url: "http://localhost:3000/i/guest_token",
           first_name: "Dev",
           last_name: "Karpe",
-          will_invite_to_walking_dinner: "TRUE",
-          coming_to_walking_dinner: "TRUE",
+          will_invite_to_Florence_dinner: "TRUE",
+          Florence_dinner: "TRUE",
           coming_to_party: "TRUE",
           transfer_needed: "FALSE",
           not_coming: "FALSE",
@@ -258,7 +297,7 @@ describe("parseGuestSheet", () => {
     });
   });
 
-  it("parses the walking dinner invite checkbox", () => {
+  it("parses the Florence dinner invite checkbox", () => {
     const table = parseGuestSheet(
       [
         [...GUEST_SHEET_HEADERS],
@@ -267,7 +306,7 @@ describe("parseGuestSheet", () => {
           token: "guest_token",
           first_name: "Dev",
           last_name: "Karpe",
-          will_invite_to_walking_dinner: "TRUE",
+          will_invite_to_Florence_dinner: "TRUE",
         }),
       ],
       "http://localhost:3000",
@@ -278,7 +317,7 @@ describe("parseGuestSheet", () => {
 
   it("keeps explicit new guest RSVP defaults pending", () => {
     expect(NEW_GUEST_RSVP_DEFAULTS).toEqual({
-      coming_to_walking_dinner: "FALSE",
+      Florence_dinner: "FALSE",
       coming_to_party: "FALSE",
       guest_2_coming_to_party: "FALSE",
       transfer_needed: "FALSE",
@@ -294,7 +333,7 @@ describe("parseGuestSheet", () => {
           token: "guest_token",
           first_name: "Dev",
           last_name: "Karpe",
-          will_invite_to_walking_dinner: "TRUE",
+          will_invite_to_Florence_dinner: "TRUE",
         }),
       ],
       "http://localhost:3000",
@@ -393,7 +432,7 @@ describe("buildRsvpColumnUpdates", () => {
     );
 
     expect(updates).toEqual([
-      { header: "coming_to_walking_dinner", value: "FALSE" },
+      { header: "Florence_dinner", value: "FALSE" },
       { header: "coming_to_party", value: "FALSE" },
       { header: "transfer_needed", value: "FALSE" },
       { header: "not_coming", value: "TRUE" },
@@ -423,7 +462,7 @@ describe("buildRsvpColumnUpdates", () => {
     );
 
     expect(updates).toEqual([
-      { header: "coming_to_walking_dinner", value: "TRUE" },
+      { header: "Florence_dinner", value: "TRUE" },
       { header: "coming_to_party", value: "TRUE" },
       { header: "guest_2_coming_to_party", value: "FALSE" },
       { header: "transfer_needed", value: "FALSE" },
@@ -434,7 +473,7 @@ describe("buildRsvpColumnUpdates", () => {
     ]);
   });
 
-  it("respects an explicit party checkbox for walking dinner invitees", () => {
+  it("respects an explicit party checkbox for Florence dinner invitees", () => {
     const updates = buildRsvpColumnUpdates(
       {
         token: "guest_token",
@@ -453,7 +492,7 @@ describe("buildRsvpColumnUpdates", () => {
     );
 
     expect(updates).toEqual([
-      { header: "coming_to_walking_dinner", value: "TRUE" },
+      { header: "Florence_dinner", value: "TRUE" },
       { header: "coming_to_party", value: "FALSE" },
       { header: "transfer_needed", value: "TRUE" },
       { header: "not_coming", value: "FALSE" },

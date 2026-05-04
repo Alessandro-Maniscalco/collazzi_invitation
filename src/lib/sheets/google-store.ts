@@ -53,8 +53,8 @@ const CHECKBOX_HEADERS: GuestSheetHeader[] = [
   "counted",
   "sent_whatsapp_save_the_date",
   "sent_instagram_save_the_date",
-  "will_invite_to_walking_dinner",
-  "coming_to_walking_dinner",
+  "will_invite_to_Florence_dinner",
+  "Florence_dinner",
   "coming_to_party",
   "guest_2_coming_to_party",
   "transfer_needed",
@@ -71,6 +71,12 @@ interface CellWrite {
   rowNumber: number;
   header: GuestSheetHeader;
   value: string;
+}
+
+interface ActivityWrite {
+  type: ActivityEvent["type"];
+  actor: string;
+  message: string;
 }
 
 interface SheetsClient {
@@ -117,6 +123,7 @@ export function getGoogleSheetsGuestStore() {
 export async function getSheetInvitationByToken(
   token: string,
   state: AppState,
+  options?: { recordOpen?: boolean },
 ): Promise<InvitationView | null> {
   const store = getGoogleSheetsGuestStore();
   const { table } = await store.loadGuests();
@@ -129,6 +136,22 @@ export async function getSheetInvitationByToken(
   }
 
   const party = partyFromSheetGuest(guest);
+
+  if (options?.recordOpen && !guest.inviteOpenedAt) {
+    const timestamp = new Date().toISOString();
+    await store.writeGuestColumns(table, guest.rowNumber, [
+      { header: "invite_opened_at", value: timestamp },
+      { header: "last_delivery_status", value: "opened" },
+    ]);
+    await store.appendActivity(
+      "invite_opened",
+      "guest",
+      `${labelForSheetGuest(guest)} opened their invitation.`,
+    );
+    guest.inviteOpenedAt = timestamp;
+    guest.lastDeliveryStatus = "opened";
+    party.token.openedAt = timestamp;
+  }
 
   return {
     event: eventForSheetGuest(state.event, guest),
@@ -392,7 +415,7 @@ export async function addSheetGuest(input: AddGuestInput, actor: string) {
       invited_by_mum: toSheetBoolean(input.invitedByMum),
       counted: "TRUE",
       source: input.source ?? "",
-      will_invite_to_walking_dinner: toSheetBoolean(input.willInviteToWalkingDinner),
+      will_invite_to_Florence_dinner: toSheetBoolean(input.willInviteToWalkingDinner),
       sent_whatsapp_save_the_date: toSheetBoolean(input.sentWhatsappSaveTheDate),
       sent_instagram_save_the_date: toSheetBoolean(input.sentInstagramSaveTheDate),
       guest_id: guestId,
@@ -440,12 +463,26 @@ export async function sendSheetBatch(input: SendBatchInput, actor: string, state
   const { table } = await store.loadGuests();
   const candidates = filterSheetGuests(table.guests, input);
   const created: DeliveryRecord[] = [];
+  const activities: ActivityWrite[] = [];
+  const sentInviteRecipients = new Set<string>();
 
   for (const guest of candidates) {
+    if (shouldSkipUnfilteredSheetInviteDelivery(guest, input)) {
+      continue;
+    }
+
     for (const channel of input.channels) {
       const recipient = guest.email;
       if (!recipient) {
         continue;
+      }
+
+      const recipientKey = deliveryRecipientKey(channel, recipient);
+      if (input.kind === "invite" && sentInviteRecipients.has(recipientKey)) {
+        continue;
+      }
+      if (input.kind === "invite") {
+        sentInviteRecipients.add(recipientKey);
       }
 
       const dispatched = await dispatchDelivery({
@@ -486,13 +523,19 @@ export async function sendSheetBatch(input: SendBatchInput, actor: string, state
       }
 
       await store.writeGuestColumns(table, guest.rowNumber, updates);
-      await store.appendActivity(
-        "delivery_created",
+      activities.push({
+        type: "delivery_created",
         actor,
-        `${input.kind === "invite" ? "Sent" : "Queued"} ${channel} ${input.kind} for ${labelForSheetGuest(guest)}.`,
-      );
+        message: `${input.kind === "invite" ? "Sent" : "Queued"} ${channel} ${input.kind} for ${labelForSheetGuest(guest)}.`,
+      });
       created.push(delivery);
     }
+  }
+
+  try {
+    await store.appendActivities(activities);
+  } catch (error) {
+    console.error("Unable to append Google Sheets delivery activity.", error);
   }
 
   return created;
@@ -542,10 +585,25 @@ export async function updateSheetDeliveryStatusFromWebhook(
 
 export class GoogleSheetsGuestStore {
   private sheetsPromise?: Promise<SheetsClient>;
+  private loadGuestsPromise?: Promise<LoadedGuestSheet>;
   private guestTabTitle?: string;
   private checkboxValidationEnsured = false;
+  private activitySheetEnsured = false;
+  private activitySheetPromise?: Promise<void>;
 
   async loadGuests(): Promise<LoadedGuestSheet> {
+    if (this.loadGuestsPromise) {
+      return this.loadGuestsPromise;
+    }
+
+    this.loadGuestsPromise = this.loadGuestsUncached().finally(() => {
+      this.loadGuestsPromise = undefined;
+    });
+
+    return this.loadGuestsPromise;
+  }
+
+  private async loadGuestsUncached(): Promise<LoadedGuestSheet> {
     const tabTitle = await this.getGuestTabTitle();
     const sheets = await this.getSheets();
     const response = await sheets.spreadsheets.values.get({
@@ -613,6 +671,14 @@ export class GoogleSheetsGuestStore {
   }
 
   async appendActivity(type: ActivityEvent["type"], actor: string, message: string) {
+    await this.appendActivities([{ type, actor, message }]);
+  }
+
+  async appendActivities(activities: ActivityWrite[]) {
+    if (!activities.length) {
+      return;
+    }
+
     assertSheetMutationAllowed();
     const sheets = await this.getSheets();
     await this.ensureActivitySheet();
@@ -622,7 +688,13 @@ export class GoogleSheetsGuestStore {
       valueInputOption: "USER_ENTERED",
       insertDataOption: "INSERT_ROWS",
       requestBody: {
-        values: [[`activity_${nanoid(12)}`, type, new Date().toISOString(), actor, message]],
+        values: activities.map((activity) => [
+          `activity_${nanoid(12)}`,
+          activity.type,
+          new Date().toISOString(),
+          activity.actor,
+          activity.message,
+        ]),
       },
     });
   }
@@ -769,6 +841,18 @@ export class GoogleSheetsGuestStore {
   }
 
   private async ensureActivitySheet() {
+    if (this.activitySheetEnsured) {
+      return;
+    }
+
+    this.activitySheetPromise ??= this.ensureActivitySheetUncached().finally(() => {
+      this.activitySheetPromise = undefined;
+    });
+
+    return this.activitySheetPromise;
+  }
+
+  private async ensureActivitySheetUncached() {
     const sheets = await this.getSheets();
     const metadata = await sheets.spreadsheets.get({
       spreadsheetId: env.GOOGLE_SHEETS_ID,
@@ -812,6 +896,8 @@ export class GoogleSheetsGuestStore {
         },
       });
     }
+
+    this.activitySheetEnsured = true;
   }
 
   private async ensureRowCapacity(tabTitle: string, requiredRowCount: number) {
@@ -996,6 +1082,19 @@ function filterSheetGuests(guests: SheetGuest[], input: SendBatchInput) {
 
     return response?.status === input.filter;
   });
+}
+
+function shouldSkipUnfilteredSheetInviteDelivery(guest: SheetGuest, input: SendBatchInput) {
+  if (input.kind !== "invite" || input.lastDeliveryStatus) {
+    return false;
+  }
+
+  const status = lastDeliveryStatusForSheetGuest(guest);
+  return Boolean(status && status !== "failed");
+}
+
+function deliveryRecipientKey(channel: DeliveryRecord["channel"], recipient: string) {
+  return `${channel}:${recipient.trim().toLocaleLowerCase()}`;
 }
 
 function sourcesForSheetBatch(input: SendBatchInput) {

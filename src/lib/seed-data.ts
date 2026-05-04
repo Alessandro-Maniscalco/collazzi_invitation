@@ -50,7 +50,7 @@ export function createSeedState(): AppState {
     questions: [
       {
         id: "question_walking_dinner",
-        label: "Walking dinner - Thursday, August 27th, 19h30",
+        label: "Dinner in the centre of Florence - Thursday, August 27th, 19h30",
         type: "checkbox",
       },
       {
@@ -72,12 +72,12 @@ export function createSeedState(): AppState {
         address: "31 Piazza della Signoria Firenze",
         mapUrl:
           "https://www.google.com/maps/search/?api=1&query=Ristorante+Frescobaldi+Firenze",
-        title: "Walking dinner",
+        title: "Dinner in the centre of Florence",
         datetimeLabel: "Thursday, August 27th, 19h30",
         dressCode: "Dress Code - Casual Chic",
         description: "",
         imageSrc: "/assets/collazzi/thursday-restaurant.jpeg",
-        note: "Walking dinner\nThursday, August 27th, 19h30\nDress Code - Casual Chic",
+        note: "Dinner in the centre of Florence\nThursday, August 27th, 19h30\nDress Code - Casual Chic",
       },
       {
         id: "itinerary_party",

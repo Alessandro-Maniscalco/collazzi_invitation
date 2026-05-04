@@ -108,6 +108,7 @@ def load_invite_people(
     counted_filter: Optional[bool],
     last_delivery_status_filter: str,
     target_people: Sequence[tuple[str, str]],
+    channel: Optional[str] = None,
 ) -> tuple[object, SheetTable, list[InvitePerson]]:
     email_filter = normalize_filter_value(email_filter)
     last_delivery_status_filter = normalize_filter_value(last_delivery_status_filter)
@@ -124,11 +125,26 @@ def load_invite_people(
     values = worksheet.get_all_values()
     table = build_sheet_table(values)
 
-    selected: list[InvitePerson] = []
+    people: list[InvitePerson] = []
     for offset, row in enumerate(values[table.data_start_row_number - 1 :]):
         row_number = table.data_start_row_number + offset
         person = person_from_row(row_number, row, table)
         if person is None:
+            continue
+        people.append(person)
+
+    sent_name_keys = (
+        set()
+        if last_delivery_status_filter not in {"empty", "any"}
+        else sent_contact_name_keys(people, channel)
+    )
+    selected_name_keys: set[str] = set()
+    selected: list[InvitePerson] = []
+    for person in people:
+        name_key = contact_name_key(person)
+        if name_key in sent_name_keys:
+            continue
+        if channel == "whatsapp" and name_key in selected_name_keys:
             continue
         if matches_filters(
             person,
@@ -139,6 +155,8 @@ def load_invite_people(
             target_people=target_people,
         ):
             selected.append(person)
+            if channel == "whatsapp" and name_key:
+                selected_name_keys.add(name_key)
 
     return worksheet, table, selected
 
@@ -261,6 +279,26 @@ def matches_target(person: InvitePerson, target_people: Sequence[tuple[str, str]
         if person_last == target_last.strip().lower() and person_first == target_first.strip().lower():
             return True
     return False
+
+
+def sent_contact_name_keys(people: Sequence[InvitePerson], channel: Optional[str]) -> set[str]:
+    if channel != "whatsapp":
+        return set()
+
+    sent_statuses = {"sandbox", "queued", "sent", "delivered", "opened"}
+    return {
+        contact_name_key(person)
+        for person in people
+        if contact_name_key(person)
+        and (
+            person.sent_whatsapp_save_the_date
+            or person.effective_delivery_status in sent_statuses
+        )
+    }
+
+
+def contact_name_key(person: InvitePerson) -> str:
+    return " ".join([person.first_name.strip().lower(), person.last_name.strip().lower()]).strip()
 
 
 def message_from_template(template: str, person: InvitePerson) -> str:

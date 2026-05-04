@@ -12,7 +12,7 @@ import type { Question } from "@/lib/types";
 const walkingDinnerQuestions = [
   {
     id: "question_walking_dinner",
-    label: "Walking dinner - Thursday, August 27th, 19h30",
+    label: "Dinner in the centre of Florence - Thursday, August 27th, 19h30",
     type: "checkbox",
   },
   {
@@ -28,7 +28,7 @@ const walkingDinnerQuestions = [
 ] satisfies Question[];
 
 describe("RSVP question visibility", () => {
-  it("shows walking dinner, party, and transfer for walking dinner invitees", () => {
+  it("shows Florence dinner, party, and transfer for dinner invitees", () => {
     const implyParty = shouldImplyPartyAttendance(walkingDinnerQuestions);
 
     expect(implyParty).toBe(false);

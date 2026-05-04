@@ -218,6 +218,23 @@ function filterParties(state: AppState, input: SendBatchInput) {
   });
 }
 
+function shouldSkipUnfilteredInviteDelivery(state: AppState, party: Party, input: SendBatchInput) {
+  if (input.kind !== "invite" || input.lastDeliveryStatus) {
+    return false;
+  }
+
+  const status = lastDeliveryStatusForParty(state, party.id);
+  if (status) {
+    return status !== "failed";
+  }
+
+  return Boolean(party.lastSentAt);
+}
+
+function deliveryRecipientKey(channel: DeliveryRecord["channel"], recipient: string) {
+  return `${channel}:${recipient.trim().toLocaleLowerCase()}`;
+}
+
 function sourceForParty(party: Party) {
   if (party.source?.trim()) {
     return party.source.trim();
@@ -257,36 +274,60 @@ export async function recordInviteOpen(tokenValue: string) {
   });
 }
 
-export async function getInvitationByToken(tokenValue: string): Promise<InvitationView | null> {
+export async function getInvitationByToken(
+  tokenValue: string,
+  options?: { recordOpen?: boolean },
+): Promise<InvitationView | null> {
   if (hasGoogleSheetsConfig()) {
-    return getSheetInvitationByToken(tokenValue, await readState());
+    return getSheetInvitationByToken(tokenValue, await readState(), options);
   }
 
-  const state = await readState();
-  const party = state.parties.find((candidate) => candidate.token.value === tokenValue);
+  const buildInvitation = (state: AppState) => {
+    const party = state.parties.find((candidate) => candidate.token.value === tokenValue);
 
-  if (!party || !party.token.active) {
-    return null;
-  }
+    if (!party || !party.token.active) {
+      return null;
+    }
 
-  const tokenExpired = party.token.expiresAt
-    ? new Date(party.token.expiresAt).getTime() < Date.now()
-    : false;
+    const tokenExpired = party.token.expiresAt
+      ? new Date(party.token.expiresAt).getTime() < Date.now()
+      : false;
 
-  if (tokenExpired) {
-    return null;
-  }
+    if (tokenExpired) {
+      return null;
+    }
 
-  return {
-    event: state.event,
-    party,
-    guests: guestsForParty(state, party.id),
-    questions: state.questions,
-    itinerary: state.itinerary,
-    accommodations: state.accommodations,
-    deliveries: deliveriesForParty(state, party.id),
-    readOnly: isReadOnly(state.event.rsvpDeadline),
+    if (options?.recordOpen && !party.token.openedAt) {
+      party.token.openedAt = new Date().toISOString();
+      const latest = deliveriesForParty(state, party.id)
+        .filter((delivery) => delivery.kind === "invite")
+        .sort((left, right) => right.sentAt.localeCompare(left.sentAt))[0];
+
+      if (latest && latest.status !== "opened") {
+        latest.status = "opened";
+        latest.openedAt = party.token.openedAt;
+      }
+
+      addActivity(state, `${party.label} opened their invitation.`, "guest", "invite_opened");
+    }
+
+    return {
+      event: state.event,
+      party,
+      guests: guestsForParty(state, party.id),
+      questions: state.questions,
+      itinerary: state.itinerary,
+      accommodations: state.accommodations,
+      deliveries: deliveriesForParty(state, party.id),
+      readOnly: isReadOnly(state.event.rsvpDeadline),
+    };
   };
+
+  if (options?.recordOpen) {
+    return updateState(buildInvitation);
+  }
+
+  return buildInvitation(await readState());
 }
 
 export async function saveRsvp(input: SaveRsvpInput) {
@@ -552,12 +593,25 @@ export async function sendBatch(input: SendBatchInput, actor: string) {
   const deliveries = await updateState(async (state) => {
     const parties = filterParties(state, input);
     const created: DeliveryRecord[] = [];
+    const sentInviteRecipients = new Set<string>();
 
     for (const party of parties) {
+      if (shouldSkipUnfilteredInviteDelivery(state, party, input)) {
+        continue;
+      }
+
       for (const channel of input.channels) {
         const recipient = party.email;
         if (!recipient) {
           continue;
+        }
+
+        const recipientKey = deliveryRecipientKey(channel, recipient);
+        if (input.kind === "invite" && sentInviteRecipients.has(recipientKey)) {
+          continue;
+        }
+        if (input.kind === "invite") {
+          sentInviteRecipients.add(recipientKey);
         }
 
         const dispatched = await dispatchDelivery({

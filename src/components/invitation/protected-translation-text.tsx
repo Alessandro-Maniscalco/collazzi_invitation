@@ -32,8 +32,10 @@ const PROTECTED_TRANSLATION_TERMS = [
   { match: "Black Tie and Long Dress", label: "Black tie e abito lungo" },
   { match: "Black Tie e abito lungo", label: "Black tie e abito lungo" },
   { match: "Black tie e abito lungo", label: "Black tie e abito lungo" },
-  { match: "Walking dinner", label: "Walking dinner" },
-  { match: "Walking Dinner", label: "Walking dinner" },
+  {
+    match: "Dinner in the centre of Florence",
+    label: "Dinner in the centre of Florence",
+  },
   { match: "Dress Code", label: "Dress Code" },
   { match: "Dress code", label: "Dress Code" },
 ];

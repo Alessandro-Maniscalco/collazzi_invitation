@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import time
 from pathlib import Path
 from typing import Optional
@@ -30,12 +31,12 @@ from whatsapp_RSVP_send import (
 #   LAST_DELIVERY_STATUS_FILTER: "empty", "sandbox", "queued", "sent",
 #                                "delivered", "opened", "failed", or "any"
 EMAIL_FILTER = "empty"
-SOURCE_FILTER = ["Zete"]
+SOURCE_FILTER = []
 COUNTED_FILTER: Optional[bool] = True
 LAST_DELIVERY_STATUS_FILTER = "empty"
 
 # Test target. Leave empty only when you are ready to batch send.
-TARGET_PEOPLE = [("Maniscalco", "Alessandro")]
+TARGET_PEOPLE = [("Elkann", "Oceano")]
 SEND_LIMIT = 1
 
 INVITE_MESSAGE_TEMPLATE = (
@@ -54,24 +55,62 @@ WAIT_AFTER_EACH_FAIL_SEC = 1.0
 # These are channel-specific tracking columns already present in the sheet.
 MARK_WHATSAPP_SENT = True
 MARK_SENT_INVITE_AT = False
-MARK_LAST_DELIVERY_STATUS_SENT = False
+MARK_LAST_DELIVERY_STATUS_SENT = True
+
+
+def get_message_box(page: Page):
+    candidates = [
+        page.locator("footer div[contenteditable='true'][role='textbox']").last,
+        page.locator("footer div[contenteditable='true'][aria-placeholder*='Type a message' i]").last,
+        page.locator("footer div[contenteditable='true'][aria-label*='Type a message' i]").last,
+        page.get_by_role("textbox", name=re.compile(r"Type a message", re.I)).last,
+        page.locator("div[contenteditable='true'][data-tab='10']").last,
+    ]
+
+    deadline = time.monotonic() + 15
+    last_error: Optional[Exception] = None
+    while time.monotonic() < deadline:
+        for candidate in candidates:
+            try:
+                if candidate.count() > 0 and candidate.is_visible(timeout=500):
+                    candidate.click()
+                    return candidate
+            except Exception as exc:
+                last_error = exc
+        time.sleep(0.2)
+
+    raise PWTimeoutError(f"WhatsApp message box not found: {last_error}")
+
+
+def click_send_button(page: Page) -> bool:
+    candidates = [
+        page.locator("button[aria-label='Send']").first,
+        page.locator("div[role='button'][aria-label='Send']").first,
+        page.locator("button:has(span[data-icon='send'])").first,
+        page.locator("div[role='button']:has(span[data-icon='send'])").first,
+    ]
+
+    for candidate in candidates:
+        try:
+            if candidate.count() > 0 and candidate.is_visible(timeout=500):
+                candidate.click()
+                return True
+        except Exception:
+            continue
+    return False
 
 
 def send_text_message(page: Page, message: str) -> None:
-    message_box = page.locator("div[aria-label='Type a message'][contenteditable='true']")
-    message_box.click()
+    message_box = get_message_box(page)
     time.sleep(0.2)
-    message_box.fill(message)
+    try:
+        message_box.fill("")
+    except Exception:
+        page.keyboard.press("Meta+A")
+    page.keyboard.insert_text(message)
     time.sleep(0.3)
 
-    send_button = page.locator("button[aria-label='Send']").first
-    if send_button.count() == 0:
-        send_button = page.locator("div[role='button'][aria-label='Send']").first
-
-    try:
-        send_button.wait_for(state="visible", timeout=5_000)
-        send_button.click()
-    except PWTimeoutError:
+    if not click_send_button(page):
         page.keyboard.press("Enter")
     time.sleep(1.0)
 
@@ -108,6 +147,7 @@ def main() -> None:
         counted_filter=COUNTED_FILTER,
         last_delivery_status_filter=LAST_DELIVERY_STATUS_FILTER,
         target_people=TARGET_PEOPLE,
+        channel="whatsapp",
     )
 
     if SEND_LIMIT:

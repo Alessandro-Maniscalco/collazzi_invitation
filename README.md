@@ -63,8 +63,8 @@ Recommended guest column order keeps host-editable fields on the left:
    `FALSE`, `0`, or `No` means the row is excluded from guest lookup, host stats, and token creation.
 11. `source` - free-text provenance, for example `AleAI`, `Bona list`, `Mum table`, or
    `Instagram DM`.
-12. `will_invite_to_walking_dinner` - boolean; controls whether the guest sees the Thursday dinner
-   section and walking dinner RSVP question. The host dashboard add-party form writes this field.
+12. `will_invite_to_Florence_dinner` - boolean; controls whether the guest sees the Thursday dinner
+   section and Florence dinner RSVP question. The host dashboard add-party form writes this field.
 13. `sent_whatsapp_save_the_date` - boolean tracking marker only; it does not send WhatsApp messages.
 14. `sent_instagram_save_the_date` - boolean tracking marker only; it does not send Instagram
     messages.
@@ -76,7 +76,7 @@ Recommended guest column order keeps host-editable fields on the left:
 20. `sent_invite_at` - timestamp written when the app sends the email invitation. A boolean `TRUE`
     is also treated as a sent marker, but timestamps are preferred.
 21. `invite_opened_at` - timestamp written when the guest first opens the invitation link.
-22. `coming_to_walking_dinner` - RSVP boolean for Thursday dinner.
+22. `Florence_dinner` - RSVP boolean for Thursday dinner.
 23. `coming_to_party` - RSVP boolean for the primary guest attending the Friday party.
 24. `guest_2_coming_to_party` - RSVP boolean for the second guest attending the Friday party.
 25. `transfer_needed` - RSVP boolean for shuttle/transfer need.
@@ -91,6 +91,8 @@ Recommended guest column order keeps host-editable fields on the left:
 
 Boolean columns are values, not labels. The API reads and writes `TRUE`/`FALSE`; Google Sheets
 checkbox formatting is recommended because it is easier for humans to edit the same boolean values.
+Existing `will_invite_to_walking_dinner` and `coming_to_walking_dinner` headers are still accepted
+as aliases and normalized to the current header names.
 
 ## Deployment
 
