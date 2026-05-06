@@ -15,5 +15,5 @@ export default async function HostPage() {
     redirect("/host/login");
   }
 
-  return <HostDashboard initialData={snapshot} host={host} />;
+  return <HostDashboard initialData={snapshot} />;
 }

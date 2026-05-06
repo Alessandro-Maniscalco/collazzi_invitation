@@ -188,9 +188,9 @@ test("host dashboard login works in mock mode", async ({ page }) => {
   await page.goto("/host/login", { waitUntil: "domcontentloaded" });
   await expect(page.getByLabel("Email")).toHaveCount(0);
   await page.getByLabel("Password").fill("playwright-host-password");
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByLabel("Password").press("Enter");
   await expect(page).toHaveURL(/\/host$/);
-  await expect(page.getByText("Host Dashboard", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Invited parties", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("Taylor & Jordan Russo", { exact: true }).first()).toBeVisible();
   await expect(page.getByLabel("Invitation source")).toBeVisible();
   await expect(page.getByLabel("Invitation source")).toContainText("friends");

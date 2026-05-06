@@ -1,8 +1,14 @@
 "use client";
 
-import { startTransition, useDeferredValue, useMemo, useState, type FormEvent } from "react";
+import {
+  startTransition,
+  useDeferredValue,
+  useMemo,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import {
@@ -13,7 +19,7 @@ import {
   latestDelivery,
   partyAttendanceSummary,
 } from "@/lib/formatters";
-import type { DashboardSnapshot, DeliveryStatus, HostUser, Party } from "@/lib/types";
+import type { DashboardSnapshot, DeliveryStatus, Party } from "@/lib/types";
 
 const emptyNewGuestForm = {
   last_name: "",
@@ -75,18 +81,47 @@ const secondaryButtonClass = cn(
   "border border-[var(--app-line)] bg-white text-stone-800 hover:-translate-y-0.5 hover:border-stone-400 hover:bg-stone-50 hover:shadow-sm",
 );
 
-const headerGhostButtonClass = cn(
-  buttonBaseClass,
-  "border border-white/20 text-white hover:-translate-y-0.5 hover:border-white/50 hover:bg-white/10",
-);
-
-const headerLightButtonClass = cn(
-  buttonBaseClass,
-  "bg-white text-stone-950 hover:-translate-y-0.5 hover:bg-stone-100 hover:shadow-md",
-);
-
 function freshNewGuestForm(): NewGuestForm {
   return { ...emptyNewGuestForm };
+}
+
+function labelForNewGuestName(firstName: string, lastName: string, email = "") {
+  return [firstName.trim(), lastName.trim()].filter(Boolean).join(" ") || email.trim() || "Guest";
+}
+
+function generatedDisplayName(guest: NewGuestForm) {
+  const primaryLabel = labelForNewGuestName(guest.first_name, guest.last_name, guest.email);
+  const hasSecondGuest = Boolean(guest.guest_2_first_name.trim() || guest.guest_2_last_name.trim());
+
+  if (!hasSecondGuest) {
+    return primaryLabel;
+  }
+
+  const guest2Label = labelForNewGuestName(guest.guest_2_first_name, guest.guest_2_last_name);
+  const sharedLastName =
+    guest.last_name.trim() &&
+    guest.guest_2_last_name.trim() &&
+    guest.last_name.trim().toLocaleLowerCase() ===
+      guest.guest_2_last_name.trim().toLocaleLowerCase();
+
+  if (sharedLastName && guest.first_name.trim() && guest.guest_2_first_name.trim()) {
+    return `${guest.first_name.trim()} e ${guest.guest_2_first_name.trim()} ${guest.last_name.trim()}`;
+  }
+
+  return `${primaryLabel} e ${guest2Label}`;
+}
+
+function updatesGeneratedDisplayName(field: keyof NewGuestForm) {
+  return field === "email";
+}
+
+function resetsGeneratedDisplayName(field: keyof NewGuestForm) {
+  return (
+    field === "last_name" ||
+    field === "first_name" ||
+    field === "guest_2_last_name" ||
+    field === "guest_2_first_name"
+  );
 }
 
 function sourceForParty(party: DashboardSnapshot["parties"][number]) {
@@ -183,16 +218,15 @@ function selectedSourcesLabel(sources: string[]) {
 
 export function HostDashboard({
   initialData,
-  host,
 }: {
   initialData: DashboardSnapshot;
-  host: HostUser;
 }) {
   const router = useRouter();
   const [csvText, setCsvText] = useState(
     "label,email,guests,tags,notes\nJamie & Riley,preview-new@example.com,Jamie Lang;Riley Lang,friends;dinner,Imported sample row",
   );
   const [newGuest, setNewGuest] = useState<NewGuestForm>(() => freshNewGuestForm());
+  const [displayNameManuallyEdited, setDisplayNameManuallyEdited] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [addingGuest, setAddingGuest] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
@@ -273,20 +307,41 @@ export function HostDashboard({
       return;
     }
 
-    const addedLabel =
-      newGuest.display_name ||
-      (newGuest.guest_2_first_name || newGuest.guest_2_last_name
-        ? `${newGuest.first_name} e ${newGuest.guest_2_first_name || newGuest.guest_2_last_name} ${
-            newGuest.last_name
-          }`.trim()
-        : `${newGuest.first_name} ${newGuest.last_name}`.trim());
+    const addedLabel = newGuest.display_name.trim() || generatedDisplayName(newGuest);
     setStatus(`Added ${addedLabel}.`);
     setNewGuest(freshNewGuestForm());
+    setDisplayNameManuallyEdited(false);
     startTransition(() => router.refresh());
   }
 
   function updateNewGuest<K extends keyof NewGuestForm>(field: K, value: NewGuestForm[K]) {
-    setNewGuest((current) => ({ ...current, [field]: value }));
+    const shouldResetDisplayName = resetsGeneratedDisplayName(field);
+
+    if (shouldResetDisplayName) {
+      setDisplayNameManuallyEdited(false);
+    }
+
+    setNewGuest((current) => {
+      const next = { ...current, [field]: value };
+
+      if (
+        shouldResetDisplayName ||
+        (!displayNameManuallyEdited && updatesGeneratedDisplayName(field))
+      ) {
+        next.display_name = generatedDisplayName(next);
+      }
+
+      return next;
+    });
+  }
+
+  function updateDisplayName(value: string) {
+    const hasManualDisplayName = value.trim().length > 0;
+    setDisplayNameManuallyEdited(hasManualDisplayName);
+    setNewGuest((current) => ({
+      ...current,
+      display_name: hasManualDisplayName ? value : generatedDisplayName(current),
+    }));
   }
 
   function toggleInviteSource(source: string) {
@@ -339,42 +394,17 @@ export function HostDashboard({
     }
   }
 
+  function stopEnterSubmit(event: KeyboardEvent<HTMLFormElement>) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+    }
+  }
+
   const stats = initialData.stats;
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(200,180,141,0.18),_transparent_30%),_var(--app-cream)] px-6 py-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
-        <header className="overflow-hidden rounded-[2rem] bg-stone-950 px-8 py-8 text-white shadow-[0_30px_80px_rgba(27,18,11,0.28)]">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className="section-label text-[var(--app-gold)]">Host Dashboard</div>
-              <h1 className="mt-4 font-display text-5xl">{initialData.event.summaryName}</h1>
-              <p className="mt-4 max-w-3xl text-base leading-8 text-stone-300">
-                Signed in as {host.email} ({host.role}). In local development this dashboard uses a
-                file-backed mock store; the same schema is modeled in Drizzle for Supabase/Postgres.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href="/"
-                title="Go to the public home page"
-                className={cn(headerGhostButtonClass, "px-4 py-2 text-sm")}
-              >
-                Home
-              </Link>
-              <form action="/api/host/logout" method="post">
-                <button
-                  type="submit"
-                  title="Sign out of the host dashboard"
-                  className={cn(headerLightButtonClass, "px-4 py-2 text-sm")}
-                >
-                  Log out
-                </button>
-              </form>
-            </div>
-          </div>
-        </header>
-
         {status ? (
           <div
             role="status"
@@ -569,8 +599,11 @@ export function HostDashboard({
           <div className="space-y-8">
             <div className="paper-panel rounded-[2rem] border border-[var(--app-line)] p-8">
               <div className="section-label">Add Guest</div>
-              <h2 className="mt-4 font-display text-4xl text-stone-950">Add invited party</h2>
-              <form onSubmit={addInvitedPerson} className="mt-6 grid gap-5">
+              <form
+                onSubmit={addInvitedPerson}
+                onKeyDown={stopEnterSubmit}
+                className="mt-6 grid gap-5"
+              >
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="block">
                     <span className="mb-2 block text-sm font-semibold text-stone-700">
@@ -633,8 +666,8 @@ export function HostDashboard({
                   </span>
                   <input
                     value={newGuest.display_name}
-                    onChange={(event) => updateNewGuest("display_name", event.target.value)}
-                    placeholder="Auto-generated when blank"
+                    onChange={(event) => updateDisplayName(event.target.value)}
+                    placeholder="Generated from guest names"
                     className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3"
                   />
                 </label>
@@ -782,13 +815,6 @@ export function HostDashboard({
                           </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-3 text-sm">
-                          <Link
-                            href={`/i/${party.token.value}`}
-                            title={`Open the private invitation for ${party.label}`}
-                            className={cn(secondaryButtonClass, "px-4 py-2")}
-                          >
-                            Open link
-                          </Link>
                           <button
                             type="button"
                             onClick={() =>

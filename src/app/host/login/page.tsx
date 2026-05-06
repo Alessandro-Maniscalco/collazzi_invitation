@@ -1,3 +1,5 @@
+import { HostLoginForm } from "./host-login-form";
+
 export const dynamic = "force-dynamic";
 
 export default async function HostLoginPage({
@@ -29,29 +31,7 @@ export default async function HostLoginPage({
         <section className="paper-panel rounded-[2rem] border border-[var(--app-line)] p-8">
           <div className="section-label">Sign In</div>
           <h2 className="mt-4 font-display text-4xl text-stone-950">Open the host shell</h2>
-          {message ? (
-            <div className="mt-5 rounded-2xl border border-[var(--app-line)] bg-white/80 px-4 py-3 text-sm text-stone-700">
-              {message}
-            </div>
-          ) : null}
-          <form action="/api/host/login" method="post" className="mt-6 space-y-4">
-            <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-stone-700">Password</span>
-              <input
-                type="password"
-                name="password"
-                required
-                autoComplete="current-password"
-                className="w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3 outline-none transition focus:border-[var(--app-wine)]"
-              />
-            </label>
-            <button
-              type="submit"
-              className="inline-flex rounded-full bg-[var(--app-wine)] px-5 py-3 text-sm font-semibold text-white"
-            >
-              Continue
-            </button>
-          </form>
+          <HostLoginForm message={message} />
         </section>
       </div>
     </main>

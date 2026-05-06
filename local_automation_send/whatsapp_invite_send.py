@@ -54,7 +54,7 @@ WAIT_AFTER_EACH_FAIL_SEC = 1.0
 
 # These are channel-specific tracking columns already present in the sheet.
 MARK_WHATSAPP_SENT = True
-MARK_SENT_INVITE_AT = False
+MARK_SENT_INVITE_AT = True
 MARK_LAST_DELIVERY_STATUS_SENT = True
 
 
