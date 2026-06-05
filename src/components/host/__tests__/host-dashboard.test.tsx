@@ -120,4 +120,47 @@ describe("HostDashboard", () => {
       fireEvent.keyDown(screen.getByLabelText("Primary first name"), { key: "Enter" }),
     ).toBe(false);
   });
+
+  it("shows RSVP receipt and link open status separately from latest email delivery", () => {
+    const snapshot = dashboardSnapshot();
+    const party = snapshot.parties[0];
+    const openedAt = new Date(Date.now() - 120_000).toISOString();
+    const rsvpUpdatedAt = new Date(Date.now() - 60_000).toISOString();
+
+    party.token.openedAt = openedAt;
+    party.response = {
+      status: "not_attending",
+      guestSelections: Object.fromEntries(party.guests.map((guest) => [guest.id, false])),
+      answers: {
+        question_walking_dinner: false,
+        question_party: false,
+        question_transfer: false,
+      },
+      note: "Grazie",
+      updatedAt: rsvpUpdatedAt,
+    };
+    party.deliveries = [
+      {
+        id: "delivery_preview",
+        partyId: party.id,
+        channel: "email",
+        kind: "invite",
+        recipient: party.email ?? "",
+        subjectLine: "Invitation",
+        bodyPreview: "Open your invitation",
+        status: "sent",
+        sentAt: new Date(Date.now() - 180_000).toISOString(),
+        openedAt,
+        sandbox: false,
+      },
+    ];
+
+    render(React.createElement(HostDashboard, {
+      initialData: snapshot,
+    }));
+
+    expect(screen.getByText(/RSVP received .* · Not attending/)).toBeInTheDocument();
+    expect(screen.getByText(/Opened link /)).toBeInTheDocument();
+    expect(screen.getByText("EMAIL invite sent")).toBeInTheDocument();
+  });
 });

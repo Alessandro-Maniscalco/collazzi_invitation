@@ -7,31 +7,31 @@ const PROTECTED_TRANSLATION_TERMS = [
   { match: "Dress code- Casual Chic", label: "Dress Code - Casual Chic" },
   {
     match: "Dress Code - Black tie e abito lungo",
-    label: "Dress Code - Black tie e abito lungo",
+    label: "Dress Code - Black tie and long dress",
   },
   {
     match: "Dress Code- Black tie e abito lungo",
-    label: "Dress Code - Black tie e abito lungo",
+    label: "Dress Code - Black tie and long dress",
   },
   {
     match: "Dress code - Black tie e abito lungo",
-    label: "Dress Code - Black tie e abito lungo",
+    label: "Dress Code - Black tie and long dress",
   },
   {
     match: "Dress code- Black tie e abito lungo",
-    label: "Dress Code - Black tie e abito lungo",
+    label: "Dress Code - Black tie and long dress",
   },
   {
     match: "Dress Code - Black Tie and Long Dress",
-    label: "Dress Code - Black tie e abito lungo",
+    label: "Dress Code - Black tie and long dress",
   },
   {
     match: "Dress code - Black Tie and Long Dress",
-    label: "Dress Code - Black tie e abito lungo",
+    label: "Dress Code - Black tie and long dress",
   },
-  { match: "Black Tie and Long Dress", label: "Black tie e abito lungo" },
-  { match: "Black Tie e abito lungo", label: "Black tie e abito lungo" },
-  { match: "Black tie e abito lungo", label: "Black tie e abito lungo" },
+  { match: "Black Tie and Long Dress", label: "Black tie and long dress" },
+  { match: "Black Tie e abito lungo", label: "Black tie and long dress" },
+  { match: "Black tie e abito lungo", label: "Black tie and long dress" },
   {
     match: "Dinner in the centre of Florence",
     label: "Dinner in the centre of Florence",

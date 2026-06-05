@@ -32,3 +32,28 @@
 **What was decided:** Any first-name or last-name change regenerates the add-guest display name and clears a prior manual override; matching last names generate "First e Second Last".
 **Why:** The display name should keep reflecting current guest names after name corrections while still allowing manual edits until a name changes.
 **What was rejected:** Preserving manual display-name overrides across name changes was rejected because it can leave stale invitation labels.
+
+## 2026-05-12, Domain Outage Root Cause
+**What was decided:** Treat the `bonaalessandro.ink` outage as a Namecheap registrar contact-verification/DNS delegation issue, not an app or Vercel deployment issue.
+**Why:** Public DNS delegates the domain to Namecheap verification-hold nameservers that return `198.54.117.242`, while Namecheap's normal DNS servers already return Vercel's required `76.76.21.21`; forcing `bonaalessandro.ink` to Vercel's IP returns `HTTP/2 200` for `/host/login`.
+**What was rejected:** Redeploying or changing application code was rejected because the latest Vercel production deployment is ready and the local production build passes.
+
+## 2026-05-13, Host RSVP and Open Display
+**What was decided:** Host guest cards should show explicit RSVP receipt and invitation-open badges from `party.response.updatedAt` and `party.token.openedAt`, independently from latest email delivery status.
+**Why:** The live Maniscalco row had both `invite_opened_at` and `rsvp_updated_at`, but `last_delivery_status` was still `sent`; the old card only surfaced delivery status and an attendance summary, so the host view did not clearly say the guest opened or RSVPed.
+**What was rejected:** Mutating the live Google Sheet to force `last_delivery_status=opened` was rejected because it would hide the real later email-send state and was not needed for display.
+
+## 2026-06-02, Card Invite August Text
+**What was decided:** Use image-generator-produced full-card edits for the regular and party-only card backs, then resize them back to the original `1240x1242` asset dimensions before replacing the served files.
+**Why:** The generator added "August" cleanly inline on the date lines, while a text-only composite kept the original art but left visible ghosting around the old date text.
+**What was rejected:** A local text-only overlay was rejected because it introduced artifacts; changing app code or references was rejected because replacing the existing served assets is the smallest change.
+
+## 2026-06-02, Dress Code Translation Wording
+**What was decided:** Display the party dress-code translation as "Black tie and long dress" while still recognizing old "e abito lungo" inputs for normalization.
+**Why:** The user requested replacing the Italian mixed phrase with the English wording, and preserving old matches prevents stale content from leaking through browser-translation protection.
+**What was rejected:** Only changing seed data was rejected because the protected translation component could still rewrite matching text back to the old phrase.
+
+## 2026-06-05, Diana Column-T Invite Sends
+**What was decided:** For the `Diana` source resend, use the literal live-sheet condition `source = Diana` and blank `sent_invite_at` in column T, then send email and write `sent_invite_at`, `last_delivery_status`, `provider_message_id`, and `last_error` directly.
+**Why:** Several Diana rows had blank column T but nonblank/opened `last_delivery_status`, so the host UI's delivery-status filter would not match the user's "never sent" condition.
+**What was rejected:** Using the normal host source-send filter was rejected because it keys off computed delivery status; normalizing or fixing unrelated sheet headers during this one-off send was rejected as outside the request.

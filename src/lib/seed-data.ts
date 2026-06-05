@@ -42,7 +42,7 @@ export function createSeedState(): AppState {
       summaryAddressName: "Villa I Collazzi",
       summaryAddressLabel: "Via Volterrana, 4A, 50018 Scandicci FI",
       introduction: "",
-      dressCode: "Black tie e abito lungo",
+      dressCode: "Black tie and long dress",
       rsvpDeadline: "2026-07-15T18:00:00.000Z",
       footerNote: "",
     },
@@ -88,10 +88,10 @@ export function createSeedState(): AppState {
           "https://www.google.com/maps/search/?api=1&query=Villa+I+Collazzi+Impruneta",
         title: "The Party",
         datetimeLabel: "Friday, August 28th, 19h30",
-        dressCode: "Dress Code - Black tie e abito lungo",
+        dressCode: "Dress Code - Black tie and long dress",
         description: "",
         imageSrc: "/assets/collazzi/friday-villa.jpeg",
-        note: "The Party \nFriday, August 28th, 19h30\nDress Code - Black tie e abito lungo",
+        note: "The Party \nFriday, August 28th, 19h30\nDress Code - Black tie and long dress",
         subItems: [
           {
             id: "itinerary_party_shuttle",

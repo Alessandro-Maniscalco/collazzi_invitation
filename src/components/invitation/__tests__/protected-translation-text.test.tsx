@@ -11,7 +11,7 @@ describe("ProtectedTranslationText", () => {
   it("marks fixed invitation phrases as non-translatable", () => {
     render(<ProtectedTranslationText text="Dress Code - Black Tie e abito lungo" />);
 
-    const dressCode = screen.getByText("Dress Code - Black tie e abito lungo");
+    const dressCode = screen.getByText("Dress Code - Black tie and long dress");
 
     expect(dressCode).toHaveAttribute("translate", "no");
     expect(dressCode).toHaveClass("notranslate");
@@ -28,10 +28,10 @@ describe("ProtectedTranslationText", () => {
     );
   });
 
-  it("renders the old English dress-code phrase as the preferred mixed wording", () => {
+  it("renders the old English dress-code phrase as the preferred wording", () => {
     render(<ProtectedTranslationText text="Dress code - Black Tie and Long Dress" />);
 
-    expect(screen.getByText("Dress Code - Black tie e abito lungo")).toHaveAttribute(
+    expect(screen.getByText("Dress Code - Black tie and long dress")).toHaveAttribute(
       "translate",
       "no",
     );

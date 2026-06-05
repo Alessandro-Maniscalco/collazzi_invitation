@@ -221,6 +221,51 @@ describe("parseGuestSheet", () => {
     });
   });
 
+  it("keeps RSVP and open signals when the latest delivery status is still sent", () => {
+    const table = parseGuestSheet(
+      [
+        [...GUEST_SHEET_HEADERS],
+        rowFromRecord({
+          guest_id: "guest_maniscalco",
+          token: "guest_token",
+          token_active: "TRUE",
+          first_name: "Alessandro",
+          last_name: "Maniscalco",
+          email: "maniscalcoalessandro1@gmail.com",
+          sent_invite_at: "2026-05-02T19:57:40.749Z",
+          invite_opened_at: "2026-04-26T23:32:16.281Z",
+          Florence_dinner: "FALSE",
+          coming_to_party: "FALSE",
+          transfer_needed: "FALSE",
+          not_coming: "TRUE",
+          rsvp_note: "Grazie",
+          rsvp_updated_at: "2026-05-13T20:41:03.798Z",
+          last_delivery_status: "sent",
+        }),
+      ],
+      "http://localhost:3000",
+    );
+    const guest = table.guests[0];
+
+    expect(guest).toMatchObject({
+      inviteOpenedAt: "2026-04-26T23:32:16.281Z",
+      lastDeliveryStatus: "sent",
+      sentInviteAt: "2026-05-02T19:57:40.749Z",
+      hasResponse: true,
+    });
+    expect(sheetGuestResponse(guest)).toEqual({
+      status: "not_attending",
+      guestSelections: { guest_maniscalco: false },
+      answers: {
+        question_walking_dinner: false,
+        question_party: false,
+        question_transfer: false,
+      },
+      note: "Grazie",
+      updatedAt: "2026-05-13T20:41:03.798Z",
+    });
+  });
+
   it("keeps two invited guests on one row with separate RSVP selections", () => {
     const table = parseGuestSheet(
       [

@@ -792,6 +792,7 @@ export function HostDashboard({
                   const latest = latestDelivery(party.deliveries);
                   const email = party.email?.trim();
                   const linkCopied = copiedLinkPartyId === party.id;
+                  const attendanceSummary = partyAttendanceSummary(party as Party, party.guests);
 
                   return (
                     <div
@@ -805,13 +806,40 @@ export function HostDashboard({
                             <div className="mt-1 text-sm text-stone-600">
                               {party.guests.map((guest) => guest.name).join(", ")}
                             </div>
-                            <div className="mt-2 text-sm text-stone-600">
-                              {partyAttendanceSummary(party as Party, party.guests)}
+                            <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                              <span
+                                suppressHydrationWarning
+                                className={cn(
+                                  "rounded-full border px-3 py-1",
+                                  party.response
+                                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                                    : "border-stone-200 bg-stone-50 text-stone-600",
+                                )}
+                              >
+                                {party.response
+                                  ? `RSVP received ${formatRelative(party.response.updatedAt)} · ${attendanceSummary}`
+                                  : "Awaiting RSVP"}
+                              </span>
+                              <span
+                                suppressHydrationWarning
+                                className={cn(
+                                  "rounded-full border px-3 py-1",
+                                  party.token.openedAt
+                                    ? "border-sky-200 bg-sky-50 text-sky-800"
+                                    : "border-stone-200 bg-stone-50 text-stone-600",
+                                )}
+                              >
+                                {party.token.openedAt
+                                  ? `Opened link ${formatRelative(party.token.openedAt)}`
+                                  : "Not opened"}
+                              </span>
                             </div>
                           </div>
                           <div className="text-right text-sm text-stone-600">
                             <div>{email || "No email"}</div>
-                            <div className="mt-2">Last sent {formatRelative(party.lastSentAt)}</div>
+                            <div className="mt-2" suppressHydrationWarning>
+                              Last sent {formatRelative(party.lastSentAt)}
+                            </div>
                           </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -841,7 +869,7 @@ export function HostDashboard({
                           </button>
                         </div>
                         {latest ? (
-                          <div className="text-sm">
+                          <div className="text-sm" suppressHydrationWarning>
                             <span className={`font-semibold ${deliveryStatusTone(latest.status)}`}>
                               {latest.channel.toUpperCase()} {latest.kind} {latest.status}
                             </span>
@@ -866,7 +894,10 @@ export function HostDashboard({
                     className="rounded-[1.35rem] border border-[var(--app-line)] bg-white/80 px-4 py-4"
                   >
                     <div className="text-sm font-semibold text-stone-900">{activity.message}</div>
-                    <div className="mt-1 text-xs uppercase tracking-[0.24em] text-stone-500">
+                    <div
+                      className="mt-1 text-xs uppercase tracking-[0.24em] text-stone-500"
+                      suppressHydrationWarning
+                    >
                       {activity.actor} · {formatRelative(activity.createdAt)}
                     </div>
                   </div>
