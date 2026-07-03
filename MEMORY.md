@@ -57,3 +57,28 @@
 **What was decided:** For the `Diana` source resend, use the literal live-sheet condition `source = Diana` and blank `sent_invite_at` in column T, then send email and write `sent_invite_at`, `last_delivery_status`, `provider_message_id`, and `last_error` directly.
 **Why:** Several Diana rows had blank column T but nonblank/opened `last_delivery_status`, so the host UI's delivery-status filter would not match the user's "never sent" condition.
 **What was rejected:** Using the normal host source-send filter was rejected because it keys off computed delivery status; normalizing or fixing unrelated sheet headers during this one-off send was rejected as outside the request.
+
+## 2026-06-22, RSVP Message Send Confirmation
+**What was decided:** Pause before sending the `RSVP {invite_url}!` message batch because the requested source `Inviti 19esimi` is not present in the live sheet, the send channel was not specified, and one selected contact name has two different private links.
+**Why:** Sending the wrong private RSVP link or using the wrong channel would be an external action that is hard to undo.
+**What was rejected:** Immediately batch-sending to all 196 read-only-selected rows was rejected until the source spelling, channel rule, and duplicate handling are confirmed.
+
+## 2026-06-22, Oliver Older Duplicate Row
+**What was decided:** Keep Oliver Older row 367 and delete row 383 before the RSVP WhatsApp reminder batch.
+**Why:** Row 367 has an email address and its invite link has already been opened, while row 383 has no email and an unopened link.
+**What was rejected:** Keeping the `Fresh guys` row 383 solely because the source label fits better was rejected because preserving the active/private link history is more important.
+
+## 2026-06-22, RSVP WhatsApp Resume Filter
+**What was decided:** Resume the WhatsApp RSVP message batch after Sebastian Buenfil, using `source` in the selected list, `coming_to_party = FALSE`, and `not_coming = FALSE`.
+**Why:** The user explicitly corrected the filter and stated they quit at Sebastian Buenfil, so the next unsent contact is Santiago Cerchione.
+**What was rejected:** Continuing with only `coming_to_party = FALSE` was rejected because declined guests with `not_coming = TRUE` should not receive the reminder.
+
+## 2026-06-22, RSVP WhatsApp Second Source Batch
+**What was decided:** For the next WhatsApp RSVP batch, use exact case-insensitive source matches for `18esimiAI`, `ale`, `Didi`, `DidiAI`, `Firenze`, `FirenzeAI`, `Modulo`, `ModuloAI`, and `Roma`, with both `coming_to_party = FALSE` and `not_coming = FALSE`.
+**Why:** The user listed these source labels directly and corrected the RSVP filter to require both false values.
+**What was rejected:** Expanding `ale` to `AleAI` was rejected because lowercase `ale` exists as its own live-sheet source; resending to Rodrigo Agag and Brando Aragau was rejected because they already received the same WhatsApp RSVP message in the earlier run.
+
+## 2026-06-22, Rebbecca Lando Duplicate Row
+**What was decided:** For the second WhatsApp RSVP batch, use Rebbecca Lando row 503 and skip row 438.
+**Why:** Row 503 has an opened invitation link, which is stronger evidence of the active private link for the guest than row 438's unopened link.
+**What was rejected:** Deleting either Rebbecca Lando row was rejected because the user only asked to record not-found contacts for this batch, not to clean duplicate rows.
