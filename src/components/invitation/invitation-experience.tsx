@@ -307,13 +307,8 @@ function GroupGift() {
         <div className={styles.giftInner}>
           <details className={styles.giftDetails} data-testid="group-gift-details">
             <summary className={styles.giftSummary}>
-              <span className={styles.giftSummaryCopy}>
-                <span className={styles.giftTitle}>Group gift to Bona and Alessandro</span>
-                <span className={styles.giftHint}>Click to open · Clicca per aprire</span>
-              </span>
-              <span className={styles.giftToggle} aria-hidden="true">
-                +
-              </span>
+              <span className={styles.giftTitle}>Group gift to Bona and Alessandro</span>
+              <span className={styles.giftToggle} aria-hidden="true" />
             </summary>
 
             <div className={styles.giftContent}>
@@ -329,7 +324,6 @@ function GroupGift() {
 
               <div className={styles.giftLanguages}>
                 <article className={styles.giftLetter} lang="en" translate="no">
-                  <h3 className={styles.giftLanguage}>English</h3>
                   <p>Dear Friends,</p>
                   <p>
                     We are so happy to celebrate our 18th and 20th birthdays with you! That
@@ -377,7 +371,6 @@ function GroupGift() {
                 </article>
 
                 <article className={styles.giftLetter} lang="it" translate="no">
-                  <h3 className={styles.giftLanguage}>Italiano</h3>
                   <p>Cari Amici,</p>
                   <p>
                     Siamo felicissimi di festeggiare con voi i nostri 18 e 20 anni! Ed è questo

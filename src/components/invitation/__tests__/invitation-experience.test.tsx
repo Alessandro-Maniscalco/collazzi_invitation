@@ -67,8 +67,9 @@ describe("InvitationExperience", () => {
     fireEvent.click(screen.getByText("Group gift to Bona and Alessandro"));
 
     expect(details).toHaveAttribute("open");
-    expect(within(details).getByRole("heading", { name: "English" })).toBeInTheDocument();
-    expect(within(details).getByRole("heading", { name: "Italiano" })).toBeInTheDocument();
+    expect(within(details).queryByText("Click to open · Clicca per aprire")).not.toBeInTheDocument();
+    expect(within(details).queryByText("English")).not.toBeInTheDocument();
+    expect(within(details).queryByText("Italiano")).not.toBeInTheDocument();
     expect(
       within(details).getByRole("img", { name: "Bona and Alessandro together as children" }),
     ).toHaveAttribute("src", "/assets/collazzi/group-gift-bona-alessandro.png");
