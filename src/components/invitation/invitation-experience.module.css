@@ -863,9 +863,16 @@
   background: #fefbf6;
 }
 
+.giftBlock::after {
+  display: block;
+  height: 80px;
+  background: #fff;
+  content: "";
+}
+
 .giftInner {
   max-width: 920px;
-  margin: 100px auto;
+  margin: 100px auto 0;
   padding: 0 8vw;
 }
 
@@ -1137,8 +1144,12 @@
   }
 
   .giftInner {
-    margin: 56px auto;
+    margin: 56px auto 0;
     padding: 0 12px;
+  }
+
+  .giftBlock::after {
+    height: 48px;
   }
 
   .giftSummary {
