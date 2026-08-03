@@ -40,6 +40,25 @@ const emptyNewGuestForm = {
 type NewGuestForm = typeof emptyNewGuestForm;
 type InviteComingToPartyFilter = "all" | "yes" | "no";
 type InviteDeliveryStatusFilter = "any" | "none" | DeliveryStatus;
+type InvitedByFilter = "all" | "ale" | "bona" | "mum";
+
+interface RsvpCounts {
+  partyYes: number;
+  partyNo: number;
+  partyPending: number;
+  dinnerYes: number;
+}
+
+interface SourceRsvpCounts extends RsvpCounts {
+  source: string;
+}
+
+const INVITED_BY_OPTIONS: Array<{ value: InvitedByFilter; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "ale", label: "Ale" },
+  { value: "bona", label: "Bona" },
+  { value: "mum", label: "Mum" },
+];
 
 const COMING_TO_PARTY_OPTIONS: Array<{ value: InviteComingToPartyFilter; label: string }> = [
   { value: "all", label: "Any" },
@@ -177,6 +196,75 @@ function partyComingToParty(party: DashboardSnapshot["parties"][number]) {
   return Boolean(party.response && Object.values(party.response.guestSelections).some(Boolean));
 }
 
+function partyMatchesInvitedBy(
+  party: DashboardSnapshot["parties"][number],
+  invitedBy: InvitedByFilter,
+) {
+  return invitedBy === "all" || party.tags.includes(`invited_by_${invitedBy}`);
+}
+
+function addPartyToRsvpCounts(
+  counts: RsvpCounts,
+  party: DashboardSnapshot["parties"][number],
+) {
+  if (!party.response) {
+    counts.partyPending += party.guests.length;
+    return;
+  }
+
+  for (const guest of party.guests) {
+    const attending = Boolean(party.response.guestSelections[guest.id]);
+    if (attending) {
+      counts.partyYes += 1;
+      if (party.response.answers.question_walking_dinner) {
+        counts.dinnerYes += 1;
+      }
+    } else {
+      counts.partyNo += 1;
+    }
+  }
+}
+
+function rsvpAnalytics(
+  parties: DashboardSnapshot["parties"],
+  invitedBy: InvitedByFilter,
+) {
+  const totals: RsvpCounts = {
+    partyYes: 0,
+    partyNo: 0,
+    partyPending: 0,
+    dinnerYes: 0,
+  };
+  const sourceCounts = new Map<string, SourceRsvpCounts>();
+
+  for (const party of parties) {
+    if (!partyMatchesInvitedBy(party, invitedBy)) {
+      continue;
+    }
+
+    addPartyToRsvpCounts(totals, party);
+
+    const source = sourceForParty(party) || "No source";
+    const normalizedSource = normalizeSource(source);
+    const counts = sourceCounts.get(normalizedSource) ?? {
+      source,
+      partyYes: 0,
+      partyNo: 0,
+      partyPending: 0,
+      dinnerYes: 0,
+    };
+    addPartyToRsvpCounts(counts, party);
+    sourceCounts.set(normalizedSource, counts);
+  }
+
+  return {
+    totals,
+    sources: Array.from(sourceCounts.values()).sort((left, right) =>
+      left.source.localeCompare(right.source),
+    ),
+  };
+}
+
 function partyMatchesInviteFilters(
   party: DashboardSnapshot["parties"][number],
   comingToParty: InviteComingToPartyFilter,
@@ -239,6 +327,7 @@ export function HostDashboard({
     useState<InviteComingToPartyFilter>("all");
   const [inviteLastDeliveryStatus, setInviteLastDeliveryStatus] =
     useState<InviteDeliveryStatusFilter>("any");
+  const [invitedByFilter, setInvitedByFilter] = useState<InvitedByFilter>("all");
   const [copiedLinkPartyId, setCopiedLinkPartyId] = useState<string | null>(null);
 
   const deferredCsv = useDeferredValue(csvText);
@@ -266,6 +355,10 @@ export function HostDashboard({
     : 0;
   const inviteFiltersActive =
     inviteComingToParty !== "all" || inviteLastDeliveryStatus !== "any";
+  const analytics = useMemo(
+    () => rsvpAnalytics(initialData.parties, invitedByFilter),
+    [initialData.parties, invitedByFilter],
+  );
 
   async function importCsv() {
     const response = await fetch("/api/host/import", {
@@ -432,6 +525,88 @@ export function HostDashboard({
               <div className="mt-4 font-display text-5xl text-stone-950">{value}</div>
             </div>
           ))}
+        </section>
+
+        <section className="paper-panel rounded-[2rem] border border-[var(--app-line)] p-8">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="section-label">RSVP Breakdown</div>
+              <h2 className="mt-4 font-display text-4xl text-stone-950">
+                Attendance by inviter and source
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-stone-600">
+                Party and dinner totals count individual guests, including second guests.
+              </p>
+            </div>
+            <div
+              role="group"
+              aria-label="Invited by filter"
+              className="flex flex-wrap gap-2"
+            >
+              {INVITED_BY_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={invitedByFilter === option.value}
+                  onClick={() => setInvitedByFilter(option.value)}
+                  className={toggleButtonClass(invitedByFilter === option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              ["Party yes", analytics.totals.partyYes],
+              ["Party no", analytics.totals.partyNo],
+              ["Party pending", analytics.totals.partyPending],
+              ["Dinner yes", analytics.totals.dinnerYes],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                data-testid={`rsvp-total-${String(label).toLocaleLowerCase().replaceAll(" ", "-")}`}
+                className="rounded-[1.5rem] border border-[var(--app-line)] bg-white/80 p-5"
+              >
+                <div className="text-sm font-semibold text-stone-600">{label}</div>
+                <div className="mt-3 font-display text-5xl text-stone-950">{value}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 overflow-x-auto rounded-[1.5rem] border border-[var(--app-line)] bg-white/80">
+            <table className="w-full min-w-[42rem] border-collapse text-left text-sm">
+              <thead className="bg-stone-50 text-stone-600">
+                <tr>
+                  {[
+                    "Source",
+                    "Party yes",
+                    "Party no",
+                    "Party pending",
+                    "Dinner yes",
+                  ].map((label) => (
+                    <th key={label} scope="col" className="px-5 py-4 font-semibold">
+                      {label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {analytics.sources.map((source) => (
+                  <tr key={normalizeSource(source.source)} className="border-t border-[var(--app-line)]">
+                    <th scope="row" className="px-5 py-4 font-semibold text-stone-900">
+                      {source.source}
+                    </th>
+                    <td className="px-5 py-4 text-stone-700">{source.partyYes}</td>
+                    <td className="px-5 py-4 text-stone-700">{source.partyNo}</td>
+                    <td className="px-5 py-4 text-stone-700">{source.partyPending}</td>
+                    <td className="px-5 py-4 text-stone-700">{source.dinnerYes}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section className="paper-panel rounded-[2rem] border border-[var(--app-line)] p-8">

@@ -82,3 +82,8 @@
 **What was decided:** For the second WhatsApp RSVP batch, use Rebbecca Lando row 503 and skip row 438.
 **Why:** Row 503 has an opened invitation link, which is stronger evidence of the active private link for the guest than row 438's unopened link.
 **What was rejected:** Deleting either Rebbecca Lando row was rejected because the user only asked to record not-found contacts for this batch, not to clean duplicate rows.
+
+## 2026-08-03, Host RSVP Analytics by Inviter and Source
+**What was decided:** Add an All/Ale/Bona/Mum filter to the host dashboard with individual-guest totals for Party yes, Party no, Party pending, and Dinner yes, followed by the same counts grouped by source.
+**Why:** Hosts need a filter-safe attendance view without manually reconciling hidden Google Sheet rows; counting guest selections includes second guests consistently.
+**What was rejected:** Adding dinner no/pending totals or expandable name lists was rejected as beyond the requested compact dashboard summary.

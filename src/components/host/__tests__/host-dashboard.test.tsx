@@ -1,6 +1,6 @@
 import React, { type AnchorHTMLAttributes, type ReactNode } from "react";
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { HostDashboard } from "@/components/host/host-dashboard";
@@ -162,5 +162,59 @@ describe("HostDashboard", () => {
     expect(screen.getByText(/RSVP received .* · Not attending/)).toBeInTheDocument();
     expect(screen.getByText(/Opened link /)).toBeInTheDocument();
     expect(screen.getByText("EMAIL invite sent")).toBeInTheDocument();
+  });
+
+  it("filters RSVP totals by inviter and breaks them down by source", () => {
+    const snapshot = dashboardSnapshot();
+    const [couple, solo, family] = snapshot.parties;
+
+    couple.tags = ["invited_by_ale", "Didi"];
+    couple.response = {
+      status: "attending",
+      guestSelections: {
+        guest_taylor: true,
+        guest_jordan: false,
+      },
+      answers: {
+        question_walking_dinner: true,
+        question_party: true,
+        question_transfer: false,
+      },
+      note: "",
+      updatedAt: new Date().toISOString(),
+    };
+    solo.tags = ["invited_by_bona", "Roma"];
+    solo.response = {
+      status: "not_attending",
+      guestSelections: { guest_ava: false },
+      answers: {
+        question_walking_dinner: false,
+        question_party: false,
+        question_transfer: false,
+      },
+      note: "",
+      updatedAt: new Date().toISOString(),
+    };
+    family.tags = ["invited_by_ale", "invited_by_bona", "Didi"];
+
+    render(React.createElement(HostDashboard, { initialData: snapshot }));
+
+    const allTotals = screen.getByRole("heading", {
+      name: "Attendance by inviter and source",
+    }).closest("section");
+    expect(allTotals).not.toBeNull();
+    expect(within(allTotals!).getByTestId("rsvp-total-party-yes")).toHaveTextContent("1");
+    expect(within(allTotals!).getByTestId("rsvp-total-party-no")).toHaveTextContent("2");
+    expect(within(allTotals!).getByTestId("rsvp-total-party-pending")).toHaveTextContent("3");
+    expect(within(allTotals!).getByTestId("rsvp-total-dinner-yes")).toHaveTextContent("1");
+
+    fireEvent.click(within(allTotals!).getByRole("button", { name: "Ale" }));
+
+    expect(within(allTotals!).getByTestId("rsvp-total-party-yes")).toHaveTextContent("1");
+    expect(within(allTotals!).getByTestId("rsvp-total-party-no")).toHaveTextContent("1");
+    expect(within(allTotals!).getByTestId("rsvp-total-party-pending")).toHaveTextContent("3");
+    expect(within(allTotals!).getByTestId("rsvp-total-dinner-yes")).toHaveTextContent("1");
+    expect(within(allTotals!).getByRole("row", { name: "Didi 1 1 3 1" })).toBeInTheDocument();
+    expect(within(allTotals!).queryByRole("row", { name: /Roma/ })).not.toBeInTheDocument();
   });
 });
