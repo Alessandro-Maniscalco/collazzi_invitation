@@ -394,8 +394,7 @@ export function sheetGuestResponse(guest: SheetGuest): PartyResponse | undefined
   const guestSelections = Object.fromEntries(
     sheetGuestMembers(guest).map((member) => [
       member.id,
-      !guest.notComing &&
-        (member.primary ? guest.comingToParty : guest.guest2ComingToParty),
+      member.primary ? guest.comingToParty : guest.guest2ComingToParty,
     ]),
   );
   const attending = Object.values(guestSelections).some(Boolean);

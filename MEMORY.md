@@ -106,3 +106,8 @@
 **What was decided:** Remove the RSVP deadline lock from both invitation controls and RSVP persistence so every active invitation can be answered or updated indefinitely.
 **Why:** A clean production deployment restored old deadline checks and closed Alberto Berlingheri's invitation even though the deadline is meant only as guidance.
 **What was rejected:** Exempting only Alberto or extending the date was rejected because either option would allow the same failure to recur for other guests.
+
+## 2026-08-03, Individual Attendance Overrides Party Decline
+**What was decided:** Build each guest selection directly from `coming_to_party` and `guest_2_coming_to_party`; use `not_coming` only as a legacy party-level signal, not as a gate over individual attendance.
+**Why:** Matteo Grassi's row has the primary guest declining and guest two attending, but a stale `not_coming` value hid the second guest's explicit Yes response.
+**What was rejected:** Editing only Matteo's row was rejected because any other mixed-attendance row with a stale party flag would display incorrectly again.
