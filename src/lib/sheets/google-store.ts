@@ -4,7 +4,6 @@ import { readFile } from "node:fs/promises";
 import { nanoid } from "nanoid";
 
 import { env, isLocalAppUrl } from "@/lib/env";
-import { isReadOnly } from "@/lib/formatters";
 import { dispatchDelivery } from "@/lib/providers/delivery";
 import { parsePartyCsv } from "@/lib/csv";
 import {
@@ -161,7 +160,6 @@ export async function getSheetInvitationByToken(
     itinerary: itineraryForSheetGuest(state.itinerary, guest),
     accommodations: state.accommodations,
     deliveries: deliveriesFromSheetGuest(guest, state.event.summaryName),
-    readOnly: isReadOnly(state.event.rsvpDeadline),
   };
 }
 
@@ -192,7 +190,7 @@ export async function recordSheetInviteOpen(token: string, actor = "guest") {
   return partyFromSheetGuest(guest);
 }
 
-export async function saveSheetRsvp(input: SaveRsvpInput, state: AppState) {
+export async function saveSheetRsvp(input: SaveRsvpInput) {
   const store = getGoogleSheetsGuestStore();
   const { table } = await store.loadGuests();
   const guest = table.guests.find(
@@ -201,10 +199,6 @@ export async function saveSheetRsvp(input: SaveRsvpInput, state: AppState) {
 
   if (!guest) {
     throw new Error("Invitation not found.");
-  }
-
-  if (isReadOnly(state.event.rsvpDeadline)) {
-    throw new Error("RSVPs are closed for this invitation.");
   }
 
   const timestamp = new Date().toISOString();

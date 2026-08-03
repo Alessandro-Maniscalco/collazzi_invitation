@@ -579,7 +579,6 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
         guests={invitation.guests}
         questions={invitation.questions}
         token={party.token.value}
-        readOnly={invitation.readOnly}
         initialResponse={response}
         preferredStatus={preferredStatus}
         onClose={() => setModalOpen(false)}

@@ -1,6 +1,6 @@
 import React, { type ComponentPropsWithoutRef } from "react";
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createSeedState } from "@/lib/seed-data";
@@ -38,7 +38,6 @@ function previewInvitation(): InvitationView {
     itinerary: state.itinerary,
     accommodations: state.accommodations,
     deliveries: [],
-    readOnly: true,
   };
 }
 
@@ -53,5 +52,17 @@ describe("InvitationExperience", () => {
     expect(screen.getByTestId("recipient-to-name")).toHaveTextContent(
       "To: Taylor & Jordan Russo",
     );
+  });
+
+  it("keeps RSVP controls open after the informational deadline", async () => {
+    const { InvitationExperience } = await import(
+      "@/components/invitation/invitation-experience"
+    );
+
+    render(React.createElement(InvitationExperience, { invitation: previewInvitation() }));
+    fireEvent.click(screen.getByRole("button", { name: "Will attend" }));
+
+    expect(screen.queryByText("RSVP is closed for this invitation.")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Confirm" })).toBeEnabled();
   });
 });

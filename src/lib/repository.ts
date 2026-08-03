@@ -6,7 +6,6 @@ import { nanoid } from "nanoid";
 
 import { parsePartyCsv } from "@/lib/csv";
 import { env, hasGoogleSheetsConfig } from "@/lib/env";
-import { isReadOnly } from "@/lib/formatters";
 import { dispatchDelivery } from "@/lib/providers/delivery";
 import { SEED_HOSTS, createSeedState, createToken } from "@/lib/seed-data";
 import {
@@ -319,7 +318,6 @@ export async function getInvitationByToken(
       itinerary: state.itinerary,
       accommodations: state.accommodations,
       deliveries: deliveriesForParty(state, party.id),
-      readOnly: isReadOnly(state.event.rsvpDeadline),
     };
   };
 
@@ -332,7 +330,7 @@ export async function getInvitationByToken(
 
 export async function saveRsvp(input: SaveRsvpInput) {
   if (hasGoogleSheetsConfig()) {
-    return saveSheetRsvp(input, await readState());
+    return saveSheetRsvp(input);
   }
 
   return updateState((state) => {
@@ -340,10 +338,6 @@ export async function saveRsvp(input: SaveRsvpInput) {
 
     if (!party) {
       throw new Error("Invitation not found.");
-    }
-
-    if (isReadOnly(state.event.rsvpDeadline)) {
-      throw new Error("RSVPs are closed for this invitation.");
     }
 
     const status = getAttendanceStatus(input.selections);

@@ -13,7 +13,6 @@ interface RsvpModalProps {
   guests: Guest[];
   questions: Question[];
   token: string;
-  readOnly: boolean;
   initialResponse?: PartyResponse;
   preferredStatus?: AttendanceStatus;
   onClose: () => void;
@@ -117,7 +116,6 @@ export function RsvpModal({
   guests,
   questions,
   token,
-  readOnly,
   initialResponse,
   preferredStatus,
   onClose,
@@ -195,18 +193,11 @@ export function RsvpModal({
           </button>
         </div>
 
-        {readOnly ? (
-          <div className="mt-5 rounded-2xl border border-[var(--app-line)] bg-white/85 px-4 py-4 text-sm text-stone-700">
-            RSVP is closed for this invitation.
-          </div>
-        ) : null}
-
         <div className="mt-6 inline-flex rounded-full border border-[var(--app-line)] bg-white p-1">
           {(["attending", "not_attending"] as const).map((status) => (
             <button
               key={status}
               type="button"
-              disabled={readOnly}
               onClick={() => {
                 setAttendanceStatus(status);
                 setGuestSelections(buildGuestSelections(guests, status, initialResponse));
@@ -240,7 +231,6 @@ export function RsvpModal({
                         <input
                           type="checkbox"
                           checked={Boolean(guestSelections[guest.id])}
-                          disabled={readOnly}
                           onChange={(event) =>
                             setGuestSelections((current) => ({
                               ...current,
@@ -270,7 +260,6 @@ export function RsvpModal({
                         <input
                           type="checkbox"
                           checked={Boolean(answers[question.id])}
-                          disabled={readOnly}
                           onChange={(event) =>
                             setAnswers((current) => ({
                               ...current,
@@ -299,7 +288,6 @@ export function RsvpModal({
                 type="email"
                 required
                 value={email}
-                disabled={readOnly}
                 autoComplete="email"
                 onChange={(event) => setEmail(event.target.value)}
                 className="mt-3 w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3 outline-none transition focus:border-[var(--app-wine)]"
@@ -311,7 +299,6 @@ export function RsvpModal({
             <span className="text-sm font-semibold text-stone-800">Private message</span>
             <textarea
               value={note}
-              disabled={readOnly}
               onChange={(event) => setNote(event.target.value)}
               rows={4}
               placeholder="Private message to host (optional)"
@@ -336,7 +323,7 @@ export function RsvpModal({
           </button>
           <button
             type="button"
-            disabled={readOnly || isPending}
+            disabled={isPending}
             onClick={() =>
               startTransition(async () => {
                 setError(null);

@@ -87,3 +87,8 @@
 **What was decided:** Add an All/Ale/Bona/Mum filter to the host dashboard with individual-guest totals for Party yes, Party no, Party pending, and Dinner yes, followed by the same counts grouped by source.
 **Why:** Hosts need a filter-safe attendance view without manually reconciling hidden Google Sheet rows; counting guest selections includes second guests consistently.
 **What was rejected:** Adding dinner no/pending totals or expandable name lists was rejected as beyond the requested compact dashboard summary.
+
+## 2026-08-03, RSVP Deadline Remains Informational
+**What was decided:** Remove the RSVP deadline lock from both invitation controls and RSVP persistence so every active invitation can be answered or updated indefinitely.
+**Why:** A clean production deployment restored old deadline checks and closed Alberto Berlingheri's invitation even though the deadline is meant only as guidance.
+**What was rejected:** Exempting only Alberto or extending the date was rejected because either option would allow the same failure to recur for other guests.
