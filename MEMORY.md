@@ -111,3 +111,8 @@
 **What was decided:** Build each guest selection directly from `coming_to_party` and `guest_2_coming_to_party`; use `not_coming` only as a legacy party-level signal, not as a gate over individual attendance.
 **Why:** Matteo Grassi's row has the primary guest declining and guest two attending, but a stale `not_coming` value hid the second guest's explicit Yes response.
 **What was rejected:** Editing only Matteo's row was rejected because any other mixed-attendance row with a stale party flag would display incorrectly again.
+
+## 2026-08-03, Bilingual Group Gift Accordion
+**What was decided:** Add a prominent closed-by-default Group gift accordion at the bottom of each invitation, with the supplied childhood photo and English/Italian letters side by side on desktop and stacked on mobile.
+**Why:** Gift information and bank details need to be clearly discoverable without overwhelming the main invitation itinerary.
+**What was rejected:** A modal was rejected because the content is long and easier to read, scroll, and revisit inline.

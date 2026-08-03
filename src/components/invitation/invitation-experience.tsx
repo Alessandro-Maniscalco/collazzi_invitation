@@ -300,6 +300,138 @@ function TravelBlock({ item }: { item: ItineraryItem }) {
   );
 }
 
+function GroupGift() {
+  return (
+    <section data-block-type="group_gift" className={styles.giftBlock}>
+      <div className={styles.blockContainer}>
+        <div className={styles.giftInner}>
+          <details className={styles.giftDetails} data-testid="group-gift-details">
+            <summary className={styles.giftSummary}>
+              <span className={styles.giftSummaryCopy}>
+                <span className={styles.giftTitle}>Group gift to Bona and Alessandro</span>
+                <span className={styles.giftHint}>Click to open · Clicca per aprire</span>
+              </span>
+              <span className={styles.giftToggle} aria-hidden="true">
+                +
+              </span>
+            </summary>
+
+            <div className={styles.giftContent}>
+              <figure className={styles.giftPhotoFrame}>
+                <Image
+                  src="/assets/collazzi/group-gift-bona-alessandro.png"
+                  alt="Bona and Alessandro together as children"
+                  fill
+                  sizes="(min-width: 760px) 360px, calc(100vw - 96px)"
+                  className={styles.giftPhoto}
+                />
+              </figure>
+
+              <div className={styles.giftLanguages}>
+                <article className={styles.giftLetter} lang="en" translate="no">
+                  <h3 className={styles.giftLanguage}>English</h3>
+                  <p>Dear Friends,</p>
+                  <p>
+                    We are so happy to celebrate our 18th and 20th birthdays with you! That
+                    alone is already a wonderful gift.
+                  </p>
+                  <p>
+                    Many of you, however, have asked us what we would like, so we have chosen
+                    something to remember this celebration by.
+                  </p>
+                  <p>Bona has chosen a watch to take with her to Segovia!</p>
+                  <p>
+                    Alessandro, instead, has chosen a beautiful long coat to face the harsh
+                    Pennsylvania winters!
+                  </p>
+                  <p>
+                    Thank you so much. See you soon!
+                    <br />
+                    Bona and Alessandro
+                  </p>
+
+                  <div className={styles.giftBankDetails}>
+                    <p>
+                      Below are the bank details (IBAN) for the UniCredit current account held
+                      by BONA MANISCALCO:
+                    </p>
+                    <p className={styles.giftIban}>IT41U0200805056000430966326</p>
+                    <p>
+                      Country: IT
+                      <br />
+                      CIN/EU: 41
+                      <br />
+                      CIN/IT: U
+                      <br />
+                      ABI: 02008
+                      <br />
+                      CAB: 05056
+                      <br />
+                      Account number: 000430966326
+                      <br />
+                      BIC/SWIFT: UNCRITM1C14
+                      <br />
+                      Payment reference: Gift for Bona and Alessandro
+                    </p>
+                  </div>
+                </article>
+
+                <article className={styles.giftLetter} lang="it" translate="no">
+                  <h3 className={styles.giftLanguage}>Italiano</h3>
+                  <p>Cari Amici,</p>
+                  <p>
+                    Siamo felicissimi di festeggiare con voi i nostri 18 e 20 anni! Ed è questo
+                    già un bellissimo regalo.
+                  </p>
+                  <p>
+                    In tanti però ci chiedete un nostro desiderio ed allora avremmo scelto un
+                    oggetto per ricordare questo festeggiamento.
+                  </p>
+                  <p>Bona avrebbe scelto un orologio da portarsi a Segovia!</p>
+                  <p>
+                    Alessandro invece un bel cappotto lungo per affrontare i rigidi inverni
+                    della Pennsylvania!
+                  </p>
+                  <p>
+                    Grazie mille. See you soon !
+                    <br />
+                    Bona ed Alessandro
+                  </p>
+
+                  <div className={styles.giftBankDetails}>
+                    <p>
+                      Di seguito le coordinate bancarie (IBAN) del conto corrente presso
+                      UniCredit intestato a BONA MANISCALCO:
+                    </p>
+                    <p className={styles.giftIban}>IT41U0200805056000430966326</p>
+                    <p>
+                      Paese: IT
+                      <br />
+                      CIN/EU: 41
+                      <br />
+                      CIN/IT: U
+                      <br />
+                      ABI: 02008
+                      <br />
+                      CAB: 05056
+                      <br />
+                      Numero C/C: 000430966326
+                      <br />
+                      BIC/SWIFT: UNCRITM1C14
+                      <br />
+                      Causale: Regalo Bona ed Alessandro
+                    </p>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function InvitationExperience({ invitation }: { invitation: InvitationView }) {
   const [progress, setProgress] = useState(0);
   const [sequenceKey, setSequenceKey] = useState(0);
@@ -587,6 +719,9 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
       ))}
 
       <AccommodationCarousel cards={invitation.accommodations} />
+
+      <hr className={styles.blockHr} />
+      <GroupGift />
 
       <RsvpModal
         open={modalOpen}

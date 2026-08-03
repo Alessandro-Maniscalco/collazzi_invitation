@@ -54,6 +54,27 @@ describe("InvitationExperience", () => {
     );
   });
 
+  it("opens the bilingual group gift section and includes the supplied photo", async () => {
+    const { InvitationExperience } = await import(
+      "@/components/invitation/invitation-experience"
+    );
+
+    render(React.createElement(InvitationExperience, { invitation: previewInvitation() }));
+
+    const details = screen.getByTestId("group-gift-details");
+    expect(details).not.toHaveAttribute("open");
+
+    fireEvent.click(screen.getByText("Group gift to Bona and Alessandro"));
+
+    expect(details).toHaveAttribute("open");
+    expect(within(details).getByRole("heading", { name: "English" })).toBeInTheDocument();
+    expect(within(details).getByRole("heading", { name: "Italiano" })).toBeInTheDocument();
+    expect(
+      within(details).getByRole("img", { name: "Bona and Alessandro together as children" }),
+    ).toHaveAttribute("src", "/assets/collazzi/group-gift-bona-alessandro.png");
+    expect(within(details).getAllByText("IT41U0200805056000430966326")).toHaveLength(2);
+  });
+
   it("keeps RSVP controls open after the informational deadline", async () => {
     const { InvitationExperience } = await import(
       "@/components/invitation/invitation-experience"
