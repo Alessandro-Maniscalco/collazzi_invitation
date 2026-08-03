@@ -530,30 +530,47 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
                   <span className={styles.recipientLabel}>To: </span>
                   <span className={styles.recipientName}>{party.label}</span>
                 </p>
-                <div className={styles.rsvpButtons}>
-                  <button
-                    type="button"
-                    data-test="rsvp-button"
-                    onClick={() => openRsvp("attending")}
-                    className={cn(
-                      styles.rsvpButton,
-                      response?.status === "attending" && styles.rsvpButtonActive,
-                    )}
+                {response ? (
+                  <div
+                    className={styles.rsvpConfirmation}
+                    role="status"
+                    aria-live="polite"
                   >
-                    Will attend
-                  </button>
-                  <button
-                    type="button"
-                    data-test="rsvp-button"
-                    onClick={() => openRsvp("not_attending")}
-                    className={cn(
-                      styles.rsvpButton,
-                      response?.status === "not_attending" && styles.rsvpButtonActive,
-                    )}
-                  >
-                    Will not attend
-                  </button>
-                </div>
+                    <p className={styles.rsvpConfirmationText}>
+                      RSVP confirmed —{" "}
+                      {response.status === "attending"
+                        ? "You will attend."
+                        : "You will not attend."}
+                    </p>
+                    <button
+                      type="button"
+                      data-test="rsvp-update-button"
+                      onClick={() => openRsvp(response.status)}
+                      className={styles.rsvpButton}
+                    >
+                      Update
+                    </button>
+                  </div>
+                ) : (
+                  <div className={styles.rsvpButtons}>
+                    <button
+                      type="button"
+                      data-test="rsvp-button"
+                      onClick={() => openRsvp("attending")}
+                      className={styles.rsvpButton}
+                    >
+                      Will attend
+                    </button>
+                    <button
+                      type="button"
+                      data-test="rsvp-button"
+                      onClick={() => openRsvp("not_attending")}
+                      className={styles.rsvpButton}
+                    >
+                      Will not attend
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -574,8 +591,6 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
       <RsvpModal
         open={modalOpen}
         partyLabel={party.label}
-        partyEmail={party.email}
-        initialEmail={guestEmail}
         guests={invitation.guests}
         questions={invitation.questions}
         token={party.token.value}
@@ -583,11 +598,6 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
         preferredStatus={preferredStatus}
         onClose={() => setModalOpen(false)}
         onSubmitted={setResponse}
-        onEmailSubmitted={(email) => {
-          setGuestEmail(email);
-          setSavedGuestEmail(email);
-          setEmailSaved(true);
-        }}
       />
     </main>
   );

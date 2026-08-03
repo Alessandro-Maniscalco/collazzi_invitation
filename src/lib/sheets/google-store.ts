@@ -212,10 +212,6 @@ export async function saveSheetRsvp(input: SaveRsvpInput) {
   const attending = Object.values(guestSelections).some(Boolean);
   const email = input.email?.trim().toLowerCase();
 
-  if (attending && !guest.email?.trim() && !email) {
-    throw new Error("Please enter your email.");
-  }
-
   const rsvpInput = guest.willInviteToWalkingDinner
     ? input
     : {

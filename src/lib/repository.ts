@@ -343,10 +343,6 @@ export async function saveRsvp(input: SaveRsvpInput) {
     const status = getAttendanceStatus(input.selections);
     const email = input.email?.trim().toLowerCase();
 
-    if (status === "attending" && !party.email?.trim() && !email) {
-      throw new Error("Please enter your email.");
-    }
-
     if (email && party.email !== email) {
       party.email = email;
       addActivity(state, `${party.label} added an email address.`, "guest", "content_updated");
