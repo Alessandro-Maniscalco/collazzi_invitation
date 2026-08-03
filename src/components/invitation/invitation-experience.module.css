@@ -492,6 +492,21 @@
   margin-top: 0;
 }
 
+.rsvpConfirmation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.rsvpConfirmationText {
+  margin: 0;
+  color: #333;
+  font-family: "700 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 20px;
+}
+
 .rsvpButton {
   min-width: 186px;
   height: 44.2188px;

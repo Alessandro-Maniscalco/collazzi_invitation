@@ -82,3 +82,17 @@
 **What was decided:** For the second WhatsApp RSVP batch, use Rebbecca Lando row 503 and skip row 438.
 **Why:** Row 503 has an opened invitation link, which is stronger evidence of the active private link for the guest than row 438's unopened link.
 **What was rejected:** Deleting either Rebbecca Lando row was rejected because the user only asked to record not-found contacts for this batch, not to clean duplicate rows.
+## 2026-07-16, RSVP Deadline Is Informational
+**What was decided:** Guests can submit or change an RSVP at any time; 30 July 2026 is displayed in the host dashboard and included in invitation emails as an informational deadline.
+**Why:** The previous deadline has passed, and the user needs late RSVP changes to remain possible while updated communication still gives guests the current requested deadline.
+**What was rejected:** Keeping the past-deadline lock in either the browser or either server store was rejected because either path would prevent a guest from changing an RSVP.
+
+## 2026-07-27, Email Is Optional for RSVP and Transport
+**What was decided:** Guests can confirm an RSVP and transport preferences without saving an email address.
+**Why:** The user asked to remove the email-save requirement from transport confirmation.
+**What was rejected:** Leaving either local-store or Google Sheets RSVP validation in place was rejected because it would still block confirmation for guests without an email.
+
+## 2026-07-27, Persistent RSVP Confirmation and Update Action
+**What was decided:** After a successful or previously saved RSVP, show a persistent confirmation with the attendance status and replace the initial attendance choices with one Update action; the modal submit action also says Update for an existing response.
+**Why:** Guests need clear evidence that their RSVP was saved and a clear way to change it.
+**What was rejected:** Keeping only the active styling on Will attend or Will not attend was rejected because guests could not tell whether the save completed.

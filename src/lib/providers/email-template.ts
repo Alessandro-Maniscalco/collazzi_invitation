@@ -153,7 +153,7 @@ function formatEventLine(
 
 function formatRsvpDeadline(value?: string) {
   if (!value) {
-    return "July 15th";
+    return "July 30th";
   }
 
   const date = new Date(value);
