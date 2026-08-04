@@ -1,0 +1,144 @@
+.mapFrame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(75, 0, 21, 0.3);
+  background: #e9e1d4;
+  box-shadow: 0 18px 44px rgba(75, 0, 21, 0.14);
+}
+
+.map {
+  width: 100%;
+  height: 690px;
+  background: #e9e1d4;
+}
+
+.mapHint {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 500;
+  max-width: 310px;
+  margin: 0;
+  padding: 10px 13px;
+  border: 1px solid rgba(75, 0, 21, 0.22);
+  background: rgba(254, 251, 246, 0.94);
+  color: #4b0015;
+  font-family: "400 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.markerWrap {
+  border: 0;
+  background: transparent;
+}
+
+.markerCore {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 999px 999px 999px 4px;
+  box-shadow: 0 5px 15px rgba(51, 32, 24, 0.34);
+  color: #fff;
+  transform: rotate(-45deg);
+  transition:
+    filter 160ms ease,
+    transform 160ms ease;
+}
+
+.markerCore svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+  transform: rotate(45deg);
+}
+
+.markerWrap:hover .markerCore,
+.markerWrap:focus .markerCore {
+  filter: brightness(1.15);
+  transform: rotate(-45deg) scale(1.14);
+}
+
+.markerMuseum {
+  background: #4b0015;
+}
+
+.markerFood {
+  background: #b06d28;
+}
+
+.popup :global(.leaflet-popup-content-wrapper),
+.popup :global(.leaflet-popup-tip) {
+  background: #fefbf6;
+  color: #333;
+}
+
+.popup :global(.leaflet-popup-content-wrapper) {
+  border: 1px solid rgba(75, 0, 21, 0.26);
+  border-radius: 0;
+  box-shadow: 0 14px 34px rgba(75, 0, 21, 0.22);
+}
+
+.popup :global(.leaflet-popup-content) {
+  margin: 17px 18px;
+}
+
+.popupContent {
+  display: grid;
+  gap: 7px;
+  min-width: 180px;
+}
+
+.popupCategory {
+  color: #8a6c60;
+  font-family: "700 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.popupContent strong {
+  color: #4b0015;
+  font-family: "400 normal-Plantin MT STD", Plantin, Georgia, serif;
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.popupDescription {
+  font-family: "400 normal-Plantin MT STD", Plantin, Georgia, serif;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.popupContent a {
+  width: fit-content;
+  margin-top: 4px;
+  color: #4b0015;
+  font-family: "500 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  .map {
+    height: 520px;
+  }
+
+  .mapHint {
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    max-width: none;
+    text-align: center;
+  }
+}

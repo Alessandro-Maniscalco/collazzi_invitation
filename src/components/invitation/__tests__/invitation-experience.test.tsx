@@ -76,7 +76,7 @@ describe("InvitationExperience", () => {
     expect(within(details).getAllByText("IT41U0200805056000430966326")).toHaveLength(2);
   });
 
-  it("opens the Florence guide and updates its map from a suggestion", async () => {
+  it("opens the Florence guide with one map for every suggestion", async () => {
     const { InvitationExperience } = await import(
       "@/components/invitation/invitation-experience"
     );
@@ -89,22 +89,14 @@ describe("InvitationExperience", () => {
     fireEvent.click(screen.getByText("Welcome to Florence!"));
 
     expect(details).toHaveAttribute("open");
-    expect(within(details).getByTitle("Map showing Uffizi Gallery")).toHaveAttribute(
-      "src",
-      expect.stringContaining("Uffizi%20Gallery%2C%20Florence%2C%20Italy"),
-    );
-
-    fireEvent.click(
-      within(details).getByRole("button", { name: "Show Boboli Gardens on map" }),
-    );
-
-    expect(within(details).getByTitle("Map showing Boboli Gardens")).toHaveAttribute(
-      "src",
-      expect.stringContaining("Boboli%20Gardens%2C%20Florence%2C%20Italy"),
-    );
     expect(
-      within(details).getByRole("button", { name: "Show Boboli Gardens on map" }),
-    ).toHaveAttribute("aria-pressed", "true");
+      within(details).getByRole("region", {
+        name: "Interactive map of Florence recommendations",
+      }),
+    ).toBeInTheDocument();
+    expect(within(details).getByText("Museums and gardens")).toBeInTheDocument();
+    expect(within(details).getByText("Food and gelato")).toBeInTheDocument();
+    expect(within(details).queryByRole("iframe")).not.toBeInTheDocument();
   });
 
   it("keeps RSVP controls open after the informational deadline", async () => {

@@ -118,6 +118,6 @@
 **What was rejected:** A modal was rejected because the content is long and easier to read, scroll, and revisit inline.
 
 ## 2026-08-04, Interactive Florence Guide
-**What was decided:** Add a full-width, closed-by-default Florence guide above the group gift section, with museum and food suggestions that update an embedded Google map in place.
-**Why:** Guests can browse the supplied local recommendations visually without leaving the invitation, while retaining a direct Google Maps link for navigation.
-**What was rejected:** A static suggestion list was rejected because it would not provide the requested interactive map; adding a map package or API key was rejected because the Google Maps query embed provides the needed interaction with less code and configuration.
+**What was decided:** Add a full-width, closed-by-default Florence guide above the group gift section, using one Leaflet/OpenStreetMap view with every museum and food location, category-specific pins, hover details, and Google Maps links.
+**Why:** Guests can understand where all recommendations are relative to one another and open any specific destination for navigation.
+**What was rejected:** The initial one-place-at-a-time Google Maps embed was superseded because it could not show all recommendations or custom category pins together; a static list was rejected because it would not provide the requested interactive map.
