@@ -453,10 +453,6 @@ function FlorenceSuggestions() {
                 Here are some tips to help you get an authentic and delicious taste of the
                 city!
               </p>
-              <p>
-                You can stroll through the marvelous center of Florence or visit a museum.
-                Here are some suggestions:
-              </p>
             </header>
 
             <div className={styles.florenceLegend} aria-label="Map legend">
@@ -481,7 +477,7 @@ function FlorenceSuggestions() {
 function GroupGift() {
   return (
     <section data-block-type="group_gift" className={styles.giftBlock}>
-      <div className={styles.blockContainer}>
+      <div className={styles.giftOuter}>
         <div className={styles.giftInner}>
           <details className={styles.giftDetails} data-testid="group-gift-details">
             <summary className={styles.giftSummary}>

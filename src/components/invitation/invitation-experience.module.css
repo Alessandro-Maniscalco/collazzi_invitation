@@ -860,7 +860,7 @@
 }
 
 .florenceBlock {
-  padding: 96px 0;
+  padding: 96px 0 36px;
   background: #fefbf6;
 }
 
@@ -986,11 +986,6 @@
   margin: 0;
 }
 
-.florenceIntro p + p {
-  margin-top: 18px;
-  font-size: 0.76em;
-}
-
 .florenceLegend {
   display: flex;
   flex-wrap: wrap;
@@ -1034,26 +1029,32 @@
   content: "";
 }
 
+.giftOuter {
+  width: min(1180px, calc(100% - 64px));
+  margin: 0 auto;
+}
+
 .giftInner {
-  max-width: 920px;
-  margin: 100px auto 0;
-  padding: 0 8vw;
+  margin: 36px auto 0;
 }
 
 .giftDetails {
-  border: 2px solid #333;
+  border: 2px solid #4b0015;
   background: #fff;
+  box-shadow: 0 20px 54px rgba(75, 0, 21, 0.13);
 }
 
 .giftSummary {
   display: flex;
-  min-height: 142px;
+  min-height: 166px;
   cursor: pointer;
   list-style: none;
   align-items: center;
   justify-content: space-between;
-  gap: 28px;
-  padding: 30px 34px;
+  gap: 26px;
+  padding: 34px 40px;
+  background: #4b0015;
+  color: #fff;
   transition:
     background-color 180ms ease,
     color 180ms ease;
@@ -1065,21 +1066,20 @@
 
 .giftSummary:hover,
 .giftSummary:focus-visible {
-  background: #4b0015;
-  color: #fefbf6;
+  background: #68102a;
   outline: none;
 }
 
 .giftTitle {
   font-family: "400 normal-Plantin MT STD", Plantin, Georgia, serif;
-  font-size: clamp(22px, 3vw, 30px);
-  line-height: 1.18;
+  font-size: clamp(32px, 4.2vw, 48px);
+  line-height: 1.05;
 }
 
 .giftToggle {
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   flex: 0 0 auto;
   border: 2px solid currentColor;
   border-radius: 999px;
@@ -1107,8 +1107,8 @@
 }
 
 .giftContent {
-  padding: 48px 42px 54px;
-  border-top: 2px solid #333;
+  padding: 56px;
+  border-top: 2px solid #4b0015;
 }
 
 .giftPhotoFrame {
@@ -1314,7 +1314,7 @@
   }
 
   .florenceBlock {
-    padding: 56px 0;
+    padding: 56px 0 24px;
   }
 
   .florenceInner {
@@ -1367,8 +1367,11 @@
   }
 
   .giftInner {
-    margin: 56px auto 0;
-    padding: 0 12px;
+    margin: 32px auto 0;
+  }
+
+  .giftOuter {
+    width: calc(100% - 24px);
   }
 
   .giftBlock::after {
@@ -1376,9 +1379,13 @@
   }
 
   .giftSummary {
-    min-height: 120px;
-    gap: 20px;
-    padding: 24px 22px;
+    min-height: 132px;
+    gap: 16px;
+    padding: 24px 20px;
+  }
+
+  .giftTitle {
+    font-size: 29px;
   }
 
   .giftToggle {

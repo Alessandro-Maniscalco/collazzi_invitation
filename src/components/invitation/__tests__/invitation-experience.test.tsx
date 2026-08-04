@@ -96,6 +96,11 @@ describe("InvitationExperience", () => {
     ).toBeInTheDocument();
     expect(within(details).getByText("Museums and gardens")).toBeInTheDocument();
     expect(within(details).getByText("Food and gelato")).toBeInTheDocument();
+    expect(
+      within(details).queryByText(
+        "You can stroll through the marvelous center of Florence or visit a museum. Here are some suggestions:",
+      ),
+    ).not.toBeInTheDocument();
     expect(within(details).queryByRole("iframe")).not.toBeInTheDocument();
   });
 
