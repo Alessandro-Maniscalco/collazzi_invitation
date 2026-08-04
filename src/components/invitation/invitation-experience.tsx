@@ -15,7 +15,7 @@ import {
 } from "react";
 
 import Image from "next/image";
-import { Play, RefreshCw } from "lucide-react";
+import { Landmark, MapPin, Play, RefreshCw, UtensilsCrossed } from "lucide-react";
 
 import { AccommodationCarousel } from "@/components/invitation/accommodation-carousel";
 import { ProtectedTranslationText } from "@/components/invitation/protected-translation-text";
@@ -295,6 +295,218 @@ function TravelBlock({ item }: { item: ItineraryItem }) {
             ))}
           </div>
         </div>
+      </div>
+    </section>
+  );
+}
+
+type FlorenceSuggestion = {
+  id: string;
+  title: string;
+  description?: string;
+  query?: string;
+};
+
+const FLORENCE_MUSEUMS: FlorenceSuggestion[] = [
+  {
+    id: "uffizi",
+    title: "Uffizi Gallery",
+    description:
+      "Botticelli’s Primavera and Birth of Venus, plus a thousand other Renaissance masterpieces",
+  },
+  {
+    id: "accademia",
+    title: "Accademia Gallery",
+    description: "Michelangelo’s David",
+  },
+  {
+    id: "opera-duomo",
+    title: "Museo dell’Opera del Duomo",
+    description: "The whole story of Brunelleschi’s Dome, the symbol of the city",
+  },
+  {
+    id: "boboli",
+    title: "Boboli Gardens",
+    description: "The world’s first Italian-style garden",
+  },
+];
+
+const FLORENCE_FOOD: FlorenceSuggestion[] = [
+  {
+    id: "quattro-leoni",
+    title: "Trattoria 4 Leoni",
+    description: "Informal classic Florentine food",
+  },
+  {
+    id: "trattoria-carmine",
+    title: "Trattoria del Carmine",
+    description: "Informal classic Florentine food",
+  },
+  {
+    id: "vini-vecchi-sapori",
+    title: "Vini e Vecchi Sapori",
+    description: "Informal classic Florentine food",
+  },
+  {
+    id: "latini",
+    title: "Il Latini",
+    description: "Famous for their Florentine steak",
+  },
+  {
+    id: "frescobaldi",
+    title: "Ristorante Frescobaldi",
+    description: "Nice food and wines!",
+  },
+  {
+    id: "orazio",
+    title: "da Orazio",
+    description: "Street food — with the typical lampredotto sandwich",
+    query: "Da Orazio Florence lampredotto",
+  },
+  {
+    id: "antico-vinaio",
+    title: "Antico Vinaio",
+    description: "World-famous for their hot, stuffed schiacciata",
+  },
+  {
+    id: "amble",
+    title: "Amblé",
+    description: "Bistro with gourmet sandwiches",
+  },
+  {
+    id: "sprone",
+    title: "Pizzeria Lo Sprone",
+    description: "Wood-fired oven pizza",
+  },
+  {
+    id: "vivoli",
+    title: "Gelateria Vivoli",
+    description: "Best ice cream in town — you will enjoy it at the party as well",
+  },
+  {
+    id: "passera",
+    title: "Gelateria della Passera",
+    description: "Award-winning artisanal gelato",
+  },
+  {
+    id: "venchi",
+    title: "Venchi Icecream and Chocolate",
+    query: "Venchi Firenze",
+  },
+];
+
+const FLORENCE_SUGGESTIONS = [...FLORENCE_MUSEUMS, ...FLORENCE_FOOD];
+
+function florenceMapQuery(suggestion: FlorenceSuggestion) {
+  return suggestion.query ?? `${suggestion.title}, Florence, Italy`;
+}
+
+function FlorenceSuggestions() {
+  const [selectedId, setSelectedId] = useState(FLORENCE_MUSEUMS[0].id);
+  const selected =
+    FLORENCE_SUGGESTIONS.find((suggestion) => suggestion.id === selectedId) ??
+    FLORENCE_MUSEUMS[0];
+  const selectedQuery = florenceMapQuery(selected);
+  const embedUrl = `https://www.google.com/maps?q=${encodeURIComponent(selectedQuery)}&output=embed`;
+  const externalMapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    selectedQuery,
+  )}`;
+
+  const renderSuggestion = (suggestion: FlorenceSuggestion) => {
+    const isSelected = suggestion.id === selected.id;
+
+    return (
+      <button
+        key={suggestion.id}
+        type="button"
+        className={cn(styles.florencePlace, isSelected && styles.florencePlaceActive)}
+        aria-label={`Show ${suggestion.title} on map`}
+        aria-pressed={isSelected}
+        onClick={() => setSelectedId(suggestion.id)}
+      >
+        <span className={styles.florencePlaceMarker} aria-hidden="true">
+          <MapPin size={16} strokeWidth={1.8} />
+        </span>
+        <span>
+          <strong>{suggestion.title}</strong>
+          {suggestion.description ? <small>{suggestion.description}</small> : null}
+        </span>
+      </button>
+    );
+  };
+
+  return (
+    <section data-block-type="florence_suggestions" className={styles.florenceBlock}>
+      <div className={styles.florenceInner}>
+        <details className={styles.florenceDetails} data-testid="florence-suggestions-details">
+          <summary className={styles.florenceSummary}>
+            <span className={styles.florenceSummaryIcon} aria-hidden="true">
+              <MapPin size={24} strokeWidth={1.6} />
+            </span>
+            <span className={styles.florenceSummaryCopy}>
+              <span className={styles.florenceEyebrow}>Our local guide</span>
+              <span className={styles.florenceTitle}>Welcome to Florence!</span>
+              <span className={styles.florenceSummaryNote}>Museums, food and local favourites</span>
+            </span>
+            <span className={styles.florenceToggle} aria-hidden="true" />
+          </summary>
+
+          <div className={styles.florenceContent}>
+            <header className={styles.florenceIntro}>
+              <p>
+                Here are some tips to help you get an authentic and delicious taste of the
+                city!
+              </p>
+              <p>
+                You can stroll through the marvelous center of Florence or visit a museum.
+                Here are some suggestions:
+              </p>
+            </header>
+
+            <div className={styles.florenceGuide}>
+              <div className={styles.florenceLists}>
+                <section className={styles.florenceCategory} aria-labelledby="florence-see">
+                  <h3 id="florence-see">
+                    <Landmark size={19} strokeWidth={1.6} aria-hidden="true" />
+                    What to see
+                  </h3>
+                  <div className={styles.florencePlaces}>
+                    {FLORENCE_MUSEUMS.map(renderSuggestion)}
+                  </div>
+                </section>
+
+                <section className={styles.florenceCategory} aria-labelledby="florence-eat">
+                  <h3 id="florence-eat">
+                    <UtensilsCrossed size={19} strokeWidth={1.6} aria-hidden="true" />
+                    Where to eat like a local
+                  </h3>
+                  <div className={styles.florencePlaces}>{FLORENCE_FOOD.map(renderSuggestion)}</div>
+                </section>
+              </div>
+
+              <aside className={styles.florenceMapPanel} aria-live="polite">
+                <div className={styles.florenceMapHeading}>
+                  <div>
+                    <span>Showing on the map</span>
+                    <strong>{selected.title}</strong>
+                  </div>
+                  <a href={externalMapUrl} target="_blank" rel="noopener noreferrer">
+                    Open in Google Maps
+                  </a>
+                </div>
+                <iframe
+                  key={selected.id}
+                  className={styles.florenceMap}
+                  src={embedUrl}
+                  title={`Map showing ${selected.title}`}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
+                />
+              </aside>
+            </div>
+          </div>
+        </details>
       </div>
     </section>
   );
@@ -714,6 +926,7 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
       <AccommodationCarousel cards={invitation.accommodations} />
 
       <hr className={styles.blockHr} />
+      <FlorenceSuggestions />
       <GroupGift />
 
       <RsvpModal

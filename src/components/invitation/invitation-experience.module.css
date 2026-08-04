@@ -859,6 +859,295 @@
   background: #333;
 }
 
+.florenceBlock {
+  padding: 96px 0;
+  background: #fff;
+}
+
+.florenceInner {
+  width: min(1180px, calc(100% - 64px));
+  margin: 0 auto;
+}
+
+.florenceDetails {
+  border: 2px solid #4b0015;
+  background: #fefbf6;
+  box-shadow: 0 20px 54px rgba(75, 0, 21, 0.13);
+}
+
+.florenceSummary {
+  display: flex;
+  min-height: 166px;
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  gap: 26px;
+  padding: 34px 40px;
+  background: #4b0015;
+  color: #fff;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.florenceSummary::-webkit-details-marker {
+  display: none;
+}
+
+.florenceSummary:hover,
+.florenceSummary:focus-visible {
+  background: #68102a;
+  outline: none;
+}
+
+.florenceSummaryIcon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+}
+
+.florenceSummaryCopy {
+  display: grid;
+  flex: 1;
+  gap: 6px;
+}
+
+.florenceEyebrow,
+.florenceSummaryNote {
+  font-family: "700 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.florenceSummaryNote {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.78);
+  letter-spacing: 0.08em;
+}
+
+.florenceTitle {
+  font-family: "400 normal-Plantin MT STD", Plantin, Georgia, serif;
+  font-size: clamp(32px, 4.2vw, 48px);
+  line-height: 1.05;
+}
+
+.florenceToggle {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  flex: 0 0 auto;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  transition: transform 220ms ease;
+}
+
+.florenceToggle::before,
+.florenceToggle::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 2px;
+  background: currentColor;
+  content: "";
+  transform: translate(-50%, -50%);
+}
+
+.florenceToggle::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.florenceDetails[open] .florenceToggle {
+  transform: rotate(45deg);
+}
+
+.florenceContent {
+  padding: 56px;
+  border-top: 2px solid #4b0015;
+}
+
+.florenceIntro {
+  max-width: 830px;
+  margin: 0 auto 54px;
+  color: #333;
+  font-family: "400 normal-Plantin MT STD", Plantin, Georgia, serif;
+  font-size: clamp(20px, 2.3vw, 26px);
+  line-height: 1.42;
+  text-align: center;
+}
+
+.florenceIntro p {
+  margin: 0;
+}
+
+.florenceIntro p + p {
+  margin-top: 18px;
+  font-size: 0.76em;
+}
+
+.florenceGuide {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.86fr) minmax(440px, 1.14fr);
+  gap: 48px;
+  align-items: start;
+}
+
+.florenceLists {
+  min-width: 0;
+}
+
+.florenceCategory + .florenceCategory {
+  margin-top: 40px;
+}
+
+.florenceCategory h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  color: #4b0015;
+  font-family: "700 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.florencePlaces {
+  display: grid;
+  gap: 9px;
+}
+
+.florencePlace {
+  display: grid;
+  width: 100%;
+  cursor: pointer;
+  appearance: none;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 16px;
+  border: 1px solid rgba(75, 0, 21, 0.2);
+  border-radius: 0;
+  background: #fff;
+  color: #333;
+  font: inherit;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.florencePlace:hover,
+.florencePlace:focus-visible {
+  border-color: #4b0015;
+  outline: none;
+  transform: translateX(4px);
+}
+
+.florencePlaceActive {
+  border-color: #4b0015;
+  background: #4b0015;
+  color: #fff;
+}
+
+.florencePlaceMarker {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+}
+
+.florencePlace strong,
+.florencePlace small {
+  display: block;
+}
+
+.florencePlace strong {
+  font-family: "500 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.florencePlace small {
+  margin-top: 5px;
+  font-family: "400 normal-Plantin MT STD", Plantin, Georgia, serif;
+  font-size: 13px;
+  line-height: 1.42;
+  opacity: 0.76;
+}
+
+.florenceMapPanel {
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(75, 0, 21, 0.28);
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(51, 51, 51, 0.13);
+}
+
+.florenceMapHeading {
+  display: flex;
+  min-height: 82px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 18px;
+  background: #f7f1e7;
+}
+
+.florenceMapHeading div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.florenceMapHeading span {
+  color: rgba(51, 51, 51, 0.65);
+  font-family: "700 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.florenceMapHeading strong {
+  color: #4b0015;
+  font-family: "400 normal-Plantin MT STD", Plantin, Georgia, serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.florenceMapHeading a {
+  flex: 0 0 auto;
+  color: #4b0015;
+  font-family: "500 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.florenceMap {
+  display: block;
+  width: 100%;
+  height: 680px;
+  border: 0;
+  background: #e5ded3;
+}
+
 .giftBlock {
   background: #fefbf6;
 }
@@ -1029,6 +1318,24 @@
   }
 }
 
+@media (max-width: 980px) {
+  .florenceContent {
+    padding: 44px 34px;
+  }
+
+  .florenceGuide {
+    grid-template-columns: 1fr;
+  }
+
+  .florenceMapPanel {
+    position: static;
+  }
+
+  .florenceMap {
+    height: 500px;
+  }
+}
+
 @media (max-width: 760px) {
   .blockContainer {
     padding-right: 20px;
@@ -1141,6 +1448,68 @@
 
   .carouselArrowRight {
     right: 24px;
+  }
+
+  .florenceBlock {
+    padding: 56px 0;
+  }
+
+  .florenceInner {
+    width: calc(100% - 24px);
+  }
+
+  .florenceSummary {
+    min-height: 132px;
+    gap: 16px;
+    padding: 24px 20px;
+  }
+
+  .florenceSummaryIcon {
+    display: none;
+  }
+
+  .florenceTitle {
+    font-size: 29px;
+  }
+
+  .florenceSummaryNote {
+    font-size: 9px;
+    line-height: 1.45;
+  }
+
+  .florenceToggle {
+    width: 42px;
+    height: 42px;
+  }
+
+  .florenceContent {
+    padding: 34px 18px 24px;
+  }
+
+  .florenceIntro {
+    margin-bottom: 36px;
+    font-size: 20px;
+  }
+
+  .florenceGuide {
+    gap: 34px;
+  }
+
+  .florencePlace {
+    padding: 14px 12px;
+  }
+
+  .florenceMapHeading {
+    display: grid;
+    gap: 10px;
+  }
+
+  .florenceMapHeading a {
+    width: fit-content;
+  }
+
+  .florenceMap {
+    height: 360px;
   }
 
   .giftInner {

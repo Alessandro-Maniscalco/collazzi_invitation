@@ -116,3 +116,8 @@
 **What was decided:** Add a prominent closed-by-default Group gift accordion at the bottom of each invitation, with the supplied childhood photo and English/Italian letters side by side on desktop and stacked on mobile.
 **Why:** Gift information and bank details need to be clearly discoverable without overwhelming the main invitation itinerary.
 **What was rejected:** A modal was rejected because the content is long and easier to read, scroll, and revisit inline.
+
+## 2026-08-04, Interactive Florence Guide
+**What was decided:** Add a full-width, closed-by-default Florence guide above the group gift section, with museum and food suggestions that update an embedded Google map in place.
+**Why:** Guests can browse the supplied local recommendations visually without leaving the invitation, while retaining a direct Google Maps link for navigation.
+**What was rejected:** A static suggestion list was rejected because it would not provide the requested interactive map; adding a map package or API key was rejected because the Google Maps query embed provides the needed interaction with less code and configuration.
