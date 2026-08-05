@@ -15,7 +15,14 @@ import {
 } from "react";
 
 import Image from "next/image";
-import { Landmark, MapPin, Play, RefreshCw, UtensilsCrossed } from "lucide-react";
+import {
+  Footprints,
+  Landmark,
+  MapPin,
+  Play,
+  RefreshCw,
+  UtensilsCrossed,
+} from "lucide-react";
 
 import { AccommodationCarousel } from "@/components/invitation/accommodation-carousel";
 import {
@@ -328,11 +335,11 @@ const FLORENCE_MUSEUMS: FlorenceMapSuggestion[] = [
     position: [43.7733279, 11.2579865],
   },
   {
-    id: "boboli",
-    title: "Boboli Gardens",
-    description: "The world’s first Italian-style garden",
+    id: "bargello",
+    title: "Museo del Bargello",
+    description: "Famous for sculpture",
     category: "museum",
-    position: [43.7632781, 11.2498992],
+    position: [43.7703791, 11.2582616],
   },
 ];
 
@@ -425,9 +432,128 @@ const FLORENCE_FOOD: FlorenceMapSuggestion[] = [
   },
 ];
 
-const FLORENCE_SUGGESTIONS = [...FLORENCE_MUSEUMS, ...FLORENCE_FOOD];
+const FLORENCE_WALK: FlorenceMapSuggestion[] = [
+  {
+    id: "santo-spirito",
+    title: "Basilica di Santo Spirito",
+    category: "tour",
+    order: 1,
+    position: [43.7674301, 11.2484144],
+    imageUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Basilica_di_Santo_Spirito_2%2C_Florence.jpg/500px-Basilica_di_Santo_Spirito_2%2C_Florence.jpg",
+    photoSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Basilica_di_Santo_Spirito_2,_Florence.jpg",
+  },
+  {
+    id: "palazzo-pitti",
+    title: "Palazzo Pitti",
+    category: "tour",
+    order: 2,
+    position: [43.7652813, 11.2502566],
+    imageUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Palazzo_Pitti_%28Florence%29_-_Facade_20150811.jpg/500px-Palazzo_Pitti_%28Florence%29_-_Facade_20150811.jpg",
+    photoSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Palazzo_Pitti_(Florence)_-_Facade_20150811.jpg",
+  },
+  {
+    id: "ponte-vecchio",
+    title: "Ponte Vecchio",
+    category: "tour",
+    order: 3,
+    position: [43.7680254, 11.253158],
+    imageUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Ponte_Vecchio_at_dusk_1.JPG/500px-Ponte_Vecchio_at_dusk_1.JPG",
+    photoSourceUrl: "https://commons.wikimedia.org/wiki/File:Ponte_Vecchio_at_dusk_1.JPG",
+  },
+  {
+    id: "palazzo-vecchio",
+    title: "Palazzo Vecchio",
+    category: "tour",
+    order: 4,
+    position: [43.7691435, 11.2561399],
+    imageUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Florence_-_tower_of_the_Palazzo_Vecchio.jpg/500px-Florence_-_tower_of_the_Palazzo_Vecchio.jpg",
+    photoSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Florence_-_tower_of_the_Palazzo_Vecchio.jpg",
+  },
+  {
+    id: "santa-croce",
+    title: "Basilica di Santa Croce",
+    category: "tour",
+    order: 5,
+    position: [43.768365, 11.2630201],
+    imageUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Basilica_di_Santa_Croce_%2812437%29.jpg/500px-Basilica_di_Santa_Croce_%2812437%29.jpg",
+    photoSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Basilica_di_Santa_Croce_(12437).jpg",
+  },
+  {
+    id: "duomo",
+    title: "Duomo di Firenze",
+    category: "tour",
+    order: 6,
+    position: [43.7731015, 11.2565742],
+    markerOffset: [-42, 18],
+    query: "Cattedrale di Santa Maria del Fiore, Firenze",
+    imageUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Facciata_duomo_di_firenze.jpg/500px-Facciata_duomo_di_firenze.jpg",
+    photoSourceUrl: "https://commons.wikimedia.org/wiki/File:Facciata_duomo_di_firenze.jpg",
+  },
+  {
+    id: "brunelleschi-dome",
+    title: "Cupola del Brunelleschi",
+    category: "tour",
+    order: 7,
+    position: [43.7730799, 11.2569509],
+    markerOffset: [28, -44],
+    imageUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Florence%2C_Italy%2C_Brunelleschi%27s_Dome_of_Florence_Cathedral.jpg/500px-Florence%2C_Italy%2C_Brunelleschi%27s_Dome_of_Florence_Cathedral.jpg",
+    photoSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Florence,_Italy,_Brunelleschi%27s_Dome_of_Florence_Cathedral.jpg",
+  },
+  {
+    id: "giotto-bell-tower",
+    title: "Campanile di Giotto",
+    category: "tour",
+    order: 8,
+    position: [43.772838, 11.2556968],
+    markerOffset: [38, 26],
+    imageUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/CampanileGiotto-01.jpg/500px-CampanileGiotto-01.jpg",
+    photoSourceUrl: "https://commons.wikimedia.org/wiki/File:CampanileGiotto-01.jpg",
+  },
+  {
+    id: "baptistery",
+    title: "Battistero di San Giovanni",
+    category: "tour",
+    order: 9,
+    position: [43.7731739, 11.2550306],
+    markerOffset: [-32, -42],
+    imageUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/South_Facade_of_Florence_Baptistery_March_2022.jpg/500px-South_Facade_of_Florence_Baptistery_March_2022.jpg",
+    photoSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:South_Facade_of_Florence_Baptistery_March_2022.jpg",
+  },
+  {
+    id: "santa-maria-novella",
+    title: "Basilica di Santa Maria Novella",
+    category: "tour",
+    order: 10,
+    position: [43.7746511, 11.2493727],
+    imageUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Santa_Maria_Novella_Florence_fa%C3%A7ade.jpg/500px-Santa_Maria_Novella_Florence_fa%C3%A7ade.jpg",
+    photoSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Santa_Maria_Novella_Florence_fa%C3%A7ade.jpg",
+  },
+];
 
 function FlorenceSuggestions() {
+  const [recommendationView, setRecommendationView] = useState<"museum" | "food">(
+    "museum",
+  );
+  const recommendationSuggestions =
+    recommendationView === "museum" ? FLORENCE_MUSEUMS : FLORENCE_FOOD;
+
   return (
     <section data-block-type="florence_suggestions" className={styles.florenceBlock}>
       <div className={styles.florenceInner}>
@@ -442,7 +568,9 @@ function FlorenceSuggestions() {
             <span className={styles.florenceSummaryCopy}>
               <span className={styles.florenceEyebrow}>Our local guide</span>
               <span className={styles.florenceTitle}>Welcome to Florence!</span>
-              <span className={styles.florenceSummaryNote}>Museums, food and local favourites</span>
+              <span className={styles.florenceSummaryNote}>
+                Museums, food and a guided city walk
+              </span>
             </span>
             <span className={styles.florenceToggle} aria-hidden="true" />
           </summary>
@@ -455,18 +583,58 @@ function FlorenceSuggestions() {
               </p>
             </header>
 
-            <div className={styles.florenceLegend} aria-label="Map legend">
-              <span>
-                <Landmark size={18} strokeWidth={1.6} aria-hidden="true" />
-                Museums and gardens
-              </span>
-              <span>
-                <UtensilsCrossed size={18} strokeWidth={1.6} aria-hidden="true" />
-                Food and gelato
-              </span>
-            </div>
+            <section className={styles.florenceMapSection} aria-labelledby="recommendations-map-title">
+              <div className={styles.florenceMapHeading}>
+                <div>
+                  <span className={styles.florenceMapEyebrow}>Choose what to explore</span>
+                  <h3 id="recommendations-map-title">Florence favourites</h3>
+                </div>
+                <div className={styles.florenceMapTabs} role="tablist" aria-label="Florence recommendations">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={recommendationView === "museum"}
+                    className={recommendationView === "museum" ? styles.florenceMapTabActive : undefined}
+                    onClick={() => setRecommendationView("museum")}
+                  >
+                    <Landmark size={18} strokeWidth={1.6} aria-hidden="true" />
+                    Museums
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={recommendationView === "food"}
+                    className={recommendationView === "food" ? styles.florenceMapTabActive : undefined}
+                    onClick={() => setRecommendationView("food")}
+                  >
+                    <UtensilsCrossed size={18} strokeWidth={1.6} aria-hidden="true" />
+                    Food
+                  </button>
+                </div>
+              </div>
 
-            <FlorenceMap suggestions={FLORENCE_SUGGESTIONS} />
+              <FlorenceMap
+                key={recommendationView}
+                mode={recommendationView}
+                suggestions={recommendationSuggestions}
+              />
+            </section>
+
+            <section className={styles.florenceMapSection} aria-labelledby="city-walk-map-title">
+              <div className={styles.florenceMapHeading}>
+                <div className={styles.florenceWalkTitle}>
+                  <span className={styles.florenceWalkIcon} aria-hidden="true">
+                    <Footprints size={22} strokeWidth={1.6} />
+                  </span>
+                  <div>
+                    <span className={styles.florenceMapEyebrow}>Ten stops · follow the numbers</span>
+                    <h3 id="city-walk-map-title">Guided city walk</h3>
+                  </div>
+                </div>
+              </div>
+
+              <FlorenceMap mode="tour" suggestions={FLORENCE_WALK} />
+            </section>
           </div>
         </details>
       </div>

@@ -82,6 +82,11 @@
 **What was decided:** For the second WhatsApp RSVP batch, use Rebbecca Lando row 503 and skip row 438.
 **Why:** Row 503 has an opened invitation link, which is stronger evidence of the active private link for the guest than row 438's unopened link.
 **What was rejected:** Deleting either Rebbecca Lando row was rejected because the user only asked to record not-found contacts for this batch, not to clean duplicate rows.
+
+## 2026-08-05, Florence Maps and Guided Walk
+**What was decided:** Split the Florence guide into a recommendation map that switches between Museums and Food and a second numbered guided-walk map. The walk runs Santo Spirito, Palazzo Pitti, Ponte Vecchio, Palazzo Vecchio, Santa Croce, the four Duomo-complex stops, and Santa Maria Novella; Boboli was replaced by Museo del Bargello in the museum recommendations.
+**Why:** Separate maps keep the recommendations readable while making the requested walking order explicit, connected, and usable with photo previews and Google Maps links.
+**What was rejected:** Keeping every museum, restaurant, and walking stop on one map was rejected because the pin density obscured the route; keeping Boboli was rejected because the user explicitly requested Bargello instead.
 ## 2026-07-16, RSVP Deadline Is Informational
 **What was decided:** Guests can submit or change an RSVP at any time; 30 July 2026 is displayed in the host dashboard and included in invitation emails as an informational deadline.
 **Why:** The previous deadline has passed, and the user needs late RSVP changes to remain possible while updated communication still gives guests the current requested deadline.

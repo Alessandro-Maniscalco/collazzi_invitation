@@ -76,7 +76,7 @@ describe("InvitationExperience", () => {
     expect(within(details).getAllByText("IT41U0200805056000430966326")).toHaveLength(2);
   });
 
-  it("opens the Florence guide with one map for every suggestion", async () => {
+  it("opens separate recommendation and numbered city-walk maps", async () => {
     const { InvitationExperience } = await import(
       "@/components/invitation/invitation-experience"
     );
@@ -91,11 +91,30 @@ describe("InvitationExperience", () => {
     expect(details).toHaveAttribute("open");
     expect(
       within(details).getByRole("region", {
-        name: "Interactive map of Florence recommendations",
+        name: "Interactive map of Florence museums",
       }),
     ).toBeInTheDocument();
-    expect(within(details).getByText("Museums and gardens")).toBeInTheDocument();
-    expect(within(details).getByText("Food and gelato")).toBeInTheDocument();
+    expect(
+      within(details).getByRole("region", {
+        name: "Guided city walk through Florence",
+      }),
+    ).toBeInTheDocument();
+    expect(within(details).getByRole("tab", { name: "Museums" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+
+    fireEvent.click(within(details).getByRole("tab", { name: "Food" }));
+
+    expect(
+      within(details).getByRole("region", {
+        name: "Interactive map of Florence food recommendations",
+      }),
+    ).toBeInTheDocument();
+    expect(within(details).getByRole("tab", { name: "Food" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
     expect(
       within(details).queryByText(
         "You can stroll through the marvelous center of Florence or visit a museum. Here are some suggestions:",
