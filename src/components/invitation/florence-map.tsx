@@ -180,7 +180,6 @@ export function FlorenceMap({
               <strong>${escapeHtml(suggestion.title)}</strong>
             </a>
             ${description}
-            <a class="${styles.popupMapsLink}" href="${mapsUrl}" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
           </div>
         `;
         const marker = leaflet
