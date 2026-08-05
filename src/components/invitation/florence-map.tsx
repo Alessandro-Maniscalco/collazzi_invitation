@@ -61,7 +61,8 @@ export function FlorenceMap({
   const hasTour = suggestions.some((suggestion) => suggestion.category === "tour");
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const mapContainer = containerRef.current;
+    if (!mapContainer) return;
 
     let disposed = false;
     let removeMap: (() => void) | undefined;
@@ -69,10 +70,29 @@ export function FlorenceMap({
     void import("leaflet").then((leaflet) => {
       if (disposed || !containerRef.current) return;
 
-      const map = leaflet.map(containerRef.current, {
+      const map = leaflet.map(mapContainer, {
         center: [43.7704, 11.2543],
         zoom: 14,
         scrollWheelZoom: false,
+      });
+
+      const handleCommandWheel = (event: WheelEvent) => {
+        if (!event.metaKey && !event.ctrlKey) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const zoomDirection = event.deltaY < 0 ? 1 : -1;
+        const nextZoom = Math.min(
+          map.getMaxZoom(),
+          Math.max(map.getMinZoom(), map.getZoom() + zoomDirection),
+        );
+
+        map.setZoomAround(map.mouseEventToContainerPoint(event), nextZoom);
+      };
+
+      mapContainer.addEventListener("wheel", handleCommandWheel, {
+        passive: false,
       });
 
       leaflet
@@ -215,6 +235,7 @@ export function FlorenceMap({
       removeMap = () => {
         resizeObserver.disconnect();
         window.cancelAnimationFrame(resizeFrame);
+        mapContainer.removeEventListener("wheel", handleCommandWheel);
         map.remove();
       };
     });
@@ -244,8 +265,8 @@ export function FlorenceMap({
       />
       <p className={styles.mapHint}>
         {hasTour
-          ? "Follow the numbered route. Hover over any pin for details and its Google Maps link."
-          : "Hover over a pin to discover the place. Use its link to open Google Maps."}
+          ? "Follow the numbered route. Hold ⌘ and scroll to zoom. Hover over any pin for details and its Google Maps link."
+          : "Hold ⌘ and scroll to zoom. Hover over a pin to discover the place and open it in Google Maps."}
       </p>
     </div>
   );

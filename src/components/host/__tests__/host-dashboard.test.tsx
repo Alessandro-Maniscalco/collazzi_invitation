@@ -60,14 +60,17 @@ function dashboardSnapshot(): DashboardSnapshot {
 }
 
 describe("HostDashboard", () => {
-  it("does not render private invitation opener links", () => {
+  it("renders private invitation opener links without prefetching them", () => {
     const snapshot = dashboardSnapshot();
 
     render(React.createElement(HostDashboard, {
       initialData: snapshot,
     }));
 
-    expect(screen.queryByRole("link", { name: "Open link" })).not.toBeInTheDocument();
+    const openLinks = screen.getAllByRole("link", { name: "Open link" });
+    expect(openLinks).toHaveLength(snapshot.parties.length);
+    expect(openLinks[0]).toHaveAttribute("href", `/i/${snapshot.parties[0].token.value}`);
+    expect(openLinks[0]).toHaveAttribute("target", "_blank");
     expect(screen.queryByText("Host Dashboard")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Home" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Log out" })).not.toBeInTheDocument();

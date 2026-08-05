@@ -83,6 +83,11 @@
 **Why:** Row 503 has an opened invitation link, which is stronger evidence of the active private link for the guest than row 438's unopened link.
 **What was rejected:** Deleting either Rebbecca Lando row was rejected because the user only asked to record not-found contacts for this batch, not to clean duplicate rows.
 
+## 2026-08-05, Guided Walk Zoom and Host Open Link
+**What was decided:** Number the Duomo cluster as Cupola del Brunelleschi 6, Campanile di Giotto 7, Duomo di Firenze 8, and Battistero di San Giovanni 9; support map zoom with Command or Control plus scroll; and restore a non-prefetched Open link action beside Copy link in each host guest card.
+**Why:** The user supplied the exact corrected map numbering, requested modifier-assisted zoom that preserves ordinary page scrolling, and explicitly asked to restore the host opener.
+**What was rejected:** Keeping the previous 6-7-8 Duomo ordering, enabling unrestricted wheel zoom, and retaining the 2026-05-06 removal of Open link were rejected because they conflict with the current request.
+
 ## 2026-08-05, Florence Maps and Guided Walk
 **What was decided:** Split the Florence guide into a recommendation map that switches between Museums and Food and a second numbered guided-walk map. The walk runs Santo Spirito, Palazzo Pitti, Ponte Vecchio, Palazzo Vecchio, Santa Croce, the four Duomo-complex stops, and Santa Maria Novella; Boboli was replaced by Museo del Bargello in the museum recommendations.
 **Why:** Separate maps keep the recommendations readable while making the requested walking order explicit, connected, and usable with photo previews and Google Maps links.

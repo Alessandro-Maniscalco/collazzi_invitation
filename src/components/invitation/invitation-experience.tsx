@@ -491,7 +491,7 @@ const FLORENCE_WALK: FlorenceMapSuggestion[] = [
     id: "duomo",
     title: "Duomo di Firenze",
     category: "tour",
-    order: 6,
+    order: 8,
     position: [43.7731455, 11.2556093],
     query: "Cattedrale di Santa Maria del Fiore, Firenze",
     imageUrl:
@@ -502,7 +502,7 @@ const FLORENCE_WALK: FlorenceMapSuggestion[] = [
     id: "brunelleschi-dome",
     title: "Cupola del Brunelleschi",
     category: "tour",
-    order: 7,
+    order: 6,
     position: [43.7733319, 11.2565651],
     imageUrl:
       "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Florence%2C_Italy%2C_Brunelleschi%27s_Dome_of_Florence_Cathedral.jpg/500px-Florence%2C_Italy%2C_Brunelleschi%27s_Dome_of_Florence_Cathedral.jpg",
@@ -513,7 +513,7 @@ const FLORENCE_WALK: FlorenceMapSuggestion[] = [
     id: "giotto-bell-tower",
     title: "Campanile di Giotto",
     category: "tour",
-    order: 8,
+    order: 7,
     position: [43.7726042, 11.2558247],
     imageUrl:
       "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/CampanileGiotto-01.jpg/500px-CampanileGiotto-01.jpg",

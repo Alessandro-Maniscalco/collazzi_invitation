@@ -1042,6 +1042,15 @@ export function HostDashboard({
                           >
                             {linkCopied ? "Copied" : "Copy link"}
                           </button>
+                          <a
+                            href={`/i/${party.token.value}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={`Open the private invitation for ${party.label}`}
+                            className={cn(secondaryButtonClass, "px-4 py-2")}
+                          >
+                            Open link
+                          </a>
                         </div>
                         {latest ? (
                           <div className="text-sm" suppressHydrationWarning>
