@@ -14,7 +14,6 @@ export type FlorenceMapSuggestion = {
   order?: number;
   imageUrl?: string;
   photoSourceUrl?: string;
-  markerOffset?: [x: number, y: number];
 };
 
 type FlorenceMapMode = FlorenceMapSuggestion["category"];
@@ -52,12 +51,14 @@ function googleMapsUrl(suggestion: FlorenceMapSuggestion) {
 
 export function FlorenceMap({
   suggestions,
-  mode,
 }: {
   suggestions: FlorenceMapSuggestion[];
-  mode: FlorenceMapMode;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const activeModes = Array.from(
+    new Set(suggestions.map((suggestion) => suggestion.category)),
+  );
+  const hasTour = suggestions.some((suggestion) => suggestion.category === "tour");
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -83,11 +84,14 @@ export function FlorenceMap({
         .addTo(map);
 
       const bounds = leaflet.latLngBounds([]);
+      const tourSuggestions = suggestions.filter(
+        (suggestion) => suggestion.category === "tour",
+      );
 
-      if (mode === "tour") {
+      if (hasTour) {
         leaflet
           .polyline(
-            suggestions.map((suggestion) => suggestion.position),
+            tourSuggestions.map((suggestion) => suggestion.position),
             {
               color: "#4b0015",
               dashArray: "2 10",
@@ -100,7 +104,7 @@ export function FlorenceMap({
       }
 
       suggestions.forEach((suggestion) => {
-        const markerOffset = suggestion.markerOffset ?? [0, 0];
+        const isTourStop = suggestion.category === "tour";
         const categoryLabel =
           suggestion.category === "museum"
             ? "Museum"
@@ -119,14 +123,12 @@ export function FlorenceMap({
             : markerSvg(suggestion.category);
         const icon = leaflet.divIcon({
           className: styles.markerWrap,
-          html: `
-            <span class="${styles.markerVisual}" style="transform: translate(${markerOffset[0]}px, ${markerOffset[1]}px)">
-              <span class="${styles.markerCore} ${markerClass}">${markerContent}</span>
-            </span>
-          `,
-          iconSize: [42, 42],
-          iconAnchor: [21, 42],
-          popupAnchor: [markerOffset[0], markerOffset[1] - 37],
+          html: `<span class="${styles.markerCore} ${
+            isTourStop ? styles.markerTourCore : ""
+          } ${markerClass}">${markerContent}</span>`,
+          iconSize: isTourStop ? [34, 34] : [42, 42],
+          iconAnchor: isTourStop ? [17, 34] : [21, 42],
+          popupAnchor: isTourStop ? [0, -29] : [0, -37],
         });
         const description = suggestion.description
           ? `<span class="${styles.popupDescription}">${escapeHtml(
@@ -165,6 +167,7 @@ export function FlorenceMap({
           .marker(suggestion.position, {
             icon,
             keyboard: true,
+            riseOnHover: true,
             title: suggestion.title,
           })
           .bindPopup(popup, {
@@ -190,7 +193,7 @@ export function FlorenceMap({
 
       map.fitBounds(bounds, {
         padding: [42, 42],
-        maxZoom: mode === "tour" ? 16 : 15,
+        maxZoom: hasTour && activeModes.length === 1 ? 16 : 15,
       });
 
       const fitVisibleMap = () => {
@@ -199,7 +202,7 @@ export function FlorenceMap({
         map.invalidateSize();
         map.fitBounds(bounds, {
           padding: [42, 42],
-          maxZoom: mode === "tour" ? 16 : 15,
+          maxZoom: hasTour && activeModes.length === 1 ? 16 : 15,
         });
       };
       const resizeObserver = new ResizeObserver(() => {
@@ -220,26 +223,28 @@ export function FlorenceMap({
       disposed = true;
       removeMap?.();
     };
-  }, [mode, suggestions]);
+  }, [activeModes.length, hasTour, suggestions]);
 
-  const ariaLabel =
-    mode === "museum"
-      ? "Interactive map of Florence museums"
-      : mode === "food"
-        ? "Interactive map of Florence food recommendations"
-        : "Guided city walk through Florence";
+  const modeLabels: Record<FlorenceMapMode, string> = {
+    museum: "Museums",
+    food: "Food",
+    tour: "Guided city walk",
+  };
+  const ariaLabel = `Interactive map of Florence: ${activeModes
+    .map((mode) => modeLabels[mode])
+    .join(", ")}`;
 
   return (
     <div className={styles.mapFrame}>
       <div
         ref={containerRef}
-        className={`${styles.map} ${mode === "tour" ? styles.mapTour : ""}`}
+        className={styles.map}
         role="region"
         aria-label={ariaLabel}
       />
       <p className={styles.mapHint}>
-        {mode === "tour"
-          ? "Follow the numbers. Hover over a stop for its photo and Google Maps link."
+        {hasTour
+          ? "Follow the numbered route. Hover over any pin for details and its Google Maps link."
           : "Hover over a pin to discover the place. Use its link to open Google Maps."}
       </p>
     </div>

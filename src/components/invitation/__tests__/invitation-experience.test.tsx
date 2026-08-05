@@ -76,7 +76,7 @@ describe("InvitationExperience", () => {
     expect(within(details).getAllByText("IT41U0200805056000430966326")).toHaveLength(2);
   });
 
-  it("opens separate recommendation and numbered city-walk maps", async () => {
+  it("uses one map with multi-select museum, food, and city-walk layers", async () => {
     const { InvitationExperience } = await import(
       "@/components/invitation/invitation-experience"
     );
@@ -91,30 +91,48 @@ describe("InvitationExperience", () => {
     expect(details).toHaveAttribute("open");
     expect(
       within(details).getByRole("region", {
-        name: "Interactive map of Florence museums",
+        name: "Interactive map of Florence: Food",
       }),
     ).toBeInTheDocument();
-    expect(
-      within(details).getByRole("region", {
-        name: "Guided city walk through Florence",
-      }),
-    ).toBeInTheDocument();
-    expect(within(details).getByRole("tab", { name: "Museums" })).toHaveAttribute(
-      "aria-selected",
+    expect(within(details).getByRole("button", { name: "Museums" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    expect(within(details).getByRole("button", { name: "Food" })).toHaveAttribute(
+      "aria-pressed",
       "true",
     );
+    expect(
+      within(details).getByRole("button", { name: "Guided city walk" }),
+    ).toHaveAttribute("aria-pressed", "false");
 
-    fireEvent.click(within(details).getByRole("tab", { name: "Food" }));
+    fireEvent.click(within(details).getByRole("button", { name: "Museums" }));
+    fireEvent.click(within(details).getByRole("button", { name: "Guided city walk" }));
 
     expect(
       within(details).getByRole("region", {
-        name: "Interactive map of Florence food recommendations",
+        name: "Interactive map of Florence: Museums, Food, Guided city walk",
       }),
     ).toBeInTheDocument();
-    expect(within(details).getByRole("tab", { name: "Food" })).toHaveAttribute(
-      "aria-selected",
+    expect(within(details).getByRole("button", { name: "Museums" })).toHaveAttribute(
+      "aria-pressed",
       "true",
     );
+    expect(
+      within(details).getByRole("button", { name: "Guided city walk" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    const routeOrder = within(details).getByRole("list", {
+      name: "Guided city walk order",
+    });
+    expect(within(routeOrder).getAllByRole("listitem")).toHaveLength(10);
+    expect(
+      within(routeOrder).getByRole("link", { name: "Basilica di Santo Spirito" }),
+    ).toHaveAttribute("href", expect.stringContaining("Basilica%20di%20Santo%20Spirito"));
+    expect(
+      within(routeOrder).getByRole("link", {
+        name: "Basilica di Santa Maria Novella",
+      }),
+    ).toBeInTheDocument();
     expect(
       within(details).queryByText(
         "You can stroll through the marvelous center of Florence or visit a museum. Here are some suggestions:",

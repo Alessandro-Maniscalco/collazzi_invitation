@@ -87,6 +87,11 @@
 **What was decided:** Split the Florence guide into a recommendation map that switches between Museums and Food and a second numbered guided-walk map. The walk runs Santo Spirito, Palazzo Pitti, Ponte Vecchio, Palazzo Vecchio, Santa Croce, the four Duomo-complex stops, and Santa Maria Novella; Boboli was replaced by Museo del Bargello in the museum recommendations.
 **Why:** Separate maps keep the recommendations readable while making the requested walking order explicit, connected, and usable with photo previews and Google Maps links.
 **What was rejected:** Keeping every museum, restaurant, and walking stop on one map was rejected because the pin density obscured the route; keeping Boboli was rejected because the user explicitly requested Bargello instead.
+
+## 2026-08-05, Multi-Select Florence Map Layers
+**What was decided:** Supersede the two-map layout with one shared map controlled by three independent Museums, Food, and Guided city walk buttons. Food is selected initially, at least one layer stays active, and selecting the walk shows a clickable 1–10 route list. Tour pins now use only geographic coordinates, including individual Duomo-complex entrances, without fixed pixel offsets.
+**Why:** Guests can combine any recommendations on one map, while true geographic anchors keep route markers attached during zooming and the route list preserves an unambiguous order at city-wide zoom.
+**What was rejected:** Keeping separate maps was rejected by the user; fixed screen-space marker offsets were rejected because they appeared to move relative to the map when zooming.
 ## 2026-07-16, RSVP Deadline Is Informational
 **What was decided:** Guests can submit or change an RSVP at any time; 30 July 2026 is displayed in the host dashboard and included in invitation emails as an informational deadline.
 **Why:** The previous deadline has passed, and the user needs late RSVP changes to remain possible while updated communication still gives guests the current requested deadline.

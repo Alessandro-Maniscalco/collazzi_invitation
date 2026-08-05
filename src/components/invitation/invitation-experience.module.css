@@ -991,12 +991,6 @@
   gap: 22px;
 }
 
-.florenceMapSection + .florenceMapSection {
-  margin-top: 64px;
-  padding-top: 56px;
-  border-top: 1px solid rgba(75, 0, 21, 0.2);
-}
-
 .florenceMapHeading {
   display: flex;
   flex-wrap: wrap;
@@ -1025,7 +1019,7 @@
   line-height: 1.05;
 }
 
-.florenceMapTabs {
+.florenceMapFilters {
   display: flex;
   align-items: center;
   padding: 4px;
@@ -1033,7 +1027,7 @@
   background: #f7f1e7;
 }
 
-.florenceMapTabs button {
+.florenceMapFilters button {
   display: flex;
   min-height: 42px;
   cursor: pointer;
@@ -1054,37 +1048,67 @@
     color 160ms ease;
 }
 
-.florenceMapTabs button:hover,
-.florenceMapTabs button:focus-visible {
+.florenceMapFilters button:hover,
+.florenceMapFilters button:focus-visible {
   background: rgba(75, 0, 21, 0.08);
   outline: none;
 }
 
-.florenceMapTabs .florenceMapTabActive {
+.florenceMapFilters .florenceMapFilterActive {
   background: #4b0015;
   color: #fff;
 }
 
-.florenceMapTabs .florenceMapTabActive:hover,
-.florenceMapTabs .florenceMapTabActive:focus-visible {
+.florenceMapFilters .florenceMapFilterActive:hover,
+.florenceMapFilters .florenceMapFilterActive:focus-visible {
   background: #68102a;
 }
 
-.florenceWalkTitle {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+.florenceRouteStops {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.florenceWalkIcon {
+.florenceRouteStops a {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid rgba(75, 0, 21, 0.18);
+  background: #f7f1e7;
+  color: #4b0015;
+  font-family: "500 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
+  font-size: 9px;
+  line-height: 1.25;
+  text-decoration: none;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.florenceRouteStops a:hover,
+.florenceRouteStops a:focus-visible {
+  border-color: rgba(75, 0, 21, 0.5);
+  background: #efe3d2;
+  outline: none;
+}
+
+.florenceRouteStops a span {
   display: grid;
-  width: 46px;
-  height: 46px;
+  width: 25px;
+  height: 25px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgba(75, 0, 21, 0.25);
   border-radius: 999px;
-  color: #4b0015;
+  background: #4b0015;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .giftBlock {
@@ -1427,11 +1451,6 @@
     gap: 16px;
   }
 
-  .florenceMapSection + .florenceMapSection {
-    margin-top: 42px;
-    padding-top: 38px;
-  }
-
   .florenceMapHeading {
     align-items: stretch;
   }
@@ -1440,14 +1459,29 @@
     width: 100%;
   }
 
-  .florenceMapTabs {
+  .florenceMapFilters {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.35fr;
     width: 100%;
   }
 
-  .florenceMapTabs button {
-    flex: 1;
-    padding: 10px 8px;
-    font-size: 9px;
+  .florenceMapFilters button {
+    min-width: 0;
+    padding: 10px 5px;
+    font-size: 8px;
+    line-height: 1.25;
+    text-align: center;
+  }
+
+  .florenceRouteStops {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .florenceRouteStops a {
+    min-height: 46px;
+    padding: 6px 7px;
+    font-size: 8px;
   }
 
   .giftInner {

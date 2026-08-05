@@ -492,8 +492,7 @@ const FLORENCE_WALK: FlorenceMapSuggestion[] = [
     title: "Duomo di Firenze",
     category: "tour",
     order: 6,
-    position: [43.7731015, 11.2565742],
-    markerOffset: [-42, 18],
+    position: [43.7731455, 11.2556093],
     query: "Cattedrale di Santa Maria del Fiore, Firenze",
     imageUrl:
       "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Facciata_duomo_di_firenze.jpg/500px-Facciata_duomo_di_firenze.jpg",
@@ -504,8 +503,7 @@ const FLORENCE_WALK: FlorenceMapSuggestion[] = [
     title: "Cupola del Brunelleschi",
     category: "tour",
     order: 7,
-    position: [43.7730799, 11.2569509],
-    markerOffset: [28, -44],
+    position: [43.7733319, 11.2565651],
     imageUrl:
       "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Florence%2C_Italy%2C_Brunelleschi%27s_Dome_of_Florence_Cathedral.jpg/500px-Florence%2C_Italy%2C_Brunelleschi%27s_Dome_of_Florence_Cathedral.jpg",
     photoSourceUrl:
@@ -516,8 +514,7 @@ const FLORENCE_WALK: FlorenceMapSuggestion[] = [
     title: "Campanile di Giotto",
     category: "tour",
     order: 8,
-    position: [43.772838, 11.2556968],
-    markerOffset: [38, 26],
+    position: [43.7726042, 11.2558247],
     imageUrl:
       "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/CampanileGiotto-01.jpg/500px-CampanileGiotto-01.jpg",
     photoSourceUrl: "https://commons.wikimedia.org/wiki/File:CampanileGiotto-01.jpg",
@@ -527,8 +524,7 @@ const FLORENCE_WALK: FlorenceMapSuggestion[] = [
     title: "Battistero di San Giovanni",
     category: "tour",
     order: 9,
-    position: [43.7731739, 11.2550306],
-    markerOffset: [-32, -42],
+    position: [43.7732999, 11.2550586],
     imageUrl:
       "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/South_Facade_of_Florence_Baptistery_March_2022.jpg/500px-South_Facade_of_Florence_Baptistery_March_2022.jpg",
     photoSourceUrl:
@@ -547,12 +543,36 @@ const FLORENCE_WALK: FlorenceMapSuggestion[] = [
   },
 ];
 
+function florenceMapsUrl(suggestion: FlorenceMapSuggestion) {
+  const query = suggestion.query ?? `${suggestion.title}, Florence, Italy`;
+
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
 function FlorenceSuggestions() {
-  const [recommendationView, setRecommendationView] = useState<"museum" | "food">(
-    "museum",
+  type FlorenceLayer = "museum" | "food" | "tour";
+
+  const [activeLayers, setActiveLayers] = useState<FlorenceLayer[]>(["food"]);
+  const activeSuggestions = useMemo(
+    () => [
+      ...(activeLayers.includes("museum") ? FLORENCE_MUSEUMS : []),
+      ...(activeLayers.includes("food") ? FLORENCE_FOOD : []),
+      ...(activeLayers.includes("tour") ? FLORENCE_WALK : []),
+    ],
+    [activeLayers],
   );
-  const recommendationSuggestions =
-    recommendationView === "museum" ? FLORENCE_MUSEUMS : FLORENCE_FOOD;
+
+  function toggleLayer(layer: FlorenceLayer) {
+    setActiveLayers((currentLayers) => {
+      if (!currentLayers.includes(layer)) {
+        return [...currentLayers, layer];
+      }
+
+      return currentLayers.length === 1
+        ? currentLayers
+        : currentLayers.filter((currentLayer) => currentLayer !== layer);
+    });
+  }
 
   return (
     <section data-block-type="florence_suggestions" className={styles.florenceBlock}>
@@ -583,57 +603,80 @@ function FlorenceSuggestions() {
               </p>
             </header>
 
-            <section className={styles.florenceMapSection} aria-labelledby="recommendations-map-title">
+            <section className={styles.florenceMapSection} aria-labelledby="florence-map-title">
               <div className={styles.florenceMapHeading}>
                 <div>
-                  <span className={styles.florenceMapEyebrow}>Choose what to explore</span>
-                  <h3 id="recommendations-map-title">Florence favourites</h3>
+                  <span className={styles.florenceMapEyebrow}>Select one or more</span>
+                  <h3 id="florence-map-title">Explore Florence</h3>
                 </div>
-                <div className={styles.florenceMapTabs} role="tablist" aria-label="Florence recommendations">
+                <div
+                  className={styles.florenceMapFilters}
+                  role="group"
+                  aria-label="Florence map layers"
+                >
                   <button
                     type="button"
-                    role="tab"
-                    aria-selected={recommendationView === "museum"}
-                    className={recommendationView === "museum" ? styles.florenceMapTabActive : undefined}
-                    onClick={() => setRecommendationView("museum")}
+                    aria-pressed={activeLayers.includes("museum")}
+                    className={
+                      activeLayers.includes("museum")
+                        ? styles.florenceMapFilterActive
+                        : undefined
+                    }
+                    onClick={() => toggleLayer("museum")}
                   >
                     <Landmark size={18} strokeWidth={1.6} aria-hidden="true" />
                     Museums
                   </button>
                   <button
                     type="button"
-                    role="tab"
-                    aria-selected={recommendationView === "food"}
-                    className={recommendationView === "food" ? styles.florenceMapTabActive : undefined}
-                    onClick={() => setRecommendationView("food")}
+                    aria-pressed={activeLayers.includes("food")}
+                    className={
+                      activeLayers.includes("food")
+                        ? styles.florenceMapFilterActive
+                        : undefined
+                    }
+                    onClick={() => toggleLayer("food")}
                   >
                     <UtensilsCrossed size={18} strokeWidth={1.6} aria-hidden="true" />
                     Food
                   </button>
+                  <button
+                    type="button"
+                    aria-pressed={activeLayers.includes("tour")}
+                    className={
+                      activeLayers.includes("tour")
+                        ? styles.florenceMapFilterActive
+                        : undefined
+                    }
+                    onClick={() => toggleLayer("tour")}
+                  >
+                    <Footprints size={18} strokeWidth={1.6} aria-hidden="true" />
+                    Guided city walk
+                  </button>
                 </div>
               </div>
+
+              {activeLayers.includes("tour") ? (
+                <ol className={styles.florenceRouteStops} aria-label="Guided city walk order">
+                  {FLORENCE_WALK.map((stop) => (
+                    <li key={stop.id}>
+                      <a
+                        href={florenceMapsUrl(stop)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <span aria-hidden="true">{stop.order}</span>
+                        {stop.title}
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              ) : null}
 
               <FlorenceMap
-                key={recommendationView}
-                mode={recommendationView}
-                suggestions={recommendationSuggestions}
+                key={activeLayers.slice().sort().join("-")}
+                suggestions={activeSuggestions}
               />
-            </section>
-
-            <section className={styles.florenceMapSection} aria-labelledby="city-walk-map-title">
-              <div className={styles.florenceMapHeading}>
-                <div className={styles.florenceWalkTitle}>
-                  <span className={styles.florenceWalkIcon} aria-hidden="true">
-                    <Footprints size={22} strokeWidth={1.6} />
-                  </span>
-                  <div>
-                    <span className={styles.florenceMapEyebrow}>Ten stops · follow the numbers</span>
-                    <h3 id="city-walk-map-title">Guided city walk</h3>
-                  </div>
-                </div>
-              </div>
-
-              <FlorenceMap mode="tour" suggestions={FLORENCE_WALK} />
             </section>
           </div>
         </details>
