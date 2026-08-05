@@ -543,12 +543,6 @@ const FLORENCE_WALK: FlorenceMapSuggestion[] = [
   },
 ];
 
-function florenceMapsUrl(suggestion: FlorenceMapSuggestion) {
-  const query = suggestion.query ?? `${suggestion.title}, Florence, Italy`;
-
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-}
-
 function FlorenceSuggestions() {
   type FlorenceLayer = "museum" | "food" | "tour";
 
@@ -655,23 +649,6 @@ function FlorenceSuggestions() {
                   </button>
                 </div>
               </div>
-
-              {activeLayers.includes("tour") ? (
-                <ol className={styles.florenceRouteStops} aria-label="Guided city walk order">
-                  {FLORENCE_WALK.map((stop) => (
-                    <li key={stop.id}>
-                      <a
-                        href={florenceMapsUrl(stop)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <span aria-hidden="true">{stop.order}</span>
-                        {stop.title}
-                      </a>
-                    </li>
-                  ))}
-                </ol>
-              ) : null}
 
               <FlorenceMap
                 key={activeLayers.slice().sort().join("-")}

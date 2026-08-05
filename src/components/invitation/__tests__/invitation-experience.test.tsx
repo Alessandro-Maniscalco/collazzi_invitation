@@ -121,18 +121,9 @@ describe("InvitationExperience", () => {
     expect(
       within(details).getByRole("button", { name: "Guided city walk" }),
     ).toHaveAttribute("aria-pressed", "true");
-    const routeOrder = within(details).getByRole("list", {
-      name: "Guided city walk order",
-    });
-    expect(within(routeOrder).getAllByRole("listitem")).toHaveLength(10);
     expect(
-      within(routeOrder).getByRole("link", { name: "Basilica di Santo Spirito" }),
-    ).toHaveAttribute("href", expect.stringContaining("Basilica%20di%20Santo%20Spirito"));
-    expect(
-      within(routeOrder).getByRole("link", {
-        name: "Basilica di Santa Maria Novella",
-      }),
-    ).toBeInTheDocument();
+      within(details).queryByRole("list", { name: "Guided city walk order" }),
+    ).not.toBeInTheDocument();
     expect(
       within(details).queryByText(
         "You can stroll through the marvelous center of Florence or visit a museum. Here are some suggestions:",

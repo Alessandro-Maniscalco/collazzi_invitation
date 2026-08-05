@@ -1064,53 +1064,6 @@
   background: #68102a;
 }
 
-.florenceRouteStops {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.florenceRouteStops a {
-  display: flex;
-  min-height: 48px;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 9px;
-  border: 1px solid rgba(75, 0, 21, 0.18);
-  background: #f7f1e7;
-  color: #4b0015;
-  font-family: "500 normal-Basis Grotesque", "Basis Grotesque", Helvetica, Arial, sans-serif;
-  font-size: 9px;
-  line-height: 1.25;
-  text-decoration: none;
-  transition:
-    background-color 160ms ease,
-    border-color 160ms ease;
-}
-
-.florenceRouteStops a:hover,
-.florenceRouteStops a:focus-visible {
-  border-color: rgba(75, 0, 21, 0.5);
-  background: #efe3d2;
-  outline: none;
-}
-
-.florenceRouteStops a span {
-  display: grid;
-  width: 25px;
-  height: 25px;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 999px;
-  background: #4b0015;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-}
-
 .giftBlock {
   background: #fefbf6;
 }
@@ -1471,17 +1424,6 @@
     font-size: 8px;
     line-height: 1.25;
     text-align: center;
-  }
-
-  .florenceRouteStops {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-  }
-
-  .florenceRouteStops a {
-    min-height: 46px;
-    padding: 6px 7px;
-    font-size: 8px;
   }
 
   .giftInner {
