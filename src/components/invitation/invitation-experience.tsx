@@ -341,6 +341,22 @@ const FLORENCE_MUSEUMS: FlorenceMapSuggestion[] = [
     category: "museum",
     position: [43.7703791, 11.2582616],
   },
+  {
+    id: "brancacci-chapel",
+    title: "Cappella Brancacci",
+    description: "Masaccio and Masolino’s landmark Renaissance fresco cycle",
+    category: "museum",
+    position: [43.767752, 11.2436579],
+    query: "Cappella Brancacci, Piazza del Carmine 14, Firenze",
+  },
+  {
+    id: "palazzo-pitti",
+    title: "Palazzo Pitti",
+    description: "The Medici grand-ducal palace and its art collections",
+    category: "museum",
+    position: [43.7650563, 11.249819],
+    query: "Palazzo Pitti, Piazza de’ Pitti 1, Firenze",
+  },
 ];
 
 const FLORENCE_FOOD: FlorenceMapSuggestion[] = [

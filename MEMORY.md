@@ -136,3 +136,8 @@
 **What was decided:** Add a full-width, closed-by-default Florence guide above the group gift section, using one Leaflet/OpenStreetMap view with every museum and food location, category-specific pins, hover details, and Google Maps links.
 **Why:** Guests can understand where all recommendations are relative to one another and open any specific destination for navigation.
 **What was rejected:** The initial one-place-at-a-time Google Maps embed was superseded because it could not show all recommendations or custom category pins together; a static list was rejected because it would not provide the requested interactive map.
+
+## 2026-08-07, Florence Museum Additions
+**What was decided:** Add Cappella Brancacci and Palazzo Pitti to the Museums map layer with their official entrance locations and Google Maps searches.
+**Why:** The user requested both places as additional museum recommendations.
+**What was rejected:** Using the supplied spelling “Pallazzo Pitti” was rejected in favor of the official “Palazzo Pitti.”
