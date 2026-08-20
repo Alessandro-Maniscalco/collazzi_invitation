@@ -156,3 +156,8 @@
 **What was decided:** Remove RSVP-deadline messages from the host dashboard and invitation emails; guests can submit or update RSVPs indefinitely.
 **Why:** The stated deadline has passed and the user explicitly wants ongoing RSVP changes.
 **What was rejected:** Keeping the deadline as informational copy was rejected because it would still imply that RSVP changes close.
+
+## 2026-08-20, Canonical Production Deployment
+**What was decided:** Deploy production only from one verified canonical branch/build, then smoke-test `/host/login`, `/host`, and an invitation link before assigning `bonaalessandro.ink`.
+**Why:** A later deployment from another checkout replaced the complete site and removed the host RSVP dashboard.
+**What was rejected:** Direct production deployments from independent feature worktrees were rejected because Vercel replaces rather than combines their snapshots.
