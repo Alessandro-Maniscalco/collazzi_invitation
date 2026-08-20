@@ -12,6 +12,7 @@ import {
 
 import Link from "next/link";
 
+import { normalizeGuestSearch } from "@/lib/check-in";
 import {
   SEATS_PER_TABLE,
   guestAtSeat,
@@ -49,6 +50,7 @@ export function SeatingPlanner({ initialData }: { initialData: SeatingSnapshot }
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string>();
   const [error, setError] = useState<string>();
+  const [searchQuery, setSearchQuery] = useState("");
   const mutationInFlight = useRef(false);
 
   const selectedGuest = data.guests.find((guest) => guest.id === selectedGuestId);
@@ -56,6 +58,13 @@ export function SeatingPlanner({ initialData }: { initialData: SeatingSnapshot }
     () => sortSeatingGuests(data.guests.filter((guest) => !guest.tableId || !guest.seatPosition)),
     [data.guests],
   );
+  const visibleUnseatedGuests = useMemo(() => {
+    const query = normalizeGuestSearch(searchQuery);
+    if (!query) return unseatedGuests;
+    return unseatedGuests.filter((guest) =>
+      normalizeGuestSearch(`${guest.firstName} ${guest.lastName}`).includes(query),
+    );
+  }, [searchQuery, unseatedGuests]);
 
   const refresh = useCallback(async () => {
     if (mutationInFlight.current) return;
@@ -203,9 +212,21 @@ export function SeatingPlanner({ initialData }: { initialData: SeatingSnapshot }
     <main className={styles.planner}>
       <section className={styles.workspace}>
         <header className="sticky top-0 z-30 flex min-w-max items-center justify-between gap-5 border-b border-stone-300/70 bg-[#f4efe7]/95 px-5 py-4 backdrop-blur sm:px-7">
-          <div>
-            <div className="section-label">Diana guest list</div>
-            <h1 className="mt-1 font-display text-4xl leading-none text-stone-950">Seating plan</h1>
+          <div className="flex items-end gap-5">
+            <div>
+              <div className="section-label">Diana guest list</div>
+              <h1 className="mt-1 font-display text-4xl leading-none text-stone-950">Seating plan</h1>
+            </div>
+            <label className="block w-72">
+              <span className="sr-only">Search unseated guests</span>
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search guest name"
+                className="w-full rounded-full border border-stone-300 bg-white px-4 py-2.5 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[var(--app-wine)] focus:ring-4 focus:ring-[rgba(90,31,45,0.1)]"
+              />
+            </label>
           </div>
           <div className="flex items-center gap-3">
             {saving ? <span className="text-sm font-semibold text-stone-600">Saving…</span> : null}
@@ -286,11 +307,12 @@ export function SeatingPlanner({ initialData }: { initialData: SeatingSnapshot }
         <div className="sticky top-0 z-10 border-b border-stone-200 bg-[#fffaf4]/95 px-4 py-5 backdrop-blur sm:px-5">
           <h2 className="font-display text-3xl text-stone-950">Unseated</h2>
           <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">
+            {searchQuery.trim() ? `${visibleUnseatedGuests.length} of ` : ""}
             {unseatedGuests.length} guests · alphabetical
           </p>
         </div>
         <div className="space-y-2 p-3 sm:p-4">
-          {unseatedGuests.map((guest) => (
+          {visibleUnseatedGuests.map((guest) => (
             <GuestButton
               key={guest.id}
               guest={guest}
@@ -303,6 +325,10 @@ export function SeatingPlanner({ initialData }: { initialData: SeatingSnapshot }
           {!unseatedGuests.length ? (
             <div className="rounded-2xl border border-dashed border-stone-300 px-3 py-8 text-center text-sm text-stone-500">
               Everyone is seated. Drop a guest here to unseat them.
+            </div>
+          ) : !visibleUnseatedGuests.length ? (
+            <div className="rounded-2xl border border-dashed border-stone-300 px-3 py-8 text-center text-sm text-stone-500">
+              No unseated guests match this search.
             </div>
           ) : null}
         </div>

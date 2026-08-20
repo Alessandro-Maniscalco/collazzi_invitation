@@ -53,7 +53,7 @@ export function seatingGuestsFromSheet(guests: SheetGuest[]) {
       const primaryTableId = parseTableId(guest.primaryTableName);
       const guest2TableId = parseTableId(guest.guest2TableName);
 
-      if (guest.firstName || guest.lastName) {
+      if ((guest.firstName || guest.lastName) && guest.comingToParty) {
         members.push({
           id: seatingGuestId(guest.guestId, "guest_1"),
           partyId: guest.guestId,
@@ -70,7 +70,7 @@ export function seatingGuestsFromSheet(guests: SheetGuest[]) {
         });
       }
 
-      if (guest.guest2FirstName || guest.guest2LastName) {
+      if ((guest.guest2FirstName || guest.guest2LastName) && guest.guest2ComingToParty) {
         members.push({
           id: seatingGuestId(guest.guestId, "guest_2"),
           partyId: guest.guestId,

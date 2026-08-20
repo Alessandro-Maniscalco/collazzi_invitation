@@ -170,3 +170,8 @@
 **What was decided:** Deploy production only from one verified canonical branch/build, then smoke-test `/host/login`, `/host`, and an invitation link before assigning `bonaalessandro.ink`.
 **Why:** A later deployment from another checkout replaced the complete site and removed the host RSVP dashboard.
 **What was rejected:** Direct production deployments from independent feature worktrees were rejected because Vercel replaces rather than combines their snapshots.
+
+## 2026-08-20, Seating Search and Attendance Filter
+**What was decided:** Add a guest-name search at the top-left of the seating workspace and include only individually attending guests whose source is Diana. Guest 1 uses `coming_to_party`; Guest 2 uses `guest_2_coming_to_party`.
+**Why:** The seating plan should contain only expected party attendees, while mixed-response invitations must still include the person who is individually coming.
+**What was rejected:** Filtering only the right-hand list was rejected because non-attendees could remain visible at tables; using the party-level `not_coming` value was rejected because it can hide an attending second guest.

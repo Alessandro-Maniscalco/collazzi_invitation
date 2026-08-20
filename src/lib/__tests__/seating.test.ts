@@ -72,6 +72,27 @@ describe("seating plan", () => {
     ]);
   });
 
+  it("includes only individually attending Diana guests", () => {
+    const guests = seatingGuestsFromSheet([
+      sheetGuest({ comingToParty: false, guest2ComingToParty: true }),
+      sheetGuest({
+        guestId: "primary-only",
+        comingToParty: true,
+        guest2ComingToParty: false,
+      }),
+      sheetGuest({
+        guestId: "nobody-coming",
+        comingToParty: false,
+        guest2ComingToParty: false,
+      }),
+    ]);
+
+    expect(guests.map((guest) => guest.id)).toEqual([
+      "party-1:guest_2",
+      "primary-only:guest_1",
+    ]);
+  });
+
   it("moves into an empty seat immediately", () => {
     const guests = seatingGuestsFromSheet([sheetGuest()]);
     const moved = applySeatingMove(guests, {
