@@ -186,7 +186,7 @@ describe("HostDashboard", () => {
       note: "",
       updatedAt: new Date().toISOString(),
     };
-    solo.tags = ["invited_by_bona", "Roma"];
+    solo.tags = ["invited_by_mum", "Roma"];
     solo.response = {
       status: "not_attending",
       guestSelections: { guest_ava: false },
@@ -198,7 +198,7 @@ describe("HostDashboard", () => {
       note: "",
       updatedAt: new Date().toISOString(),
     };
-    family.tags = ["invited_by_ale", "invited_by_bona", "Didi"];
+    family.tags = ["invited_by_mum", "Diana"];
 
     render(React.createElement(HostDashboard, { initialData: snapshot }));
 
@@ -215,9 +215,18 @@ describe("HostDashboard", () => {
 
     expect(within(allTotals!).getByTestId("rsvp-total-party-yes")).toHaveTextContent("1");
     expect(within(allTotals!).getByTestId("rsvp-total-party-no")).toHaveTextContent("1");
-    expect(within(allTotals!).getByTestId("rsvp-total-party-pending")).toHaveTextContent("3");
+    expect(within(allTotals!).getByTestId("rsvp-total-party-pending")).toHaveTextContent("0");
     expect(within(allTotals!).getByTestId("rsvp-total-dinner-yes")).toHaveTextContent("1");
-    expect(within(allTotals!).getByRole("row", { name: "Didi 1 1 3 1" })).toBeInTheDocument();
+    expect(within(allTotals!).getByRole("row", { name: "Didi 1 1 0 1" })).toBeInTheDocument();
+    expect(within(allTotals!).queryByRole("row", { name: /Roma/ })).not.toBeInTheDocument();
+
+    fireEvent.click(within(allTotals!).getByRole("button", { name: "Mum" }));
+
+    expect(within(allTotals!).getByTestId("rsvp-total-party-yes")).toHaveTextContent("0");
+    expect(within(allTotals!).getByTestId("rsvp-total-party-no")).toHaveTextContent("1");
+    expect(within(allTotals!).getByTestId("rsvp-total-party-pending")).toHaveTextContent("3");
+    expect(within(allTotals!).getByTestId("rsvp-total-dinner-yes")).toHaveTextContent("0");
+    expect(within(allTotals!).getByRole("row", { name: "Diana 0 0 3 0" })).toBeInTheDocument();
     expect(within(allTotals!).queryByRole("row", { name: /Roma/ })).not.toBeInTheDocument();
   });
 });

@@ -60,6 +60,8 @@ const INVITED_BY_OPTIONS: Array<{ value: InvitedByFilter; label: string }> = [
   { value: "mum", label: "Mum" },
 ];
 
+const MUM_RSVP_BREAKDOWN_SOURCE = "diana";
+
 const COMING_TO_PARTY_OPTIONS: Array<{ value: InviteComingToPartyFilter; label: string }> = [
   { value: "all", label: "Any" },
   { value: "yes", label: "TRUE" },
@@ -259,9 +261,12 @@ function rsvpAnalytics(
 
   return {
     totals,
-    sources: Array.from(sourceCounts.values()).sort((left, right) =>
-      left.source.localeCompare(right.source),
-    ),
+    sources: Array.from(sourceCounts.values())
+      .filter(
+        (source) =>
+          invitedBy !== "mum" || normalizeSource(source.source) === MUM_RSVP_BREAKDOWN_SOURCE,
+      )
+      .sort((left, right) => left.source.localeCompare(right.source)),
   };
 }
 

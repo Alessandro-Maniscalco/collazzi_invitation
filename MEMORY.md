@@ -146,3 +146,8 @@
 **What was decided:** Show party shuttle departures from Piazza Torquato Tasso as running from 19:00 to 19:30.
 **Why:** The user corrected the guest-facing departure window.
 **What was rejected:** Keeping the previous 19h to 20h window was rejected because it is no longer accurate.
+
+## 2026-08-20, Mum RSVP Source Breakdown
+**What was decided:** When Mum is selected in the host RSVP Breakdown, display only the Diana source row while retaining totals for all of Mum’s invitees.
+**Why:** The user asked for Mum’s source breakdown to be limited to Diana without changing the overall RSVP counts.
+**What was rejected:** Filtering Mum’s total counts down to Diana was rejected because the request is specifically about the source display.
