@@ -67,7 +67,7 @@ export function SeatingPlanner({ initialData }: { initialData: SeatingSnapshot }
   }, [searchQuery, unseatedGuests]);
 
   const refresh = useCallback(async () => {
-    if (mutationInFlight.current) return;
+    if (mutationInFlight.current || document.visibilityState !== "visible") return;
     const response = await fetch("/api/host/seating", { cache: "no-store" });
     if (!response.ok) return;
     setData((await response.json()) as SeatingSnapshot);
@@ -75,7 +75,14 @@ export function SeatingPlanner({ initialData }: { initialData: SeatingSnapshot }
 
   useEffect(() => {
     const interval = window.setInterval(refresh, REFRESH_INTERVAL_MS);
-    return () => window.clearInterval(interval);
+    function refreshWhenVisible() {
+      if (document.visibilityState === "visible") void refresh();
+    }
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, [refresh]);
 
   useEffect(() => {

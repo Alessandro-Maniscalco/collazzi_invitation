@@ -175,3 +175,8 @@
 **What was decided:** Add a guest-name search at the top-left of the seating workspace and include only individually attending guests whose source is Diana. Guest 1 uses `coming_to_party`; Guest 2 uses `guest_2_coming_to_party`.
 **Why:** The seating plan should contain only expected party attendees, while mixed-response invitations must still include the person who is individually coming.
 **What was rejected:** Filtering only the right-hand list was rejected because non-attendees could remain visible at tables; using the party-level `not_coming` value was rejected because it can hide an attending second guest.
+
+## 2026-08-20, Canonical Main Deployment and Sheets Read Protection
+**What was decided:** Make `main` the single complete production history and reduce Google Sheets quota pressure by validating host cookies without guest reads, pausing polling in hidden tabs, caching table labels, and falling back to the last successful guest read during a temporary 429.
+**Why:** The live host page returned a Sheets read-quota error after seating and check-in polling multiplied guest reads, which made the entire RSVP dashboard appear missing even though the component was deployed.
+**What was rejected:** Continuing production releases from feature branches was rejected because they can replace complete snapshots; slowing the visible 10-second refresh was rejected because door staff still need the agreed update cadence.

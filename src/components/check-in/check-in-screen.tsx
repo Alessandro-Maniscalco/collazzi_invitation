@@ -18,7 +18,7 @@ export function CheckInScreen({ initialGuests }: { initialGuests: CheckInGuest[]
   const results = useMemo(() => searchCheckInGuests(guests, query).slice(0, 30), [guests, query]);
 
   const refreshGuests = useCallback(async () => {
-    if (mutationInFlight.current) return;
+    if (mutationInFlight.current || document.visibilityState !== "visible") return;
     const response = await fetch("/api/check-in/guests", { cache: "no-store" });
     if (!response.ok) return;
     const payload = (await response.json()) as { guests: CheckInGuest[] };
@@ -27,7 +27,14 @@ export function CheckInScreen({ initialGuests }: { initialGuests: CheckInGuest[]
 
   useEffect(() => {
     const interval = window.setInterval(refreshGuests, REFRESH_INTERVAL_MS);
-    return () => window.clearInterval(interval);
+    function refreshWhenVisible() {
+      if (document.visibilityState === "visible") void refreshGuests();
+    }
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, [refreshGuests]);
 
   async function setCheckIn(guest: CheckInGuest) {

@@ -612,21 +612,41 @@ export async function updateSheetDeliveryStatusFromWebhook(
 export class GoogleSheetsGuestStore {
   private sheetsPromise?: Promise<SheetsClient>;
   private loadGuestsPromise?: Promise<LoadedGuestSheet>;
+  private loadedGuestsCache?: LoadedGuestSheet;
+  private loadedGuestsCachedAt = 0;
   private guestTabTitle?: string;
   private checkboxValidationEnsured = false;
   private activitySheetEnsured = false;
   private activitySheetPromise?: Promise<void>;
   private seatingTableSheetEnsured = false;
   private seatingTableSheetPromise?: Promise<void>;
+  private seatingTableNamesCache?: Array<{ id: number; name: string }>;
+  private seatingTableNamesCachedAt = 0;
+  private seatingTableNamesPromise?: Promise<Array<{ id: number; name: string }>>;
 
   async loadGuests(): Promise<LoadedGuestSheet> {
+    if (this.loadedGuestsCache && Date.now() - this.loadedGuestsCachedAt < 5_000) {
+      return this.loadedGuestsCache;
+    }
     if (this.loadGuestsPromise) {
       return this.loadGuestsPromise;
     }
 
-    this.loadGuestsPromise = this.loadGuestsUncached().finally(() => {
-      this.loadGuestsPromise = undefined;
-    });
+    this.loadGuestsPromise = this.loadGuestsUncached()
+      .then((loaded) => {
+        this.loadedGuestsCache = loaded;
+        this.loadedGuestsCachedAt = Date.now();
+        return loaded;
+      })
+      .catch((error) => {
+        if (this.loadedGuestsCache && isSheetsReadQuotaError(error)) {
+          return this.loadedGuestsCache;
+        }
+        throw error;
+      })
+      .finally(() => {
+        this.loadGuestsPromise = undefined;
+      });
 
     return this.loadGuestsPromise;
   }
@@ -696,6 +716,34 @@ export class GoogleSheetsGuestStore {
   }
 
   async loadSeatingTableNames() {
+    if (
+      this.seatingTableNamesCache &&
+      Date.now() - this.seatingTableNamesCachedAt < 30_000
+    ) {
+      return this.seatingTableNamesCache;
+    }
+    if (this.seatingTableNamesPromise) return this.seatingTableNamesPromise;
+
+    this.seatingTableNamesPromise = this.loadSeatingTableNamesUncached()
+      .then((tables) => {
+        this.seatingTableNamesCache = tables;
+        this.seatingTableNamesCachedAt = Date.now();
+        return tables;
+      })
+      .catch((error) => {
+        if (this.seatingTableNamesCache && isSheetsReadQuotaError(error)) {
+          return this.seatingTableNamesCache;
+        }
+        throw error;
+      })
+      .finally(() => {
+        this.seatingTableNamesPromise = undefined;
+      });
+
+    return this.seatingTableNamesPromise;
+  }
+
+  private async loadSeatingTableNamesUncached() {
     await this.ensureSeatingTableSheet();
     const sheets = await this.getSheets();
     const response = await sheets.spreadsheets.values.get({
@@ -721,6 +769,12 @@ export class GoogleSheetsGuestStore {
       valueInputOption: "RAW",
       requestBody: { values: [[name]] },
     });
+    if (this.seatingTableNamesCache) {
+      this.seatingTableNamesCache = this.seatingTableNamesCache.map((table) =>
+        table.id === tableId ? { ...table, name } : table,
+      );
+      this.seatingTableNamesCachedAt = Date.now();
+    }
   }
 
   async appendGuestRows(tabTitle: string, table: GuestSheetTable, rows: string[][]) {
@@ -1156,6 +1210,16 @@ function assertSheetMutationAllowed() {
 
 function isTypedColumnValidationError(error: unknown) {
   return error instanceof Error && error.message.includes("typed columns");
+}
+
+function isSheetsReadQuotaError(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { code?: unknown; status?: unknown; message?: unknown };
+  return (
+    candidate.code === 429 ||
+    candidate.status === 429 ||
+    (typeof candidate.message === "string" && candidate.message.includes("Quota exceeded"))
+  );
 }
 
 async function loadServiceAccountCredentials() {

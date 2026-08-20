@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { env } from "@/lib/env";
-import { getDashboardSnapshot } from "@/lib/repository";
+import { SEED_HOSTS } from "@/lib/seed-data";
 import type { DashboardSnapshot, HostUser } from "@/lib/types";
 
 export const HOST_COOKIE_NAME = "collazzi-host";
@@ -20,13 +20,7 @@ export function findHostById(snapshot: DashboardSnapshot, hostId: string) {
 
 export async function getHostSession() {
   const hostId = await getHostSessionId();
-
-  if (!hostId) {
-    return null;
-  }
-
-  const snapshot = await getDashboardSnapshot();
-  return findHostById(snapshot, hostId);
+  return hostId ? SEED_HOSTS.find((host) => host.id === hostId) ?? null : null;
 }
 
 export async function requireHostSessionId() {
@@ -39,8 +33,7 @@ export async function requireHostSessionId() {
 
 export async function requireHostSession() {
   const hostId = await requireHostSessionId();
-  const snapshot = await getDashboardSnapshot();
-  const host = findHostById(snapshot, hostId);
+  const host = SEED_HOSTS.find((candidate) => candidate.id === hostId);
   if (!host) {
     redirect("/host/login");
   }

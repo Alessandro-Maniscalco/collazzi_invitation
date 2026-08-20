@@ -1,8 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { cookies } from "next/headers";
-
-import { getDashboardSnapshot } from "@/lib/repository";
+import { SEED_HOSTS } from "@/lib/seed-data";
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),
@@ -12,10 +11,6 @@ vi.mock("next/navigation", () => ({
   redirect: vi.fn((path: string) => {
     throw new Error(`redirect:${path}`);
   }),
-}));
-
-vi.mock("@/lib/repository", () => ({
-  getDashboardSnapshot: vi.fn(),
 }));
 
 describe("host auth helpers", () => {
@@ -36,7 +31,7 @@ describe("host auth helpers", () => {
     expect(parseHostSessionValue("host_bona_ale")).toBeNull();
   });
 
-  it("does not load dashboard data when no host cookie exists", async () => {
+  it("returns no host when no host cookie exists", async () => {
     vi.stubEnv("HOST_PASSWORD", "test-host-password");
     vi.mocked(cookies).mockResolvedValue({
       get: vi.fn(() => undefined),
@@ -45,6 +40,15 @@ describe("host auth helpers", () => {
     const { getHostSession } = await import("@/lib/auth");
 
     await expect(getHostSession()).resolves.toBeNull();
-    expect(getDashboardSnapshot).not.toHaveBeenCalled();
+  });
+
+  it("validates a signed host session without loading guest data", async () => {
+    vi.stubEnv("HOST_PASSWORD", "test-host-password");
+    const { createHostSessionValue, getHostSession } = await import("@/lib/auth");
+    vi.mocked(cookies).mockResolvedValue({
+      get: vi.fn(() => ({ value: createHostSessionValue(SEED_HOSTS[0].id) })),
+    } as never);
+
+    await expect(getHostSession()).resolves.toEqual(SEED_HOSTS[0]);
   });
 });
