@@ -14,7 +14,6 @@ import { useRouter } from "next/navigation";
 import {
   cn,
   deliveryStatusTone,
-  formatDeadline,
   formatRelative,
   latestDelivery,
   partyAttendanceSummary,
@@ -1091,9 +1090,6 @@ export function HostDashboard({
                     </div>
                   </div>
                 ))}
-              </div>
-              <div className="mt-6 text-sm text-stone-600">
-                RSVP deadline: {formatDeadline(initialData.event.rsvpDeadline)}
               </div>
             </div>
           </div>

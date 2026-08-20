@@ -485,7 +485,6 @@ export async function sendSheetBatch(input: SendBatchInput, actor: string, state
         summaryDateLabel: state.event.summaryDateLabel,
         summaryAddressName: state.event.summaryAddressName,
         summaryAddressLabel: state.event.summaryAddressLabel,
-        rsvpDeadline: state.event.rsvpDeadline,
         heroImageSrc: PARTY_ONLY_BACK_IMAGE_SRC,
       });
       const timestamp = new Date().toISOString();

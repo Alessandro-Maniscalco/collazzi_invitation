@@ -75,6 +75,7 @@ describe("HostDashboard", () => {
     expect(screen.queryByRole("link", { name: "Home" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Log out" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Add invited party" })).not.toBeInTheDocument();
+    expect(screen.queryByText("RSVP deadline:")).not.toBeInTheDocument();
     expect(
       screen.getAllByRole("button", { name: /Copy the private invitation link for/ }),
     ).toHaveLength(snapshot.parties.length);

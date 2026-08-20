@@ -614,7 +614,6 @@ export async function sendBatch(input: SendBatchInput, actor: string) {
           summaryDateLabel: state.event.summaryDateLabel,
           summaryAddressName: state.event.summaryAddressName,
           summaryAddressLabel: state.event.summaryAddressLabel,
-          rsvpDeadline: state.event.rsvpDeadline,
           heroImageSrc: EMAIL_CARD_IMAGE_SRC,
         });
 

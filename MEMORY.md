@@ -151,3 +151,8 @@
 **What was decided:** When Mum is selected in the host RSVP Breakdown, display only the Diana source row while retaining totals for all of Mum’s invitees.
 **Why:** The user asked for Mum’s source breakdown to be limited to Diana without changing the overall RSVP counts.
 **What was rejected:** Filtering Mum’s total counts down to Diana was rejected because the request is specifically about the source display.
+
+## 2026-08-20, Remove RSVP Deadline Messaging
+**What was decided:** Remove RSVP-deadline messages from the host dashboard and invitation emails; guests can submit or update RSVPs indefinitely.
+**Why:** The stated deadline has passed and the user explicitly wants ongoing RSVP changes.
+**What was rejected:** Keeping the deadline as informational copy was rejected because it would still imply that RSVP changes close.
