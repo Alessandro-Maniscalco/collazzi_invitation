@@ -82,3 +82,13 @@
 **What was decided:** For the second WhatsApp RSVP batch, use Rebbecca Lando row 503 and skip row 438.
 **Why:** Row 503 has an opened invitation link, which is stronger evidence of the active private link for the guest than row 438's unopened link.
 **What was rejected:** Deleting either Rebbecca Lando row was rejected because the user only asked to record not-found contacts for this batch, not to clean duplicate rows.
+
+## 2026-08-20, Live Diana Seating Planner
+**What was decided:** Add a protected `/host/seating` page backed by immediate Google Sheets writes for exactly the `Diana` source, with 15 tables of 10 numbered seats, a persistent alphabetical unseated list, drag/drop and click-based move/switch/drop controls, editable table labels stored in a `Seating Tables` tab, and gray-to-green check-in status. In the overview, use as much of each first name as fits and keep it on the same line as the seat number; in the expanded view, show a true circular tabletop with full first and last names arranged around its circumference. Number seats clockwise with 1–5 descending the left side and 6–10 ascending the right side, and omit check-in wording from unseated guest cards while retaining their status color.
+**Why:** The seating arrangement needs to be quickly reorganized from either the full 15-table view or one enlarged table while remaining synchronized with the existing guest and check-in columns.
+**What was rejected:** Draft-only saving was rejected because the user chose live persistence; storing editable table labels inside guest assignment cells was rejected because empty tables also need durable names; initials-only overview labels were rejected in favor of the longest readable first-name text.
+
+## 2026-08-20, Individual Phone Check-In Workflow
+**What was decided:** Add a separate PIN-protected `/check-in` workflow backed by the existing per-person check-in and table columns in the `Lista` Google Sheet. Search is name-order, accent, punctuation, and case insensitive; each named guest is checked independently; all phones refresh within 10 seconds; locations and RSVP eligibility are not stored or filtered.
+**Why:** Door staff need a fast phone interface while Google Sheets remains the live source of truth and multiple staff may safely set the same intended check-in state concurrently.
+**What was rejected:** Whole-invitation check-in, location-specific statuses, RSVP filtering, unnamed Guest 2 check-in, and adding host edit/delete controls in this change were rejected as inaccurate or outside the requested scope.

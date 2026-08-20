@@ -11,6 +11,7 @@ import { dispatchDelivery } from "@/lib/providers/delivery";
 import { SEED_HOSTS, createSeedState, createToken } from "@/lib/seed-data";
 import {
   addSheetGuest,
+  getSheetCheckInGuests,
   getSheetDashboardSnapshot,
   getSheetInvitationByToken,
   importSheetPartiesFromCsv,
@@ -19,6 +20,7 @@ import {
   saveSheetGuestEmail,
   saveSheetRsvp,
   sendSheetBatch,
+  updateSheetCheckIn,
   updateSheetDeliveryStatusFromWebhook,
 } from "@/lib/sheets/google-store";
 import type { AddGuestInput } from "@/lib/sheets/guest-sheet";
@@ -26,6 +28,8 @@ import type {
   AccommodationCard,
   ActivityEvent,
   AppState,
+  CheckInGuest,
+  CheckInMember,
   DashboardSnapshot,
   DeliveryRecord,
   DeliveryStatus,
@@ -438,6 +442,64 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
     },
     activities: state.activities.slice(0, 12),
   };
+}
+
+export class CheckInGuestUnavailableError extends Error {
+  constructor() {
+    super("This guest is no longer available. Refresh and try again.");
+    this.name = "CheckInGuestUnavailableError";
+  }
+}
+
+export async function getCheckInGuests(): Promise<CheckInGuest[]> {
+  if (hasGoogleSheetsConfig()) {
+    return getSheetCheckInGuests();
+  }
+
+  const state = await readState();
+  return state.parties.flatMap((party) =>
+    guestsForParty(state, party.id)
+      .slice(0, 2)
+      .filter((guest) => guest.name.trim())
+      .map((guest, index) => ({
+        partyId: party.id,
+        member: index === 0 ? "guest_1" : "guest_2",
+        name: guest.name,
+        checkedIn: Boolean(guest.checkedIn),
+        tableName: guest.tableName,
+      } satisfies CheckInGuest)),
+  );
+}
+
+export async function updateCheckIn(
+  partyId: string,
+  member: CheckInMember,
+  checkedIn: boolean,
+) {
+  if (hasGoogleSheetsConfig()) {
+    const updated = await updateSheetCheckIn(partyId, member, checkedIn);
+    if (!updated) throw new CheckInGuestUnavailableError();
+    return updated;
+  }
+
+  return updateState((state) => {
+    const party = state.parties.find((candidate) => candidate.id === partyId);
+    const memberIndex = member === "guest_1" ? 0 : 1;
+    const guest = party ? guestsForParty(state, party.id)[memberIndex] : undefined;
+
+    if (!guest?.name.trim()) {
+      throw new CheckInGuestUnavailableError();
+    }
+
+    guest.checkedIn = checkedIn;
+    return {
+      partyId,
+      member,
+      name: guest.name,
+      checkedIn,
+      tableName: guest.tableName,
+    } satisfies CheckInGuest;
+  });
 }
 
 export async function updateContent(input: HostContentUpdate, actor: string) {

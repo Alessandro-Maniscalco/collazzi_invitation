@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import {
   cn,
@@ -405,6 +406,14 @@ export function HostDashboard({
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(200,180,141,0.18),_transparent_30%),_var(--app-cream)] px-6 py-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
+        <div className="flex justify-end">
+          <Link
+            href="/host/seating"
+            className={`${primaryButtonClass} px-5 py-3 text-sm`}
+          >
+            Seating arrangement
+          </Link>
+        </div>
         {status ? (
           <div
             role="status"

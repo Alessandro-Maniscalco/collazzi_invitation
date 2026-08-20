@@ -36,6 +36,12 @@ export const GUEST_SHEET_HEADERS = [
   "last_delivery_status",
   "provider_message_id",
   "last_error",
+  "Checked in guest 1",
+  "Checked in guest 2",
+  "Tavolo guest 1",
+  "Tavoli guest 2",
+  "Position guest 1",
+  "Position guest 2",
   "admin_notes",
 ] as const;
 
@@ -76,6 +82,12 @@ export interface SheetGuest {
   lastDeliveryStatus?: DeliveryStatus;
   providerMessageId?: string;
   lastError?: string;
+  primaryCheckedIn: boolean;
+  guest2CheckedIn: boolean;
+  primaryTableName?: string;
+  guest2TableName?: string;
+  primarySeatPosition?: number;
+  guest2SeatPosition?: number;
   adminNotes?: string;
   hasResponse: boolean;
 }
@@ -192,6 +204,18 @@ const FIELD_ALIASES: Partial<Record<GuestSheetHeader, string[]>> = {
   last_delivery_status: ["delivery status", "last delivery"],
   provider_message_id: ["provider message id", "message id"],
   admin_notes: ["admin notes"],
+  "Position guest 1": [
+    "seat guest 1",
+    "seat position guest 1",
+    "posizione guest 1",
+    "posto guest 1",
+  ],
+  "Position guest 2": [
+    "seat guest 2",
+    "seat position guest 2",
+    "posizione guest 2",
+    "posto guest 2",
+  ],
 };
 
 const LEGACY_COLUMN_INDEX: Partial<Record<GuestSheetHeader, number>> = {
@@ -645,6 +669,12 @@ function parseGuestRow(
     lastDeliveryStatus: parseDeliveryStatus(cell(row, columnMap, "last_delivery_status")),
     providerMessageId: cell(row, columnMap, "provider_message_id") || undefined,
     lastError: cell(row, columnMap, "last_error") || undefined,
+    primaryCheckedIn: parseSheetBoolean(cell(row, columnMap, "Checked in guest 1")),
+    guest2CheckedIn: parseSheetBoolean(cell(row, columnMap, "Checked in guest 2")),
+    primaryTableName: cell(row, columnMap, "Tavolo guest 1") || undefined,
+    guest2TableName: cell(row, columnMap, "Tavoli guest 2") || undefined,
+    primarySeatPosition: parseSeatPosition(cell(row, columnMap, "Position guest 1")),
+    guest2SeatPosition: parseSeatPosition(cell(row, columnMap, "Position guest 2")),
     adminNotes: cell(row, columnMap, "admin_notes") || undefined,
     hasResponse:
       Boolean(rsvpUpdatedAt || rsvpNote) ||
@@ -674,6 +704,13 @@ function parseSheetBoolean(value: string) {
   }
 
   return false;
+}
+
+function parseSeatPosition(value: string) {
+  const position = Number.parseInt(value, 10);
+  return Number.isInteger(position) && position >= 1 && position <= 10
+    ? position
+    : undefined;
 }
 
 function parseTimestampLike(value: string) {

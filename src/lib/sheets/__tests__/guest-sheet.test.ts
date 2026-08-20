@@ -44,6 +44,37 @@ describe("parseGuestSheet", () => {
     expect(GUEST_SHEET_HEADERS).not.toContain("phone");
   });
 
+  it("uses the exact existing check-in and table columns without appending duplicates", () => {
+    const table = parseGuestSheet(
+      [
+        [...GUEST_SHEET_HEADERS],
+        rowFromRecord({
+          guest_id: "guest_1",
+          first_name: "Mario",
+          last_name: "Rossi",
+          guest_2_first_name: "Anna",
+          guest_2_last_name: "Rossi",
+          counted: "TRUE",
+          "Checked in guest 1": "TRUE",
+          "Checked in guest 2": "FALSE",
+          "Tavolo guest 1": "Olive",
+          "Tavoli guest 2": "Rose",
+        }),
+      ],
+      "http://localhost:3000",
+    );
+
+    expect(table.needsHeaderUpdate).toBe(false);
+    expect(table.headers.filter((header) => header === "Checked in guest 1")).toHaveLength(1);
+    expect(table.headers.filter((header) => header === "Tavoli guest 2")).toHaveLength(1);
+    expect(table.guests[0]).toMatchObject({
+      primaryCheckedIn: true,
+      guest2CheckedIn: false,
+      primaryTableName: "Olive",
+      guest2TableName: "Rose",
+    });
+  });
+
   it("normalizes the current legacy headings and positional RSVP columns", () => {
     const table = parseGuestSheet(
       [

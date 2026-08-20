@@ -30,6 +30,8 @@ import {
 import type {
   ActivityEvent,
   AppState,
+  CheckInGuest,
+  CheckInMember,
   DashboardSnapshot,
   DeliveryRecord,
   DeliveryStatus,
@@ -44,6 +46,8 @@ import type {
 
 const ACTIVITY_SHEET_TITLE = "Activity";
 const ACTIVITY_HEADERS = ["id", "type", "created_at", "actor", "message"];
+const SEATING_TABLE_SHEET_TITLE = "Seating Tables";
+const SEATING_TABLE_HEADERS = ["table_id", "table_name"];
 const PARTY_ONLY_BACK_IMAGE_SRC = "/assets/collazzi/party-only-back.png";
 const CHECKBOX_HEADERS: GuestSheetHeader[] = [
   "token_active",
@@ -59,6 +63,8 @@ const CHECKBOX_HEADERS: GuestSheetHeader[] = [
   "guest_2_coming_to_party",
   "transfer_needed",
   "not_coming",
+  "Checked in guest 1",
+  "Checked in guest 2",
 ];
 const nodeRequire = createRequire(import.meta.url);
 
@@ -339,6 +345,37 @@ export async function getSheetDashboardSnapshot(state: AppState): Promise<Dashbo
   };
 }
 
+export async function getSheetCheckInGuests(): Promise<CheckInGuest[]> {
+  const store = getGoogleSheetsGuestStore();
+  const { table } = await store.loadGuests();
+  return table.guests.flatMap(checkInGuestsFromSheetGuest);
+}
+
+export async function updateSheetCheckIn(
+  partyId: string,
+  member: CheckInMember,
+  checkedIn: boolean,
+): Promise<CheckInGuest | null> {
+  const store = getGoogleSheetsGuestStore();
+  const { table } = await store.loadGuests();
+  const guest = table.guests.find((candidate) => candidate.guestId === partyId);
+  if (!guest) return null;
+
+  const checkInGuest = checkInGuestsFromSheetGuest(guest).find(
+    (candidate) => candidate.member === member,
+  );
+  if (!checkInGuest) return null;
+
+  await store.writeGuestColumns(table, guest.rowNumber, [
+    {
+      header: member === "guest_1" ? "Checked in guest 1" : "Checked in guest 2",
+      value: toSheetBoolean(checkedIn),
+    },
+  ]);
+
+  return { ...checkInGuest, checkedIn };
+}
+
 export async function importSheetPartiesFromCsv(csv: string, actor: string) {
   const rows = parsePartyCsv(csv);
   const store = getGoogleSheetsGuestStore();
@@ -590,6 +627,8 @@ export class GoogleSheetsGuestStore {
   private checkboxValidationEnsured = false;
   private activitySheetEnsured = false;
   private activitySheetPromise?: Promise<void>;
+  private seatingTableSheetEnsured = false;
+  private seatingTableSheetPromise?: Promise<void>;
 
   async loadGuests(): Promise<LoadedGuestSheet> {
     if (this.loadGuestsPromise) {
@@ -649,6 +688,50 @@ export class GoogleSheetsGuestStore {
       })),
       table,
     );
+  }
+
+  async writeGuestColumnBatches(
+    table: GuestSheetTable,
+    batches: Array<{ rowNumber: number; updates: SheetColumnUpdate[] }>,
+  ) {
+    await this.writeCells(
+      batches.flatMap((batch) =>
+        batch.updates.map((update) => ({
+          rowNumber: batch.rowNumber,
+          header: update.header,
+          value: update.value,
+        })),
+      ),
+      table,
+    );
+  }
+
+  async loadSeatingTableNames() {
+    await this.ensureSeatingTableSheet();
+    const sheets = await this.getSheets();
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: env.GOOGLE_SHEETS_ID,
+      range: rangeFor(SEATING_TABLE_SHEET_TITLE, "A2:B16"),
+      valueRenderOption: "UNFORMATTED_VALUE",
+    });
+    const rows = normalizeValues(response.data.values);
+
+    return Array.from({ length: 15 }, (_, index) => {
+      const id = index + 1;
+      const row = rows.find((candidate) => Number(candidate[0]) === id);
+      return { id, name: row?.[1]?.trim() || `Table ${id}` };
+    });
+  }
+
+  async renameSeatingTable(tableId: number, name: string) {
+    await this.ensureSeatingTableSheet();
+    const sheets = await this.getSheets();
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: env.GOOGLE_SHEETS_ID,
+      range: rangeFor(SEATING_TABLE_SHEET_TITLE, `B${tableId + 1}`),
+      valueInputOption: "RAW",
+      requestBody: { values: [[name]] },
+    });
   }
 
   async appendGuestRows(tabTitle: string, table: GuestSheetTable, rows: string[][]) {
@@ -850,6 +933,73 @@ export class GoogleSheetsGuestStore {
     });
 
     return this.activitySheetPromise;
+  }
+
+  private async ensureSeatingTableSheet() {
+    if (this.seatingTableSheetEnsured) return;
+
+    this.seatingTableSheetPromise ??= this.ensureSeatingTableSheetUncached().finally(() => {
+      this.seatingTableSheetPromise = undefined;
+    });
+
+    return this.seatingTableSheetPromise;
+  }
+
+  private async ensureSeatingTableSheetUncached() {
+    const sheets = await this.getSheets();
+    const metadata = await sheets.spreadsheets.get({
+      spreadsheetId: env.GOOGLE_SHEETS_ID,
+    });
+    const exists = metadata.data.sheets?.some(
+      (sheet) => sheet.properties?.title === SEATING_TABLE_SHEET_TITLE,
+    );
+
+    if (!exists) {
+      assertSheetMutationAllowed();
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: env.GOOGLE_SHEETS_ID,
+        requestBody: {
+          requests: [{ addSheet: { properties: { title: SEATING_TABLE_SHEET_TITLE } } }],
+        },
+      });
+    }
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: env.GOOGLE_SHEETS_ID,
+      range: rangeFor(SEATING_TABLE_SHEET_TITLE, "A1:B16"),
+      valueRenderOption: "UNFORMATTED_VALUE",
+    });
+    const rows = normalizeValues(response.data.values);
+    const names = new Map<number, string>(
+      rows.slice(1).flatMap((row): Array<[number, string]> => {
+        const id = Number(row[0]);
+        return id >= 1 && id <= 15 ? [[id, row[1]?.trim() || `Table ${id}`]] : [];
+      }),
+    );
+    const completeRows = [
+      SEATING_TABLE_HEADERS,
+      ...Array.from({ length: 15 }, (_, index) => {
+        const id = index + 1;
+        return [String(id), names.get(id) || `Table ${id}`];
+      }),
+    ];
+    const isComplete =
+      rows.length >= 16 &&
+      rows[0]?.[0] === SEATING_TABLE_HEADERS[0] &&
+      rows[0]?.[1] === SEATING_TABLE_HEADERS[1] &&
+      completeRows.every((row, index) => row[0] === rows[index]?.[0] && row[1] === rows[index]?.[1]);
+
+    if (!isComplete) {
+      assertSheetMutationAllowed();
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: env.GOOGLE_SHEETS_ID,
+        range: rangeFor(SEATING_TABLE_SHEET_TITLE, "A1:B16"),
+        valueInputOption: "RAW",
+        requestBody: { values: completeRows },
+      });
+    }
+
+    this.seatingTableSheetEnsured = true;
   }
 
   private async ensureActivitySheetUncached() {
@@ -1171,6 +1321,32 @@ function guestsFromSheetGuest(guest: SheetGuest): Guest[] {
     partyId: member.partyId,
     name: member.name,
   }));
+}
+
+function checkInGuestsFromSheetGuest(guest: SheetGuest): CheckInGuest[] {
+  const members: CheckInGuest[] = [];
+
+  if (guest.firstName || guest.lastName) {
+    members.push({
+      partyId: guest.guestId,
+      member: "guest_1",
+      name: labelForName(guest.firstName, guest.lastName),
+      checkedIn: guest.primaryCheckedIn,
+      tableName: guest.primaryTableName,
+    });
+  }
+
+  if (guest.guest2FirstName || guest.guest2LastName) {
+    members.push({
+      partyId: guest.guestId,
+      member: "guest_2",
+      name: labelForName(guest.guest2FirstName, guest.guest2LastName),
+      checkedIn: guest.guest2CheckedIn,
+      tableName: guest.guest2TableName,
+    });
+  }
+
+  return members;
 }
 
 function deliveriesFromSheetGuest(guest: SheetGuest, eventTitle: string): DeliveryRecord[] {

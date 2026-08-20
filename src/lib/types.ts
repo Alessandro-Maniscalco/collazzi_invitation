@@ -9,6 +9,7 @@ export type DeliveryStatus =
   | "opened"
   | "failed";
 export type AttendanceStatus = "attending" | "not_attending";
+export type CheckInMember = "guest_1" | "guest_2";
 export type QuestionType = "checkbox";
 export type ActivityType =
   | "invite_opened"
@@ -52,6 +53,16 @@ export interface Guest {
   id: string;
   partyId: string;
   name: string;
+  checkedIn?: boolean;
+  tableName?: string;
+}
+
+export interface CheckInGuest {
+  partyId: string;
+  member: CheckInMember;
+  name: string;
+  checkedIn: boolean;
+  tableName?: string;
 }
 
 export interface InviteToken {
