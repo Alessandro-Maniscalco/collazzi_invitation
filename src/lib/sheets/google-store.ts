@@ -4,7 +4,6 @@ import { readFile } from "node:fs/promises";
 import { nanoid } from "nanoid";
 
 import { env, isLocalAppUrl } from "@/lib/env";
-import { isReadOnly } from "@/lib/formatters";
 import { dispatchDelivery } from "@/lib/providers/delivery";
 import { parsePartyCsv } from "@/lib/csv";
 import {
@@ -167,7 +166,6 @@ export async function getSheetInvitationByToken(
     itinerary: itineraryForSheetGuest(state.itinerary, guest),
     accommodations: state.accommodations,
     deliveries: deliveriesFromSheetGuest(guest, state.event.summaryName),
-    readOnly: isReadOnly(state.event.rsvpDeadline),
   };
 }
 
@@ -198,7 +196,7 @@ export async function recordSheetInviteOpen(token: string, actor = "guest") {
   return partyFromSheetGuest(guest);
 }
 
-export async function saveSheetRsvp(input: SaveRsvpInput, state: AppState) {
+export async function saveSheetRsvp(input: SaveRsvpInput) {
   const store = getGoogleSheetsGuestStore();
   const { table } = await store.loadGuests();
   const guest = table.guests.find(
@@ -207,10 +205,6 @@ export async function saveSheetRsvp(input: SaveRsvpInput, state: AppState) {
 
   if (!guest) {
     throw new Error("Invitation not found.");
-  }
-
-  if (isReadOnly(state.event.rsvpDeadline)) {
-    throw new Error("RSVPs are closed for this invitation.");
   }
 
   const timestamp = new Date().toISOString();
@@ -223,10 +217,6 @@ export async function saveSheetRsvp(input: SaveRsvpInput, state: AppState) {
   );
   const attending = Object.values(guestSelections).some(Boolean);
   const email = input.email?.trim().toLowerCase();
-
-  if (attending && !guest.email?.trim() && !email) {
-    throw new Error("Please enter your email.");
-  }
 
   const rsvpInput = guest.willInviteToWalkingDinner
     ? input
@@ -532,7 +522,6 @@ export async function sendSheetBatch(input: SendBatchInput, actor: string, state
         summaryDateLabel: state.event.summaryDateLabel,
         summaryAddressName: state.event.summaryAddressName,
         summaryAddressLabel: state.event.summaryAddressLabel,
-        rsvpDeadline: state.event.rsvpDeadline,
         heroImageSrc: PARTY_ONLY_BACK_IMAGE_SRC,
       });
       const timestamp = new Date().toISOString();

@@ -92,3 +92,81 @@
 **What was decided:** Add a separate PIN-protected `/check-in` workflow backed by the existing per-person check-in and table columns in the `Lista` Google Sheet. Search is name-order, accent, punctuation, and case insensitive; each named guest is checked independently; all phones refresh within 10 seconds; locations and RSVP eligibility are not stored or filtered.
 **Why:** Door staff need a fast phone interface while Google Sheets remains the live source of truth and multiple staff may safely set the same intended check-in state concurrently.
 **What was rejected:** Whole-invitation check-in, location-specific statuses, RSVP filtering, unnamed Guest 2 check-in, and adding host edit/delete controls in this change were rejected as inaccurate or outside the requested scope.
+## 2026-08-05, Guided Walk Zoom and Host Open Link
+**What was decided:** Number the Duomo cluster as Cupola del Brunelleschi 6, Campanile di Giotto 7, Duomo di Firenze 8, and Battistero di San Giovanni 9; support map zoom with Command or Control plus scroll; and restore a non-prefetched Open link action beside Copy link in each host guest card.
+**Why:** The user supplied the exact corrected map numbering, requested modifier-assisted zoom that preserves ordinary page scrolling, and explicitly asked to restore the host opener.
+**What was rejected:** Keeping the previous 6-7-8 Duomo ordering, enabling unrestricted wheel zoom, and retaining the 2026-05-06 removal of Open link were rejected because they conflict with the current request.
+
+## 2026-08-05, Florence Maps and Guided Walk
+**What was decided:** Split the Florence guide into a recommendation map that switches between Museums and Food and a second numbered guided-walk map. The walk runs Santo Spirito, Palazzo Pitti, Ponte Vecchio, Palazzo Vecchio, Santa Croce, the four Duomo-complex stops, and Santa Maria Novella; Boboli was replaced by Museo del Bargello in the museum recommendations.
+**Why:** Separate maps keep the recommendations readable while making the requested walking order explicit, connected, and usable with photo previews and Google Maps links.
+**What was rejected:** Keeping every museum, restaurant, and walking stop on one map was rejected because the pin density obscured the route; keeping Boboli was rejected because the user explicitly requested Bargello instead.
+
+## 2026-08-05, Multi-Select Florence Map Layers
+**What was decided:** Supersede the two-map layout with one shared map controlled by three independent Museums, Food, and Guided city walk buttons. Food is selected initially, at least one layer stays active, and selecting the walk shows a clickable 1–10 route list. Tour pins now use only geographic coordinates, including individual Duomo-complex entrances, without fixed pixel offsets.
+**Why:** Guests can combine any recommendations on one map, while true geographic anchors keep route markers attached during zooming and the route list preserves an unambiguous order at city-wide zoom.
+**What was rejected:** Keeping separate maps was rejected by the user; fixed screen-space marker offsets were rejected because they appeared to move relative to the map when zooming.
+## 2026-07-16, RSVP Deadline Is Informational
+**What was decided:** Guests can submit or change an RSVP at any time; 30 July 2026 is displayed in the host dashboard and included in invitation emails as an informational deadline.
+**Why:** The previous deadline has passed, and the user needs late RSVP changes to remain possible while updated communication still gives guests the current requested deadline.
+**What was rejected:** Keeping the past-deadline lock in either the browser or either server store was rejected because either path would prevent a guest from changing an RSVP.
+
+## 2026-07-27, Email Is Optional for RSVP and Transport
+**What was decided:** Guests can confirm an RSVP and transport preferences without saving an email address.
+**Why:** The user asked to remove the email-save requirement from transport confirmation.
+**What was rejected:** Leaving either local-store or Google Sheets RSVP validation in place was rejected because it would still block confirmation for guests without an email.
+
+## 2026-07-27, Persistent RSVP Confirmation and Update Action
+**What was decided:** After a successful or previously saved RSVP, show a persistent confirmation with the attendance status and replace the initial attendance choices with one Update action; the modal submit action also says Update for an existing response.
+**Why:** Guests need clear evidence that their RSVP was saved and a clear way to change it.
+**What was rejected:** Keeping only the active styling on Will attend or Will not attend was rejected because guests could not tell whether the save completed.
+
+## 2026-08-03, Host RSVP Analytics by Inviter and Source
+**What was decided:** Add an All/Ale/Bona/Mum filter to the host dashboard with individual-guest totals for Party yes, Party no, Party pending, and Dinner yes, followed by the same counts grouped by source.
+**Why:** Hosts need a filter-safe attendance view without manually reconciling hidden Google Sheet rows; counting guest selections includes second guests consistently.
+**What was rejected:** Adding dinner no/pending totals or expandable name lists was rejected as beyond the requested compact dashboard summary.
+
+## 2026-08-03, RSVP Deadline Remains Informational
+**What was decided:** Remove the RSVP deadline lock from both invitation controls and RSVP persistence so every active invitation can be answered or updated indefinitely.
+**Why:** A clean production deployment restored old deadline checks and closed Alberto Berlingheri's invitation even though the deadline is meant only as guidance.
+**What was rejected:** Exempting only Alberto or extending the date was rejected because either option would allow the same failure to recur for other guests.
+
+## 2026-08-03, Individual Attendance Overrides Party Decline
+**What was decided:** Build each guest selection directly from `coming_to_party` and `guest_2_coming_to_party`; use `not_coming` only as a legacy party-level signal, not as a gate over individual attendance.
+**Why:** Matteo Grassi's row has the primary guest declining and guest two attending, but a stale `not_coming` value hid the second guest's explicit Yes response.
+**What was rejected:** Editing only Matteo's row was rejected because any other mixed-attendance row with a stale party flag would display incorrectly again.
+
+## 2026-08-03, Bilingual Group Gift Accordion
+**What was decided:** Add a prominent closed-by-default Group gift accordion at the bottom of each invitation, with the supplied childhood photo and English/Italian letters side by side on desktop and stacked on mobile.
+**Why:** Gift information and bank details need to be clearly discoverable without overwhelming the main invitation itinerary.
+**What was rejected:** A modal was rejected because the content is long and easier to read, scroll, and revisit inline.
+
+## 2026-08-04, Interactive Florence Guide
+**What was decided:** Add a full-width, closed-by-default Florence guide above the group gift section, using one Leaflet/OpenStreetMap view with every museum and food location, category-specific pins, hover details, and Google Maps links.
+**Why:** Guests can understand where all recommendations are relative to one another and open any specific destination for navigation.
+**What was rejected:** The initial one-place-at-a-time Google Maps embed was superseded because it could not show all recommendations or custom category pins together; a static list was rejected because it would not provide the requested interactive map.
+
+## 2026-08-07, Florence Museum Additions
+**What was decided:** Add Cappella Brancacci and Palazzo Pitti to the Museums map layer with their official entrance locations and Google Maps searches.
+**Why:** The user requested both places as additional museum recommendations.
+**What was rejected:** Using the supplied spelling “Pallazzo Pitti” was rejected in favor of the official “Palazzo Pitti.”
+
+## 2026-08-20, Shuttle Departure Window
+**What was decided:** Show party shuttle departures from Piazza Torquato Tasso as running from 19:00 to 19:30.
+**Why:** The user corrected the guest-facing departure window.
+**What was rejected:** Keeping the previous 19h to 20h window was rejected because it is no longer accurate.
+
+## 2026-08-20, Mum RSVP Source Breakdown
+**What was decided:** When Mum is selected in the host RSVP Breakdown, display only the Diana source row while retaining totals for all of Mum’s invitees.
+**Why:** The user asked for Mum’s source breakdown to be limited to Diana without changing the overall RSVP counts.
+**What was rejected:** Filtering Mum’s total counts down to Diana was rejected because the request is specifically about the source display.
+
+## 2026-08-20, Remove RSVP Deadline Messaging
+**What was decided:** Remove RSVP-deadline messages from the host dashboard and invitation emails; guests can submit or update RSVPs indefinitely.
+**Why:** The stated deadline has passed and the user explicitly wants ongoing RSVP changes.
+**What was rejected:** Keeping the deadline as informational copy was rejected because it would still imply that RSVP changes close.
+
+## 2026-08-20, Canonical Production Deployment
+**What was decided:** Deploy production only from one verified canonical branch/build, then smoke-test `/host/login`, `/host`, and an invitation link before assigning `bonaalessandro.ink`.
+**Why:** A later deployment from another checkout replaced the complete site and removed the host RSVP dashboard.
+**What was rejected:** Direct production deployments from independent feature worktrees were rejected because Vercel replaces rather than combines their snapshots.

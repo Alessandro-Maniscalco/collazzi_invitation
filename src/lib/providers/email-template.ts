@@ -9,7 +9,6 @@ export interface InvitationEmailInput {
   summaryDateLabel?: string;
   summaryAddressName?: string;
   summaryAddressLabel?: string;
-  rsvpDeadline?: string;
   heroImageSrc?: string;
   mapUrl?: string;
 }
@@ -27,7 +26,6 @@ const COUPLE_NAME = "Bona and Alessandro";
 export function renderInvitationEmail(input: InvitationEmailInput): InvitationEmail {
   const dateParts = splitDateLabel(input.summaryDateLabel);
   const eventLine = formatEventLine(dateParts, input.summaryAddressName);
-  const rsvpLabel = formatRsvpDeadline(input.rsvpDeadline);
   const greetingName = greetingNameForLabel(input.partyLabel);
   const isReminder = input.kind === "reminder";
   const subjectLine = isReminder
@@ -52,7 +50,6 @@ export function renderInvitationEmail(input: InvitationEmailInput): InvitationEm
       <p style="margin:0 0 18px;">Hi ${escapeHtml(greetingName)},</p>
       <p style="margin:0 0 18px;">Here is your invitation link: <a href="${escapeAttribute(input.inviteUrl)}" target="_blank" style="color:${TEXT_COLOR};text-decoration:underline;">${escapeHtml(input.inviteUrl)}</a>!</p>
       <p style="margin:0 0 18px;">${escapeHtml(eventLine)}</p>
-      <p style="margin:0 0 18px;">Please RSVP by ${escapeHtml(rsvpLabel)}.</p>
       <p style="margin:0;">Best,<br />${escapeHtml(COUPLE_NAME)}</p>
     </div>
   </body>
@@ -64,8 +61,6 @@ export function renderInvitationEmail(input: InvitationEmailInput): InvitationEm
     `Here is your invitation link: ${input.inviteUrl}!`,
     "",
     eventLine,
-    "",
-    `Please RSVP by ${rsvpLabel}.`,
     "",
     "Best,",
     COUPLE_NAME,
@@ -149,35 +144,6 @@ function formatEventLine(
   const venue = addressName || "Villa I Collazzi";
 
   return `${dateTime}. ${venue}, Florence.`;
-}
-
-function formatRsvpDeadline(value?: string) {
-  if (!value) {
-    return "July 15th";
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  const month = new Intl.DateTimeFormat("en", { month: "long", timeZone: "Europe/Rome" }).format(
-    date,
-  );
-  const day = Number(new Intl.DateTimeFormat("en", { day: "numeric", timeZone: "Europe/Rome" }).format(date));
-  return `${month} ${day}${ordinal(day)}`;
-}
-
-function ordinal(day: number) {
-  if (day >= 11 && day <= 13) {
-    return "th";
-  }
-
-  const last = day % 10;
-  if (last === 1) return "st";
-  if (last === 2) return "nd";
-  if (last === 3) return "rd";
-  return "th";
 }
 
 function escapeHtml(value: string) {

@@ -183,7 +183,6 @@ export interface InvitationView {
   itinerary: ItineraryItem[];
   accommodations: AccommodationCard[];
   deliveries: DeliveryRecord[];
-  readOnly: boolean;
 }
 
 export interface DashboardSnapshot {

@@ -8,17 +8,13 @@ import type { AttendanceStatus, Guest, PartyResponse, Question } from "@/lib/typ
 interface RsvpModalProps {
   open: boolean;
   partyLabel: string;
-  partyEmail?: string;
-  initialEmail?: string;
   guests: Guest[];
   questions: Question[];
   token: string;
-  readOnly: boolean;
   initialResponse?: PartyResponse;
   preferredStatus?: AttendanceStatus;
   onClose: () => void;
   onSubmitted: (response: PartyResponse) => void;
-  onEmailSubmitted?: (email: string) => void;
 }
 
 const WALKING_DINNER_QUESTION_ID = "question_walking_dinner";
@@ -34,18 +30,6 @@ export function shouldImplyPartyAttendance(questions: Question[]) {
 
 export function visibleRsvpQuestions(questions: Question[], implyParty: boolean) {
   return questions.filter((question) => !(implyParty && isImpliedPartyQuestion(question)));
-}
-
-export function normalizeRsvpEmail(email: string) {
-  return email.trim().toLowerCase();
-}
-
-export function isValidRsvpEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeRsvpEmail(email));
-}
-
-export function shouldRequireEmailForRsvp(status: AttendanceStatus, partyEmail?: string) {
-  return status === "attending" && !partyEmail?.trim();
 }
 
 function hasSelectedGuest(selections: Record<string, boolean>) {
@@ -112,17 +96,13 @@ function normalizeAnswers(
 export function RsvpModal({
   open,
   partyLabel,
-  partyEmail,
-  initialEmail,
   guests,
   questions,
   token,
-  readOnly,
   initialResponse,
   preferredStatus,
   onClose,
   onSubmitted,
-  onEmailSubmitted,
 }: RsvpModalProps) {
   const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatus>(
     preferredStatus ?? initialResponse?.status ?? "attending",
@@ -136,12 +116,10 @@ export function RsvpModal({
   );
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
   const [note, setNote] = useState(initialResponse?.note ?? "");
-  const [email, setEmail] = useState(initialEmail ?? partyEmail ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const implyParty = shouldImplyPartyAttendance(questions);
   const visibleQuestions = visibleRsvpQuestions(questions, implyParty);
-  const requiresEmail = shouldRequireEmailForRsvp(attendanceStatus, partyEmail);
 
   useEffect(() => {
     if (!open) return;
@@ -150,9 +128,8 @@ export function RsvpModal({
     setGuestSelections(buildGuestSelections(guests, status, initialResponse));
     setAnswers(buildAnswers(questions, initialResponse, status, implyParty));
     setNote(initialResponse?.note ?? "");
-    setEmail(initialEmail ?? partyEmail ?? "");
     setError(null);
-  }, [guests, implyParty, initialEmail, initialResponse, open, partyEmail, preferredStatus, questions]);
+  }, [guests, implyParty, initialResponse, open, preferredStatus, questions]);
 
   useEffect(() => {
     if (!open) return;
@@ -195,18 +172,11 @@ export function RsvpModal({
           </button>
         </div>
 
-        {readOnly ? (
-          <div className="mt-5 rounded-2xl border border-[var(--app-line)] bg-white/85 px-4 py-4 text-sm text-stone-700">
-            RSVP is closed for this invitation.
-          </div>
-        ) : null}
-
         <div className="mt-6 inline-flex rounded-full border border-[var(--app-line)] bg-white p-1">
           {(["attending", "not_attending"] as const).map((status) => (
             <button
               key={status}
               type="button"
-              disabled={readOnly}
               onClick={() => {
                 setAttendanceStatus(status);
                 setGuestSelections(buildGuestSelections(guests, status, initialResponse));
@@ -240,7 +210,6 @@ export function RsvpModal({
                         <input
                           type="checkbox"
                           checked={Boolean(guestSelections[guest.id])}
-                          disabled={readOnly}
                           onChange={(event) =>
                             setGuestSelections((current) => ({
                               ...current,
@@ -270,7 +239,6 @@ export function RsvpModal({
                         <input
                           type="checkbox"
                           checked={Boolean(answers[question.id])}
-                          disabled={readOnly}
                           onChange={(event) =>
                             setAnswers((current) => ({
                               ...current,
@@ -290,28 +258,10 @@ export function RsvpModal({
             </>
           ) : null}
 
-          {requiresEmail ? (
-            <label className="block">
-              <span className="text-sm font-semibold text-stone-800">
-                Please enter your email:
-              </span>
-              <input
-                type="email"
-                required
-                value={email}
-                disabled={readOnly}
-                autoComplete="email"
-                onChange={(event) => setEmail(event.target.value)}
-                className="mt-3 w-full rounded-2xl border border-[var(--app-line)] bg-white px-4 py-3 outline-none transition focus:border-[var(--app-wine)]"
-              />
-            </label>
-          ) : null}
-
           <label className="block">
             <span className="text-sm font-semibold text-stone-800">Private message</span>
             <textarea
               value={note}
-              disabled={readOnly}
               onChange={(event) => setNote(event.target.value)}
               rows={4}
               placeholder="Private message to host (optional)"
@@ -336,7 +286,7 @@ export function RsvpModal({
           </button>
           <button
             type="button"
-            disabled={readOnly || isPending}
+            disabled={isPending}
             onClick={() =>
               startTransition(async () => {
                 setError(null);
@@ -347,18 +297,6 @@ export function RsvpModal({
 
                 if (attendanceStatus === "attending" && !hasSelectedGuest(selections)) {
                   setError("Select at least one guest, or choose Will not attend.");
-                  return;
-                }
-
-                const emailToSubmit = normalizeRsvpEmail(email);
-
-                if (requiresEmail && !emailToSubmit) {
-                  setError("Please enter your email.");
-                  return;
-                }
-
-                if (requiresEmail && !isValidRsvpEmail(emailToSubmit)) {
-                  setError("Please enter a valid email.");
                   return;
                 }
 
@@ -379,7 +317,6 @@ export function RsvpModal({
                     selections,
                     answers: normalizedAnswers,
                     note,
-                    ...(requiresEmail ? { email: emailToSubmit } : {}),
                   }),
                 });
 
@@ -392,16 +329,13 @@ export function RsvpModal({
                 }
 
                 const payload = (await response.json()) as { response: PartyResponse };
-                if (requiresEmail) {
-                  onEmailSubmitted?.(emailToSubmit);
-                }
                 onSubmitted(payload.response);
                 onClose();
               })
             }
             className="rounded-full bg-[var(--app-wine)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
           >
-            {isPending ? "Saving..." : "Confirm"}
+            {isPending ? "Saving..." : initialResponse ? "Update" : "Confirm"}
           </button>
         </div>
       </div>

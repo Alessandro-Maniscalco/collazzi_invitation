@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  isValidRsvpEmail,
-  normalizeRsvpEmail,
-  shouldRequireEmailForRsvp,
   shouldImplyPartyAttendance,
   visibleRsvpQuestions,
 } from "@/components/invitation/rsvp-modal";
@@ -45,20 +42,5 @@ describe("RSVP question visibility", () => {
     expect(implyParty).toBe(true);
     expect(visibleRsvpQuestions(partyOnlyQuestions, implyParty).map((question) => question.id))
       .toEqual(["question_transfer"]);
-  });
-});
-
-describe("RSVP email requirement", () => {
-  it("requires an email only for attending RSVPs when the party has no email", () => {
-    expect(shouldRequireEmailForRsvp("attending", undefined)).toBe(true);
-    expect(shouldRequireEmailForRsvp("attending", "")).toBe(true);
-    expect(shouldRequireEmailForRsvp("attending", "guest@example.com")).toBe(false);
-    expect(shouldRequireEmailForRsvp("not_attending", undefined)).toBe(false);
-  });
-
-  it("normalizes and validates RSVP emails", () => {
-    expect(normalizeRsvpEmail(" Guest@Example.COM ")).toBe("guest@example.com");
-    expect(isValidRsvpEmail("guest@example.com")).toBe(true);
-    expect(isValidRsvpEmail("guest")).toBe(false);
   });
 });

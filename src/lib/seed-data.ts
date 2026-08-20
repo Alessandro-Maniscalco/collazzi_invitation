@@ -43,7 +43,7 @@ export function createSeedState(): AppState {
       summaryAddressLabel: "Via Volterrana, 4A, 50018 Scandicci FI",
       introduction: "",
       dressCode: "Black tie and long dress",
-      rsvpDeadline: "2026-07-15T18:00:00.000Z",
+      rsvpDeadline: "2026-07-30T18:00:00.000Z",
       footerNote: "",
     },
     hosts: SEED_HOSTS.map((host) => ({ ...host })),
@@ -102,7 +102,7 @@ export function createSeedState(): AppState {
               "https://www.google.com/maps/search/?api=1&query=Piazza+Torquato+Tasso+Firenze",
             note: "A complimentary shuttle service will be available to and from",
             hours:
-              "Departure Times \nFrom 19h to 20h\n\nReturn to Florence Times \n2h30 - 3h30 - 4h15 - 5h",
+              "Departure Times \nFrom 19:00 to 19:30\n\nReturn to Florence Times \n2h30 - 3h30 - 4h15 - 5h",
           },
         ],
       },

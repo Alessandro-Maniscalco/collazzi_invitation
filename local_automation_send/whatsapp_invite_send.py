@@ -40,7 +40,7 @@ TARGET_PEOPLE = [("Elkann", "Oceano")]
 SEND_LIMIT = 1
 
 INVITE_MESSAGE_TEMPLATE = (
-    "Hi! Here is the formal invite, please rsvp by July 15th: {invite_url}"
+    "Hi! Here is the formal invite, please rsvp by July 30th: {invite_url}"
 )
 
 GOOGLE_SHEETS_CREDENTIALS_PATH = Path.home() / "Downloads" / "collazzi-b908241311bf.json"

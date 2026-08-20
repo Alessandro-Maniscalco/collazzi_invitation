@@ -14,7 +14,6 @@ interface DispatchDeliveryInput {
   summaryDateLabel?: string;
   summaryAddressName?: string;
   summaryAddressLabel?: string;
-  rsvpDeadline?: string;
   heroImageSrc?: string;
   mapUrl?: string;
 }
@@ -39,7 +38,6 @@ export async function dispatchDelivery(
     summaryDateLabel: input.summaryDateLabel,
     summaryAddressName: input.summaryAddressName,
     summaryAddressLabel: input.summaryAddressLabel,
-    rsvpDeadline: input.rsvpDeadline,
     heroImageSrc: input.heroImageSrc,
     mapUrl: input.mapUrl,
   });

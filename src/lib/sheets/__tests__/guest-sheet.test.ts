@@ -352,6 +352,34 @@ describe("parseGuestSheet", () => {
     });
   });
 
+  it("keeps a second guest attending when a stale party-level decline is also set", () => {
+    const table = parseGuestSheet(
+      [
+        [...GUEST_SHEET_HEADERS],
+        rowFromRecord({
+          guest_id: "guest_grassi",
+          token: "guest_token",
+          first_name: "Matteo",
+          last_name: "Grassi",
+          guest_2_first_name: "Guest Two",
+          coming_to_party: "FALSE",
+          guest_2_coming_to_party: "TRUE",
+          not_coming: "TRUE",
+          rsvp_updated_at: "2026-08-03T12:00:00.000Z",
+        }),
+      ],
+      "http://localhost:3000",
+    );
+
+    expect(sheetGuestResponse(table.guests[0])).toMatchObject({
+      status: "attending",
+      guestSelections: {
+        guest_grassi: false,
+        guest_grassi__guest_2: true,
+      },
+    });
+  });
+
   it("keeps explicitly inactive tokens inactive", () => {
     const table = parseGuestSheet(
       [

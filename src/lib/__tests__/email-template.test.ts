@@ -10,7 +10,6 @@ const baseInput = {
   summaryDateLabel: "Thursday, August 27th, 19h30 – Friday, August 28th, 19h30",
   summaryAddressName: "Villa I Collazzi",
   summaryAddressLabel: "Via Volterrana, 4A, 50018 Scandicci FI",
-  rsvpDeadline: "2026-07-15T18:00:00.000Z",
   heroImageSrc: "/assets/collazzi/invito-save-date.jpg",
 };
 
@@ -30,14 +29,14 @@ describe("renderInvitationEmail", () => {
     expect(email.text).toContain("Friday, August 28th, 2026, 19:30. Villa I Collazzi, Florence.");
     expect(email.text).not.toContain("Thursday, August 27th");
     expect(email.text).not.toContain("Here is your invitation link:\n");
-    expect(email.text).toContain("Please RSVP by July 15th.");
+    expect(email.text).not.toContain("RSVP by");
     expect(email.text).toContain("Best,\nBona and Alessandro");
     expect(email.html).toContain("Hi Alessandro,");
     expect(email.html).toContain("text-align:left");
     expect(email.html).toContain("Here is your invitation link: <a");
     expect(email.html).toContain("https://bonaalessandro.ink/i/guest_example</a>!");
     expect(email.html).toContain("Friday, August 28th, 2026, 19:30. Villa I Collazzi, Florence.");
-    expect(email.html).toContain("Please RSVP by July 15th.");
+    expect(email.html).not.toContain("RSVP by");
     expect(email.html).not.toContain("<img");
     expect(email.html).not.toContain("align=\"center\"");
     expect(email.html).not.toContain("OPEN INVITE");

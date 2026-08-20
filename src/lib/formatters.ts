@@ -1,4 +1,4 @@
-import { format, formatDistanceToNowStrict, isPast, parseISO } from "date-fns";
+import { format, formatDistanceToNowStrict, parseISO } from "date-fns";
 
 import type {
   DashboardSnapshot,
@@ -24,10 +24,6 @@ export function formatTimestamp(value?: string) {
 export function formatRelative(value?: string) {
   if (!value) return "Never";
   return formatDistanceToNowStrict(parseISO(value), { addSuffix: true });
-}
-
-export function isReadOnly(deadline: string) {
-  return isPast(parseISO(deadline));
 }
 
 export function partyAttendanceSummary(party: Party, guests: Guest[]) {

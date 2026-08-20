@@ -1,13 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { isReadOnly, partyAttendanceSummary } from "@/lib/formatters";
+import { partyAttendanceSummary } from "@/lib/formatters";
 import type { Guest, Party } from "@/lib/types";
-
-describe("isReadOnly", () => {
-  it("returns true for a past deadline", () => {
-    expect(isReadOnly("2020-01-01T00:00:00.000Z")).toBe(true);
-  });
-});
 
 describe("partyAttendanceSummary", () => {
   it("counts guest selections when a response exists", () => {
