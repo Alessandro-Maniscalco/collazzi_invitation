@@ -52,6 +52,8 @@ describe("InvitationExperience", () => {
     expect(screen.getByTestId("recipient-to-name")).toHaveTextContent(
       "To: Taylor & Jordan Russo",
     );
+    expect(document.body).toHaveTextContent("From 19:00 to 19:30");
+    expect(document.body).not.toHaveTextContent("From 19h to 20h");
   });
 
   it("opens the bilingual group gift section and includes the supplied photo", async () => {

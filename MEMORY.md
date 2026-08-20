@@ -141,3 +141,8 @@
 **What was decided:** Add Cappella Brancacci and Palazzo Pitti to the Museums map layer with their official entrance locations and Google Maps searches.
 **Why:** The user requested both places as additional museum recommendations.
 **What was rejected:** Using the supplied spelling “Pallazzo Pitti” was rejected in favor of the official “Palazzo Pitti.”
+
+## 2026-08-20, Shuttle Departure Window
+**What was decided:** Show party shuttle departures from Piazza Torquato Tasso as running from 19:00 to 19:30.
+**Why:** The user corrected the guest-facing departure window.
+**What was rejected:** Keeping the previous 19h to 20h window was rejected because it is no longer accurate.

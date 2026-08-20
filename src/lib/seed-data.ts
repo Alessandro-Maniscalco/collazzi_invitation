@@ -102,7 +102,7 @@ export function createSeedState(): AppState {
               "https://www.google.com/maps/search/?api=1&query=Piazza+Torquato+Tasso+Firenze",
             note: "A complimentary shuttle service will be available to and from",
             hours:
-              "Departure Times \nFrom 19h to 20h\n\nReturn to Florence Times \n2h30 - 3h30 - 4h15 - 5h",
+              "Departure Times \nFrom 19:00 to 19:30\n\nReturn to Florence Times \n2h30 - 3h30 - 4h15 - 5h",
           },
         ],
       },
