@@ -21,6 +21,19 @@ vi.stubGlobal("React", React);
 afterEach(() => cleanup());
 
 describe("SeatingPlanner", () => {
+  it("keeps the compact table-name target centered around only its text", () => {
+    const initialData: SeatingSnapshot = {
+      tables: [{ id: 1, name: "Table 1" }],
+      guests: [],
+    };
+
+    render(React.createElement(SeatingPlanner, { initialData }));
+
+    const tableName = screen.getByRole("button", { name: "Table 1" });
+    expect(tableName).toHaveClass("mx-auto", "w-fit", "max-w-full");
+    expect(tableName).not.toHaveClass("w-full");
+  });
+
   it("filters the alphabetical unseated list from the top search field", () => {
     const initialData: SeatingSnapshot = {
       tables: [{ id: 1, name: "Table 1" }],

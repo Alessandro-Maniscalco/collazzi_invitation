@@ -180,3 +180,8 @@
 **What was decided:** Make `main` the single complete production history and reduce Google Sheets quota pressure by validating host cookies without guest reads, pausing polling in hidden tabs, caching table labels, and falling back to the last successful guest read during a temporary 429.
 **Why:** The live host page returned a Sheets read-quota error after seating and check-in polling multiplied guest reads, which made the entire RSVP dashboard appear missing even though the component was deployed.
 **What was rejected:** Continuing production releases from feature branches was rejected because they can replace complete snapshots; slowing the visible 10-second refresh was rejected because door staff still need the agreed update cadence.
+
+## 2026-08-20, Compact Table Header Click Area
+**What was decided:** Limit the compact table-name edit target to the centered visible text so the empty header space on either side opens the table like the rest of the card.
+**Why:** A full-width invisible name button intercepted clicks across the top line even where no text was visible.
+**What was rejected:** Delaying every table click to distinguish single-click from double-click was rejected because it would make opening tables feel slower.

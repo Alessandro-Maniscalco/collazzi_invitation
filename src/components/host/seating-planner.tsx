@@ -457,7 +457,9 @@ function TableName(props: TableProps & { large?: boolean }) {
       title="Double-click to edit the table name"
       onClick={(event) => event.stopPropagation()}
       onDoubleClick={() => props.onBeginEditing(props.table.id, props.table.name)}
-      className={`block w-full cursor-text truncate text-center font-bold text-stone-900 ${props.large ? "text-3xl" : "text-sm"}`}
+      className={`block cursor-text truncate text-center font-bold text-stone-900 ${
+        props.large ? "w-full text-3xl" : "mx-auto w-fit max-w-full text-sm"
+      }`}
     >
       {props.table.name}
     </button>
