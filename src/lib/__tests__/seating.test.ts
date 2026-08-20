@@ -4,6 +4,7 @@ import {
   applySeatingMove,
   seatingGuestsFromSheet,
   seatingUpdatesForGuest,
+  sortSeatingGuests,
 } from "@/lib/seating";
 import type { SheetGuest } from "@/lib/sheets/guest-sheet";
 
@@ -90,6 +91,20 @@ describe("seating plan", () => {
     expect(guests.map((guest) => guest.id)).toEqual([
       "party-1:guest_2",
       "primary-only:guest_1",
+    ]);
+  });
+
+  it("sorts the unseated list by last name and then first name", () => {
+    const guests = seatingGuestsFromSheet([
+      sheetGuest({ guestId: "rossi-z", firstName: "Zoe", lastName: "Rossi" }),
+      sheetGuest({ guestId: "bianchi-b", firstName: "Beatrice", lastName: "Bianchi" }),
+      sheetGuest({ guestId: "bianchi-a", firstName: "Alessandra", lastName: "Bianchi" }),
+    ]).filter((guest) => guest.member === "guest_1");
+
+    expect(sortSeatingGuests(guests).map((guest) => guest.id)).toEqual([
+      "bianchi-a:guest_1",
+      "bianchi-b:guest_1",
+      "rossi-z:guest_1",
     ]);
   });
 

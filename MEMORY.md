@@ -185,3 +185,8 @@
 **What was decided:** Limit the compact table-name edit target to the centered visible text so the empty header space on either side opens the table like the rest of the card.
 **Why:** A full-width invisible name button intercepted clicks across the top line even where no text was visible.
 **What was rejected:** Delaying every table click to distinguish single-click from double-click was rejected because it would make opening tables feel slower.
+
+## 2026-08-20, Seating List Last-Name Order
+**What was decided:** Sort the unseated seating list by last name, using first name as the tie-breaker and as the fallback when a surname is blank.
+**Why:** The user wants the alphabetical source list organized by family name.
+**What was rejected:** Keeping first-name order was rejected because it makes surname lookup slower.

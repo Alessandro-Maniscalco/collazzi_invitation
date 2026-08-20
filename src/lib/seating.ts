@@ -103,11 +103,15 @@ export function seatingGuestsFromSheet(guests: SheetGuest[]) {
 }
 
 export function sortSeatingGuests(guests: SeatingGuest[]) {
-  return [...guests].sort((left, right) =>
-    `${left.firstName} ${left.lastName}`.localeCompare(`${right.firstName} ${right.lastName}`, undefined, {
-      sensitivity: "base",
-    }),
-  );
+  return [...guests].sort((left, right) => {
+    const lastNameOrder = (left.lastName || left.firstName).localeCompare(
+      right.lastName || right.firstName,
+      undefined,
+      { sensitivity: "base" },
+    );
+    if (lastNameOrder) return lastNameOrder;
+    return left.firstName.localeCompare(right.firstName, undefined, { sensitivity: "base" });
+  });
 }
 
 export function guestAtSeat(
