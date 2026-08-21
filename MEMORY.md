@@ -200,3 +200,8 @@
 **What was decided:** Show first name followed by last name in every occupied overview seat, keeping the text on one line and truncating only when the available seat width is exhausted.
 **Why:** The wider three-column tables provide room to expose surnames and make guests easier to distinguish.
 **What was rejected:** Continuing to show only first names in the overview was rejected because it wastes the newly available width.
+
+## 2026-08-21, Dinner Invitee Shuttle Departure
+**What was decided:** Show Florence dinner invitees a single party shuttle departure time of 19:00, without the 19:30 endpoint; keep the existing window for party-only invitees.
+**Why:** The user specified a fixed 19:00 shuttle departure for guests invited to the Florence dinner.
+**What was rejected:** Changing the shuttle window for every invitee was rejected because the request was limited to dinner invitees.

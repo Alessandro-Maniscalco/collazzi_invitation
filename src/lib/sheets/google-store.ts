@@ -1355,12 +1355,30 @@ function questionsForSheetGuest(questions: AppState["questions"], guest: SheetGu
   return questions.filter((question) => question.id !== "question_walking_dinner");
 }
 
-function itineraryForSheetGuest(itinerary: AppState["itinerary"], guest: SheetGuest) {
-  if (guest.willInviteToWalkingDinner) {
-    return itinerary;
+export function itineraryForInvitation(
+  itinerary: AppState["itinerary"],
+  willInviteToWalkingDinner: boolean,
+) {
+  if (!willInviteToWalkingDinner) {
+    return itinerary.filter((item) => item.id !== "itinerary_dinner");
   }
 
-  return itinerary.filter((item) => item.id !== "itinerary_dinner");
+  return itinerary.map((item) => ({
+    ...item,
+    subItems: item.subItems?.map((subItem) =>
+      subItem.id === "itinerary_party_shuttle"
+        ? {
+            ...subItem,
+            hours:
+              "Departure Time \n19:00\n\nReturn to Florence Times \n2h30 - 3h30 - 4h15 - 5h",
+          }
+        : subItem,
+    ),
+  }));
+}
+
+function itineraryForSheetGuest(itinerary: AppState["itinerary"], guest: SheetGuest) {
+  return itineraryForInvitation(itinerary, guest.willInviteToWalkingDinner);
 }
 
 function partyOnlyDateLabel(label: string) {
