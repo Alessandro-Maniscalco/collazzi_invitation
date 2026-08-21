@@ -21,6 +21,28 @@ vi.stubGlobal("React", React);
 afterEach(() => cleanup());
 
 describe("SeatingPlanner", () => {
+  it("shows first and last name in an occupied overview seat", () => {
+    const initialData: SeatingSnapshot = {
+      tables: [{ id: 1, name: "Table 1" }],
+      guests: [
+        {
+          id: "party-1:guest_1",
+          partyId: "party-1",
+          member: "guest_1",
+          firstName: "Alessandra",
+          lastName: "Rossi",
+          checkedIn: false,
+          tableId: 1,
+          seatPosition: 1,
+        },
+      ],
+    };
+
+    render(React.createElement(SeatingPlanner, { initialData }));
+
+    expect(screen.getByText("Alessandra Rossi")).toBeInTheDocument();
+  });
+
   it("keeps the compact table-name target centered around only its text", () => {
     const initialData: SeatingSnapshot = {
       tables: [{ id: 1, name: "Table 1" }],

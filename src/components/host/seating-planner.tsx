@@ -515,7 +515,7 @@ function Seat({
       <span className="shrink-0 font-mono text-[0.68rem] font-bold opacity-60">{position}</span>
       {guest ? (
         <span className={styles.guestName}>
-          {compact ? guest.firstName : `${guest.firstName} ${guest.lastName}`.trim()}
+          {`${guest.firstName} ${guest.lastName}`.trim()}
         </span>
       ) : (
         <span className={styles.guestName}>Empty</span>

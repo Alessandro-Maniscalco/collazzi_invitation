@@ -195,3 +195,8 @@
 **What was decided:** Display the 15 compact seating tables in a fixed three-column overview grid.
 **Why:** The user requested three table columns instead of five for larger, easier-to-read table cards.
 **What was rejected:** Keeping the five-column desktop grid was rejected because each table was too narrow for the desired overview.
+
+## 2026-08-21, Full Names in Seating Overview
+**What was decided:** Show first name followed by last name in every occupied overview seat, keeping the text on one line and truncating only when the available seat width is exhausted.
+**Why:** The wider three-column tables provide room to expose surnames and make guests easier to distinguish.
+**What was rejected:** Continuing to show only first names in the overview was rejected because it wastes the newly available width.
