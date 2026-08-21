@@ -190,3 +190,8 @@
 **What was decided:** Sort the unseated seating list by last name, using first name as the tie-breaker and as the fallback when a surname is blank.
 **Why:** The user wants the alphabetical source list organized by family name.
 **What was rejected:** Keeping first-name order was rejected because it makes surname lookup slower.
+
+## 2026-08-21, Three-Column Seating Overview
+**What was decided:** Display the 15 compact seating tables in a fixed three-column overview grid.
+**Why:** The user requested three table columns instead of five for larger, easier-to-read table cards.
+**What was rejected:** Keeping the five-column desktop grid was rejected because each table was too narrow for the desired overview.
