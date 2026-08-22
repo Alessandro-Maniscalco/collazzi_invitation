@@ -205,3 +205,8 @@
 **What was decided:** Show Florence dinner invitees a single party shuttle departure time of 19:00, without the 19:30 endpoint; keep the existing window for party-only invitees.
 **Why:** The user specified a fixed 19:00 shuttle departure for guests invited to the Florence dinner.
 **What was rejected:** Changing the shuttle window for every invitee was rejected because the request was limited to dinner invitees.
+
+## 2026-08-22, Seating Arrangement Button Contrast
+**What was decided:** Give the Host-page Seating arrangement link an explicit white text utility that cannot be overridden by inherited link color rules.
+**Why:** The navigation button needs reliable high contrast against its wine background.
+**What was rejected:** Changing the shared primary-button styling was rejected because the request is limited to this one link.

@@ -506,7 +506,7 @@ export function HostDashboard({
         <div className="flex justify-end">
           <Link
             href="/host/seating"
-            className={`${primaryButtonClass} px-5 py-3 text-sm`}
+            className={cn(primaryButtonClass, "!text-white px-5 py-3 text-sm")}
           >
             Seating arrangement
           </Link>
