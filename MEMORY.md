@@ -210,3 +210,8 @@
 **What was decided:** Give the Host-page Seating arrangement link an explicit white text utility that cannot be overridden by inherited link color rules.
 **Why:** The navigation button needs reliable high contrast against its wine background.
 **What was rejected:** Changing the shared primary-button styling was rejected because the request is limited to this one link.
+
+## 2026-08-24, New Ale Invitees With Confirmed Party RSVP
+**What was decided:** Add the 12 supplied people as separate active invitations, classify them as invited by Ale with a blank source, and record the primary guest as attending the party.
+**Why:** None of the supplied people already existed in `Lista`, and recent comparable Ale additions use a blank source; separate rows preserve one private invitation per person.
+**What was rejected:** Blindly appending without duplicate checks, assigning an unprovided source, grouping people into shared rows, or marking dinner and second-guest attendance were rejected because the request only confirmed each named person for the party.
