@@ -7,6 +7,7 @@ import { nanoid } from "nanoid";
 import { parsePartyCsv } from "@/lib/csv";
 import { env, hasGoogleSheetsConfig } from "@/lib/env";
 import { dispatchDelivery } from "@/lib/providers/delivery";
+import { assertRsvpChangeAllowed } from "@/lib/rsvp-policy";
 import { SEED_HOSTS, createSeedState, createToken } from "@/lib/seed-data";
 import {
   addSheetGuest,
@@ -343,6 +344,8 @@ export async function saveRsvp(input: SaveRsvpInput) {
     if (!party) {
       throw new Error("Invitation not found.");
     }
+
+    assertRsvpChangeAllowed(party.source, input.selections);
 
     const status = getAttendanceStatus(input.selections);
     const email = input.email?.trim().toLowerCase();

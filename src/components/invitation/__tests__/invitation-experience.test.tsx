@@ -26,13 +26,13 @@ vi.stubGlobal("React", React);
 
 afterEach(() => cleanup());
 
-function previewInvitation(response?: PartyResponse): InvitationView {
+function previewInvitation(response?: PartyResponse, source = "Ale"): InvitationView {
   const state = createSeedState();
   const party = state.parties[0];
 
   return {
     event: state.event,
-    party: { ...party, response },
+    party: { ...party, response, source },
     guests: state.guests.filter((guest) => guest.partyId === party.id),
     questions: state.questions,
     itinerary: state.itinerary,
@@ -134,16 +134,36 @@ describe("InvitationExperience", () => {
     expect(within(details).queryByRole("iframe")).not.toBeInTheDocument();
   });
 
-  it("keeps RSVP controls open after the informational deadline", async () => {
+  it("allows non-Diana invitations to decline but not add attendees", async () => {
     const { InvitationExperience } = await import(
       "@/components/invitation/invitation-experience"
     );
 
     render(React.createElement(InvitationExperience, { invitation: previewInvitation() }));
-    fireEvent.click(screen.getByRole("button", { name: "Will attend" }));
+    expect(screen.getByText(/RSVPs are now closed/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Will attend" })).not.toBeInTheDocument();
 
-    expect(screen.queryByText("RSVP is closed for this invitation.")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Confirm" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Will not attend" }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).queryByRole("button", { name: "Will attend" })).not.toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Will not attend" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Confirm" })).toBeEnabled();
+  });
+
+  it("keeps full RSVP controls open for the Diana source", async () => {
+    const { InvitationExperience } = await import(
+      "@/components/invitation/invitation-experience"
+    );
+
+    render(
+      React.createElement(InvitationExperience, {
+        invitation: previewInvitation(undefined, "Diana"),
+      }),
+    );
+
+    expect(screen.getByRole("button", { name: "Will attend" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Will not attend" })).toBeInTheDocument();
   });
 
   it("shows a saved RSVP confirmation and changes the action to Update", async () => {
@@ -153,19 +173,20 @@ describe("InvitationExperience", () => {
     const response: PartyResponse = {
       status: "attending",
       guestSelections: {},
-      answers: {},
+      answers: { question_transfer: true },
+      transferTime: "19:00",
       note: "",
       updatedAt: "2026-07-27T12:00:00.000Z",
     };
 
     render(
       React.createElement(InvitationExperience, {
-        invitation: previewInvitation(response),
+        invitation: previewInvitation(response, "Diana"),
       }),
     );
 
     expect(screen.getByRole("status")).toHaveTextContent(
-      "RSVP confirmed — You will attend.",
+      "RSVP confirmed — You will attend, with transfer at 19:00.",
     );
     expect(screen.queryByRole("button", { name: "Will attend" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Will not attend" })).not.toBeInTheDocument();
@@ -175,5 +196,34 @@ describe("InvitationExperience", () => {
     expect(
       within(screen.getByRole("dialog")).getByRole("button", { name: "Update" }),
     ).toBeInTheDocument();
+  });
+
+  it("only lets a saved non-Diana attendee change to not attending", async () => {
+    const { InvitationExperience } = await import(
+      "@/components/invitation/invitation-experience"
+    );
+    const response: PartyResponse = {
+      status: "attending",
+      guestSelections: { guest_taylor: true },
+      answers: {},
+      note: "",
+      updatedAt: "2026-07-27T12:00:00.000Z",
+    };
+
+    render(
+      React.createElement(InvitationExperience, {
+        invitation: previewInvitation(response, "Ale"),
+      }),
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "RSVP confirmed — You will attend, without transfer.",
+    );
+    expect(screen.queryByRole("button", { name: "Update" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Will not attend" }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).queryByRole("button", { name: "Will attend" })).not.toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Update" })).toBeEnabled();
   });
 });

@@ -9,6 +9,7 @@ export type DeliveryStatus =
   | "opened"
   | "failed";
 export type AttendanceStatus = "attending" | "not_attending";
+export type TransferTime = "19:00" | "19:30";
 export type CheckInMember = "guest_1" | "guest_2";
 export type QuestionType = "checkbox";
 export type ActivityType =
@@ -76,6 +77,7 @@ export interface PartyResponse {
   status: AttendanceStatus;
   guestSelections: Record<string, boolean>;
   answers: Record<string, boolean>;
+  transferTime?: TransferTime;
   note: string;
   updatedAt: string;
 }

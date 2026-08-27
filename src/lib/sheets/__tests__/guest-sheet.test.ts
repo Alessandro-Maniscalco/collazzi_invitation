@@ -252,6 +252,32 @@ describe("parseGuestSheet", () => {
     });
   });
 
+  it("maps a saved transfer departure to the RSVP response", () => {
+    const table = parseGuestSheet(
+      [
+        [...GUEST_SHEET_HEADERS],
+        rowFromRecord({
+          guest_id: "guest_transfer",
+          token: "guest_token",
+          token_active: "TRUE",
+          first_name: "Transfer",
+          last_name: "Guest",
+          coming_to_party: "TRUE",
+          transfer_needed: "TRUE",
+          transfer_time: "19:00",
+          rsvp_updated_at: "2026-08-25T12:00:00.000Z",
+        }),
+      ],
+      "http://localhost:3000",
+    );
+
+    expect(sheetGuestResponse(table.guests[0])).toMatchObject({
+      status: "attending",
+      answers: { question_transfer: true },
+      transferTime: "19:00",
+    });
+  });
+
   it("keeps RSVP and open signals when the latest delivery status is still sent", () => {
     const table = parseGuestSheet(
       [

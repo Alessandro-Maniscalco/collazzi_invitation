@@ -7,6 +7,7 @@ import type { AttendanceStatus, Guest, PartyResponse, Question } from "@/lib/typ
 
 interface RsvpModalProps {
   open: boolean;
+  allowAttending: boolean;
   partyLabel: string;
   guests: Guest[];
   questions: Question[];
@@ -95,6 +96,7 @@ function normalizeAnswers(
 
 export function RsvpModal({
   open,
+  allowAttending,
   partyLabel,
   guests,
   questions,
@@ -105,12 +107,14 @@ export function RsvpModal({
   onSubmitted,
 }: RsvpModalProps) {
   const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatus>(
-    preferredStatus ?? initialResponse?.status ?? "attending",
+    allowAttending ? (preferredStatus ?? initialResponse?.status ?? "attending") : "not_attending",
   );
   const [guestSelections, setGuestSelections] = useState<Record<string, boolean>>(() =>
     buildGuestSelections(
       guests,
-      preferredStatus ?? initialResponse?.status ?? "attending",
+      allowAttending
+        ? (preferredStatus ?? initialResponse?.status ?? "attending")
+        : "not_attending",
       initialResponse,
     ),
   );
@@ -123,13 +127,15 @@ export function RsvpModal({
 
   useEffect(() => {
     if (!open) return;
-    const status = preferredStatus ?? initialResponse?.status ?? "attending";
+    const status = allowAttending
+      ? (preferredStatus ?? initialResponse?.status ?? "attending")
+      : "not_attending";
     setAttendanceStatus(status);
     setGuestSelections(buildGuestSelections(guests, status, initialResponse));
     setAnswers(buildAnswers(questions, initialResponse, status, implyParty));
     setNote(initialResponse?.note ?? "");
     setError(null);
-  }, [guests, implyParty, initialResponse, open, preferredStatus, questions]);
+  }, [allowAttending, guests, implyParty, initialResponse, open, preferredStatus, questions]);
 
   useEffect(() => {
     if (!open) return;
@@ -159,7 +165,9 @@ export function RsvpModal({
           <div>
             <div className="section-label">RSVP</div>
             <h2 id="rsvp-title" className="mt-3 font-display text-4xl text-stone-950">
-              Will you attend, {partyLabel}?
+              {allowAttending
+                ? `Will you attend, ${partyLabel}?`
+                : `Can you no longer attend, ${partyLabel}?`}
             </h2>
             <p className="mt-2 text-base text-stone-700">Bona and Alessandro Maniscalco</p>
           </div>
@@ -173,7 +181,10 @@ export function RsvpModal({
         </div>
 
         <div className="mt-6 inline-flex rounded-full border border-[var(--app-line)] bg-white p-1">
-          {(["attending", "not_attending"] as const).map((status) => (
+          {(allowAttending
+            ? (["attending", "not_attending"] as const)
+            : (["not_attending"] as const)
+          ).map((status) => (
             <button
               key={status}
               type="button"

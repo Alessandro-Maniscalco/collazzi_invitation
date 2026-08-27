@@ -2,6 +2,7 @@ import type {
   DeliveryStatus,
   PartyResponse,
   SaveRsvpInput,
+  TransferTime,
 } from "@/lib/types";
 
 export const GUEST_SHEET_HEADERS = [
@@ -43,6 +44,7 @@ export const GUEST_SHEET_HEADERS = [
   "Position guest 1",
   "Position guest 2",
   "admin_notes",
+  "transfer_time",
 ] as const;
 
 export type GuestSheetHeader = (typeof GUEST_SHEET_HEADERS)[number];
@@ -89,6 +91,7 @@ export interface SheetGuest {
   primarySeatPosition?: number;
   guest2SeatPosition?: number;
   adminNotes?: string;
+  transferTime?: TransferTime;
   hasResponse: boolean;
 }
 
@@ -204,6 +207,7 @@ const FIELD_ALIASES: Partial<Record<GuestSheetHeader, string[]>> = {
   last_delivery_status: ["delivery status", "last delivery"],
   provider_message_id: ["provider message id", "message id"],
   admin_notes: ["admin notes"],
+  transfer_time: ["transfer time", "shuttle time", "departure time"],
   "Position guest 1": [
     "seat guest 1",
     "seat position guest 1",
@@ -432,6 +436,9 @@ export function sheetGuestResponse(guest: SheetGuest): PartyResponse | undefined
       question_party: attending,
       question_transfer: attending && guest.transferNeeded,
     },
+    ...(attending && guest.transferNeeded && guest.transferTime
+      ? { transferTime: guest.transferTime }
+      : {}),
     note: guest.rsvpNote,
     updatedAt: guest.rsvpUpdatedAt ?? new Date(0).toISOString(),
   };
@@ -675,6 +682,7 @@ function parseGuestRow(
     primarySeatPosition: parseSeatPosition(cell(row, columnMap, "Position guest 1")),
     guest2SeatPosition: parseSeatPosition(cell(row, columnMap, "Position guest 2")),
     adminNotes: cell(row, columnMap, "admin_notes") || undefined,
+    transferTime: parseTransferTime(cell(row, columnMap, "transfer_time")),
     hasResponse:
       Boolean(rsvpUpdatedAt || rsvpNote) ||
       notComing ||
@@ -703,6 +711,10 @@ function parseSheetBoolean(value: string) {
   }
 
   return false;
+}
+
+function parseTransferTime(value: string): TransferTime | undefined {
+  return value === "19:00" || value === "19:30" ? value : undefined;
 }
 
 function parseSeatPosition(value: string) {

@@ -131,6 +131,31 @@
 **Why:** A clean production deployment restored old deadline checks and closed Alberto Berlingheri's invitation even though the deadline is meant only as guidance.
 **What was rejected:** Exempting only Alberto or extending the date was rejected because either option would allow the same failure to recur for other guests.
 
+## 2026-08-25, RSVP Closed Except Declines and Diana
+**What was decided:** Close RSVP attendance additions for every source except Diana. Non-Diana invitations can still change the whole invitation to Will not attend, while Diana invitations retain full RSVP editing.
+**Why:** Attendance numbers must no longer increase, but late declines should still lower the final count and the Diana adult group needs an explicit exception.
+**What was rejected:** A complete lock was rejected because it would prevent late declines; allowing existing non-Diana attendees to edit individual attendance or preferences was rejected because that could preserve or increase attendance after closure.
+
+## 2026-08-25, RSVP Confirmation Shows Transfer Status
+**What was decided:** An attending guest's saved RSVP confirmation explicitly says whether the RSVP includes transfer.
+**Why:** Guests need to know which transport choice was actually saved so they do not take the wrong shuttle.
+**What was rejected:** Keeping the generic You will attend confirmation was rejected because it gave no transport confirmation.
+
+## 2026-08-25, Dinner Transfer Guests Use 19:00
+**What was decided:** Every dinner attendee who requested transfer belongs on the 19:00 departure; only the remaining transfer passengers should be divided between 19:00 and 19:30.
+**Why:** Dinner attendees have already been told 19:00 and should not be split across departures.
+**What was rejected:** The earlier proposal to divide dinner attendees evenly between 19:00 and 19:30 was rejected because it conflicts with what they were told.
+
+## 2026-08-25, Stable Transfer Departure Assignment
+**What was decided:** Assign 19:00 to all dinner transfer guests, all Ale and Bona jointly invited transfer guests, and the first 24 remaining Bona-only transfer passengers in live Sheet order; assign 19:30 to the rest. Store the result in a dedicated transfer_time column and show it in the RSVP confirmation.
+**Why:** The first 24 Bona-only passengers produce the closest possible split without separating invitation rows: 157 passengers at 19:00 and 158 at 19:30. Persisting the value prevents assignments from drifting when RSVPs or row order change.
+**What was rejected:** Recalculating the first group dynamically on every page load was rejected because a guest's departure could change; storing the time in free-text notes was rejected because it is unreliable for guest-facing confirmation.
+
+## 2026-08-25, Itinerary Shows Assigned Transfer Departure
+**What was decided:** Replace the shuttle's 19:00 to 19:30 departure window with the guest's single saved transfer_time when present; retain the original window when no transfer time is assigned.
+**Why:** Each transfer passenger should see only their assigned shuttle time in both the RSVP confirmation and itinerary, while unassigned guests still need the general shuttle information.
+**What was rejected:** Keeping the dinner-only 19:00 override was rejected because the persisted guest assignment is more precise and also covers party-only passengers.
+
 ## 2026-08-03, Individual Attendance Overrides Party Decline
 **What was decided:** Build each guest selection directly from `coming_to_party` and `guest_2_coming_to_party`; use `not_coming` only as a legacy party-level signal, not as a gate over individual attendance.
 **Why:** Matteo Grassi's row has the primary guest declining and guest two attending, but a stale `not_coming` value hid the second guest's explicit Yes response.
@@ -215,3 +240,13 @@
 **What was decided:** Add the 12 supplied people as separate active invitations, classify them as invited by Ale with a blank source, and record the primary guest as attending the party.
 **Why:** None of the supplied people already existed in `Lista`, and recent comparable Ale additions use a blank source; separate rows preserve one private invitation per person.
 **What was rejected:** Blindly appending without duplicate checks, assigning an unprovided source, grouping people into shared rows, or marking dinner and second-guest attendance were rejected because the request only confirmed each named person for the party.
+
+## 2026-08-27, Seating Check-In Summary and Sidebar Toggle
+**What was decided:** Show a collapsible right-hand guest list controlled by a red arrow, and display check-in fractions in Seating as Adults for exact source Diana and Others for every other named guest.
+**Why:** The seating workspace needs more horizontal room on demand while showing live door-arrival progress for the adult group and everyone else.
+**What was rejected:** Adding a second polling endpoint was rejected because the existing seating snapshot already reads the same sheet data and can calculate both fractions without extra quota pressure.
+
+## 2026-08-27, Shared Seating Table Names and Guest Exports
+**What was decided:** Resolve numeric seat assignments against the editable `Seating Tables` names on the check-in page and in the two RSVP-yes exports; include first name, last name, and table, sorted by last name, with one complete list and one exact-source Diana list.
+**Why:** Door staff and Diana need the same recognizable table names shown in Seating arrangement, while blank table cells clearly identify confirmed guests who are not yet seated.
+**What was rejected:** Keeping raw table numbers or omitting table assignments from the files was rejected because either would force manual cross-referencing.

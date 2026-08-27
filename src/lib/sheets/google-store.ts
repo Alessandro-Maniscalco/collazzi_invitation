@@ -6,6 +6,7 @@ import { nanoid } from "nanoid";
 import { env, isLocalAppUrl } from "@/lib/env";
 import { dispatchDelivery } from "@/lib/providers/delivery";
 import { parsePartyCsv } from "@/lib/csv";
+import { assertRsvpChangeAllowed } from "@/lib/rsvp-policy";
 import {
   buildInviteUrl,
   buildInviteUrlFormula,
@@ -207,6 +208,8 @@ export async function saveSheetRsvp(input: SaveRsvpInput) {
     throw new Error("Invitation not found.");
   }
 
+  assertRsvpChangeAllowed(guest.source, input.selections);
+
   const timestamp = new Date().toISOString();
   const selectionIds = sheetGuestSelectionIds(guest);
   const guestSelections = Object.fromEntries(
@@ -229,6 +232,14 @@ export async function saveSheetRsvp(input: SaveRsvpInput) {
         },
       };
   const columnUpdates = buildRsvpColumnUpdates(rsvpInput, timestamp, selectionIds);
+  const transferTime =
+    attending && Boolean(rsvpInput.answers.question_transfer)
+      ? (guest.transferTime ?? "19:30")
+      : undefined;
+
+  if (transferTime && !guest.transferTime) {
+    columnUpdates.push({ header: "transfer_time", value: transferTime });
+  }
 
   if (email) {
     columnUpdates.push({ header: "email", value: email });
@@ -260,6 +271,7 @@ export async function saveSheetRsvp(input: SaveRsvpInput) {
       question_party: attending && Boolean(rsvpInput.answers.question_party),
       question_transfer: attending && Boolean(rsvpInput.answers.question_transfer),
     },
+    ...(transferTime ? { transferTime } : {}),
     note: input.note,
     updatedAt: timestamp,
   } satisfies PartyResponse;
@@ -337,8 +349,14 @@ export async function getSheetDashboardSnapshot(state: AppState): Promise<Dashbo
 
 export async function getSheetCheckInGuests(): Promise<CheckInGuest[]> {
   const store = getGoogleSheetsGuestStore();
-  const { table } = await store.loadGuests();
-  return table.guests.flatMap(checkInGuestsFromSheetGuest);
+  const [{ table }, seatingTables] = await Promise.all([
+    store.loadGuests(),
+    store.loadSeatingTableNames(),
+  ]);
+  const tableNames = new Map(seatingTables.map((table) => [table.id, table.name]));
+  return table.guests.flatMap((guest) =>
+    checkInGuestsFromSheetGuest(guest, tableNames),
+  );
 }
 
 export async function updateSheetCheckIn(
@@ -347,11 +365,15 @@ export async function updateSheetCheckIn(
   checkedIn: boolean,
 ): Promise<CheckInGuest | null> {
   const store = getGoogleSheetsGuestStore();
-  const { table } = await store.loadGuests();
+  const [{ table }, seatingTables] = await Promise.all([
+    store.loadGuests(),
+    store.loadSeatingTableNames(),
+  ]);
   const guest = table.guests.find((candidate) => candidate.guestId === partyId);
   if (!guest) return null;
 
-  const checkInGuest = checkInGuestsFromSheetGuest(guest).find(
+  const tableNames = new Map(seatingTables.map((table) => [table.id, table.name]));
+  const checkInGuest = checkInGuestsFromSheetGuest(guest, tableNames).find(
     (candidate) => candidate.member === member,
   );
   if (!checkInGuest) return null;
@@ -1358,19 +1380,24 @@ function questionsForSheetGuest(questions: AppState["questions"], guest: SheetGu
 export function itineraryForInvitation(
   itinerary: AppState["itinerary"],
   willInviteToWalkingDinner: boolean,
+  transferTime?: SheetGuest["transferTime"],
 ) {
-  if (!willInviteToWalkingDinner) {
-    return itinerary.filter((item) => item.id !== "itinerary_dinner");
+  const visibleItinerary = willInviteToWalkingDinner
+    ? itinerary
+    : itinerary.filter((item) => item.id !== "itinerary_dinner");
+
+  if (!transferTime) {
+    return visibleItinerary;
   }
 
-  return itinerary.map((item) => ({
+  return visibleItinerary.map((item) => ({
     ...item,
     subItems: item.subItems?.map((subItem) =>
       subItem.id === "itinerary_party_shuttle"
         ? {
             ...subItem,
             hours:
-              "Departure Time \n19:00\n\nReturn to Florence Times \n2h30 - 3h30 - 4h15 - 5h",
+              `Departure Time \n${transferTime}\n\nReturn to Florence Times \n2h30 - 3h30 - 4h15 - 5h`,
           }
         : subItem,
     ),
@@ -1378,7 +1405,11 @@ export function itineraryForInvitation(
 }
 
 function itineraryForSheetGuest(itinerary: AppState["itinerary"], guest: SheetGuest) {
-  return itineraryForInvitation(itinerary, guest.willInviteToWalkingDinner);
+  return itineraryForInvitation(
+    itinerary,
+    guest.willInviteToWalkingDinner,
+    guest.transferTime,
+  );
 }
 
 function partyOnlyDateLabel(label: string) {
@@ -1394,7 +1425,10 @@ function guestsFromSheetGuest(guest: SheetGuest): Guest[] {
   }));
 }
 
-function checkInGuestsFromSheetGuest(guest: SheetGuest): CheckInGuest[] {
+function checkInGuestsFromSheetGuest(
+  guest: SheetGuest,
+  tableNames = new Map<number, string>(),
+): CheckInGuest[] {
   const members: CheckInGuest[] = [];
 
   if (guest.firstName || guest.lastName) {
@@ -1403,7 +1437,7 @@ function checkInGuestsFromSheetGuest(guest: SheetGuest): CheckInGuest[] {
       member: "guest_1",
       name: labelForName(guest.firstName, guest.lastName),
       checkedIn: guest.primaryCheckedIn,
-      tableName: guest.primaryTableName,
+      tableName: resolveCheckInTableName(guest.primaryTableName, tableNames),
     });
   }
 
@@ -1413,11 +1447,25 @@ function checkInGuestsFromSheetGuest(guest: SheetGuest): CheckInGuest[] {
       member: "guest_2",
       name: labelForName(guest.guest2FirstName, guest.guest2LastName),
       checkedIn: guest.guest2CheckedIn,
-      tableName: guest.guest2TableName,
+      tableName: resolveCheckInTableName(guest.guest2TableName, tableNames),
     });
   }
 
   return members;
+}
+
+export function resolveCheckInTableName(
+  value: string | undefined,
+  tableNames: ReadonlyMap<number, string>,
+) {
+  const tableName = value?.trim();
+  if (!tableName) return undefined;
+
+  const match = tableName.match(/^(?:table\s*)?(\d+)$/i);
+  if (!match) return tableName;
+
+  const tableId = Number(match[1]);
+  return tableNames.get(tableId) ?? tableName;
 }
 
 function deliveriesFromSheetGuest(guest: SheetGuest, eventTitle: string): DeliveryRecord[] {

@@ -32,6 +32,7 @@ import {
 import { ProtectedTranslationText } from "@/components/invitation/protected-translation-text";
 import { RsvpModal } from "@/components/invitation/rsvp-modal";
 import { cn } from "@/lib/formatters";
+import { hasFullRsvpAccess } from "@/lib/rsvp-policy";
 import type {
   AttendanceStatus,
   InvitationView,
@@ -818,6 +819,7 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
   const hasGuestEmail = Boolean(savedGuestEmail.trim());
   const showEmailCapture = !hasGuestEmail || emailSaved;
   const party = { ...invitation.party, email: savedGuestEmail || undefined, response };
+  const allowFullRsvp = hasFullRsvpAccess(party.source);
   const stage = stageFromProgress(progress);
   const sceneStyle = useMemo(() => buildSceneStyle(progress, sceneSide), [progress, sceneSide]);
 
@@ -1042,19 +1044,31 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
                     <p className={styles.rsvpConfirmationText}>
                       RSVP confirmed —{" "}
                       {response.status === "attending"
-                        ? "You will attend."
+                        ? `You will attend, ${
+                            response.answers.question_transfer
+                              ? `with transfer${
+                                  response.transferTime
+                                    ? ` at ${response.transferTime}`
+                                    : ""
+                                }.`
+                              : "without transfer."
+                          }`
                         : "You will not attend."}
                     </p>
-                    <button
-                      type="button"
-                      data-test="rsvp-update-button"
-                      onClick={() => openRsvp(response.status)}
-                      className={styles.rsvpButton}
-                    >
-                      Update
-                    </button>
+                    {allowFullRsvp || response.status === "attending" ? (
+                      <button
+                        type="button"
+                        data-test="rsvp-update-button"
+                        onClick={() =>
+                          openRsvp(allowFullRsvp ? response.status : "not_attending")
+                        }
+                        className={styles.rsvpButton}
+                      >
+                        {allowFullRsvp ? "Update" : "Will not attend"}
+                      </button>
+                    ) : null}
                   </div>
-                ) : (
+                ) : allowFullRsvp ? (
                   <div className={styles.rsvpButtons}>
                     <button
                       type="button"
@@ -1064,6 +1078,20 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
                     >
                       Will attend
                     </button>
+                    <button
+                      type="button"
+                      data-test="rsvp-button"
+                      onClick={() => openRsvp("not_attending")}
+                      className={styles.rsvpButton}
+                    >
+                      Will not attend
+                    </button>
+                  </div>
+                ) : (
+                  <div className={styles.rsvpConfirmation}>
+                    <p className={styles.rsvpConfirmationText}>
+                      RSVPs are now closed. If you can no longer attend, please let us know.
+                    </p>
                     <button
                       type="button"
                       data-test="rsvp-button"
@@ -1097,6 +1125,7 @@ export function InvitationExperience({ invitation }: { invitation: InvitationVie
 
       <RsvpModal
         open={modalOpen}
+        allowAttending={allowFullRsvp}
         partyLabel={party.label}
         guests={invitation.guests}
         questions={invitation.questions}
