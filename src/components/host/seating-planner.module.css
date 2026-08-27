@@ -5,6 +5,10 @@
   background: #f4efe7;
 }
 
+.planner[data-guest-list-open="false"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .workspace {
   min-width: 0;
   overflow: auto;
@@ -91,9 +95,47 @@
   box-shadow: -12px 0 32px rgba(67, 45, 26, 0.06);
 }
 
+.planner[data-guest-list-open="false"] .guestList {
+  display: none;
+}
+
+.sidebarToggle {
+  position: fixed;
+  z-index: 40;
+  top: 50%;
+  right: calc(clamp(15rem, 23vw, 21rem) - 1.25rem);
+  display: grid;
+  width: 2.5rem;
+  height: 3.25rem;
+  place-items: center;
+  border: 1px solid rgb(220 38 38 / 0.5);
+  border-radius: 999px;
+  background: #fffaf4;
+  color: #dc2626;
+  box-shadow: 0 8px 20px rgb(127 29 29 / 0.16);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+  transform: translateY(-50%);
+  transition: right 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.sidebarToggle:hover {
+  background: #fef2f2;
+  transform: translateY(-50%) scale(1.04);
+}
+
+.planner[data-guest-list-open="false"] .sidebarToggle {
+  right: 0.5rem;
+}
+
 @media (max-width: 760px) {
   .planner {
     grid-template-columns: minmax(0, 1fr) 13rem;
+  }
+
+  .sidebarToggle {
+    right: calc(13rem - 1.25rem);
   }
 
   .expandedLayout {

@@ -51,6 +51,7 @@ export function SeatingPlanner({ initialData }: { initialData: SeatingSnapshot }
   const [message, setMessage] = useState<string>();
   const [error, setError] = useState<string>();
   const [searchQuery, setSearchQuery] = useState("");
+  const [guestListOpen, setGuestListOpen] = useState(true);
   const mutationInFlight = useRef(false);
 
   const selectedGuest = data.guests.find((guest) => guest.id === selectedGuestId);
@@ -65,6 +66,13 @@ export function SeatingPlanner({ initialData }: { initialData: SeatingSnapshot }
       normalizeGuestSearch(`${guest.firstName} ${guest.lastName}`).includes(query),
     );
   }, [searchQuery, unseatedGuests]);
+  const checkIn = data.checkIn ?? {
+    adults: {
+      checkedIn: data.guests.filter((guest) => guest.checkedIn).length,
+      total: data.guests.length,
+    },
+    others: { checkedIn: 0, total: 0 },
+  };
 
   const refresh = useCallback(async () => {
     if (mutationInFlight.current || document.visibilityState !== "visible") return;
@@ -216,13 +224,16 @@ export function SeatingPlanner({ initialData }: { initialData: SeatingSnapshot }
   }
 
   return (
-    <main className={styles.planner}>
+    <main className={styles.planner} data-guest-list-open={guestListOpen}>
       <section className={styles.workspace}>
         <header className="sticky top-0 z-30 flex min-w-max items-center justify-between gap-5 border-b border-stone-300/70 bg-[#f4efe7]/95 px-5 py-4 backdrop-blur sm:px-7">
           <div className="flex items-end gap-5">
             <div>
               <div className="section-label">Diana guest list</div>
               <h1 className="mt-1 font-display text-4xl leading-none text-stone-950">Seating plan</h1>
+              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-stone-600">
+                Check-in · Adults: {checkIn.adults.checkedIn}/{checkIn.adults.total} · Others: {checkIn.others.checkedIn}/{checkIn.others.total}
+              </p>
             </div>
             <label className="block w-72">
               <span className="sr-only">Search unseated guests</span>
@@ -306,7 +317,19 @@ export function SeatingPlanner({ initialData }: { initialData: SeatingSnapshot }
         )}
       </section>
 
+      <button
+        type="button"
+        aria-controls="seating-guest-list"
+        aria-expanded={guestListOpen}
+        aria-label={guestListOpen ? "Hide guest list" : "Show guest list"}
+        onClick={() => setGuestListOpen((open) => !open)}
+        className={styles.sidebarToggle}
+      >
+        <span aria-hidden="true">{guestListOpen ? "→" : "←"}</span>
+      </button>
+
       <aside
+        id="seating-guest-list"
         className={styles.guestList}
         onDragOver={(event) => event.preventDefault()}
         onDrop={dropOnGuestList}

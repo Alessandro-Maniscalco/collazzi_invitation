@@ -21,6 +21,30 @@ vi.stubGlobal("React", React);
 afterEach(() => cleanup());
 
 describe("SeatingPlanner", () => {
+  it("shows live check-in fractions and can collapse the guest list", () => {
+    const initialData: SeatingSnapshot = {
+      tables: [{ id: 1, name: "Table 1" }],
+      guests: [],
+      checkIn: {
+        adults: { checkedIn: 4, total: 12 },
+        others: { checkedIn: 7, total: 20 },
+      },
+    };
+
+    render(React.createElement(SeatingPlanner, { initialData }));
+
+    expect(screen.getByText("Check-in · Adults: 4/12 · Others: 7/20")).toBeInTheDocument();
+    const toggle = screen.getByRole("button", { name: "Hide guest list" });
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+
+    fireEvent.click(toggle);
+
+    expect(screen.getByRole("button", { name: "Show guest list" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+
   it("shows first and last name in an occupied overview seat", () => {
     const initialData: SeatingSnapshot = {
       tables: [{ id: 1, name: "Table 1" }],

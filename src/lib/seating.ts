@@ -25,6 +25,17 @@ export interface SeatingGuest {
 export interface SeatingSnapshot {
   tables: SeatingTable[];
   guests: SeatingGuest[];
+  checkIn?: SeatingCheckInSummary;
+}
+
+export interface CheckInFraction {
+  checkedIn: number;
+  total: number;
+}
+
+export interface SeatingCheckInSummary {
+  adults: CheckInFraction;
+  others: CheckInFraction;
 }
 
 export type SeatingMoveMode = "move" | "switch" | "drop";
@@ -100,6 +111,35 @@ export function seatingGuestsFromSheet(guests: SheetGuest[]) {
     occupied.add(seatKey);
     return guest;
   });
+}
+
+export function seatingCheckInSummaryFromSheet(guests: SheetGuest[]): SeatingCheckInSummary {
+  const summary: SeatingCheckInSummary = {
+    adults: { checkedIn: 0, total: 0 },
+    others: { checkedIn: 0, total: 0 },
+  };
+
+  for (const guest of guests) {
+    const group =
+      guest.source?.trim().toLocaleLowerCase() === SEATING_SOURCE.toLocaleLowerCase()
+        ? summary.adults
+        : summary.others;
+    const members = [
+      { hasName: Boolean(guest.firstName || guest.lastName), checkedIn: guest.primaryCheckedIn },
+      {
+        hasName: Boolean(guest.guest2FirstName || guest.guest2LastName),
+        checkedIn: guest.guest2CheckedIn,
+      },
+    ];
+
+    for (const member of members) {
+      if (!member.hasName) continue;
+      group.total += 1;
+      if (member.checkedIn) group.checkedIn += 1;
+    }
+  }
+
+  return summary;
 }
 
 export function sortSeatingGuests(guests: SeatingGuest[]) {

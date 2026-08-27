@@ -3,6 +3,7 @@ import { getGoogleSheetsGuestStore } from "@/lib/sheets/google-store";
 import {
   SEATING_TABLE_COUNT,
   applySeatingMove,
+  seatingCheckInSummaryFromSheet,
   seatingGuestsFromSheet,
   seatingUpdatesForGuest,
   validTableId,
@@ -29,7 +30,11 @@ function localTables() {
 
 export async function getSeatingSnapshot(): Promise<SeatingSnapshot> {
   if (!hasGoogleSheetsConfig()) {
-    return { tables: localTables(), guests: [] };
+    return {
+      tables: localTables(),
+      guests: [],
+      checkIn: { adults: { checkedIn: 0, total: 0 }, others: { checkedIn: 0, total: 0 } },
+    };
   }
 
   const store = getGoogleSheetsGuestStore();
@@ -37,7 +42,11 @@ export async function getSeatingSnapshot(): Promise<SeatingSnapshot> {
     store.loadGuests(),
     store.loadSeatingTableNames(),
   ]);
-  return { tables, guests: seatingGuestsFromSheet(table.guests) };
+  return {
+    tables,
+    guests: seatingGuestsFromSheet(table.guests),
+    checkIn: seatingCheckInSummaryFromSheet(table.guests),
+  };
 }
 
 export async function moveSeatingGuest(move: SeatingMove): Promise<SeatingSnapshot> {
@@ -70,7 +79,7 @@ export async function moveSeatingGuest(move: SeatingMove): Promise<SeatingSnapsh
     }),
   );
 
-  return { tables, guests: nextGuests };
+  return { tables, guests: nextGuests, checkIn: seatingCheckInSummaryFromSheet(table.guests) };
 }
 
 export async function renameSeatingTable(tableId: number, name: string) {

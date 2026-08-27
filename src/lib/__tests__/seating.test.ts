@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   applySeatingMove,
+  seatingCheckInSummaryFromSheet,
   seatingGuestsFromSheet,
   seatingUpdatesForGuest,
   sortSeatingGuests,
@@ -92,6 +93,24 @@ describe("seating plan", () => {
       "party-1:guest_2",
       "primary-only:guest_1",
     ]);
+  });
+
+  it("splits check-in counts into Diana adults and everyone else", () => {
+    expect(
+      seatingCheckInSummaryFromSheet([
+        sheetGuest(),
+        sheetGuest({
+          guestId: "other",
+          source: "Ale",
+          guest2FirstName: "",
+          guest2LastName: "",
+          primaryCheckedIn: true,
+        }),
+      ]),
+    ).toEqual({
+      adults: { checkedIn: 1, total: 2 },
+      others: { checkedIn: 1, total: 1 },
+    });
   });
 
   it("sorts the unseated list by last name and then first name", () => {
