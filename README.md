@@ -1,123 +1,139 @@
 # Collazzi Invitation
 
-Single-event invitation site inspired by the supplied Paperless Post screenshots and PDF.
+A working event invitation, RSVP, host dashboard, check-in, and seating-planner site built for one real party.
+
+This repository is public so it can be copied, forked, and adapted for another event:
+
+- [GitHub repository](https://github.com/Alessandro-Maniscalco/collazzi_invitation)
+- [Download the sanitized Google Sheets template](docs/Collazzi-Sheets-Template.xlsx)
+- [LLM handoff and customization map](docs/LLM-HANDOFF.md)
+
+The template contains no real guests, emails, invitation tokens, or RSVP data. Upload it to Google Drive and open it with Google Sheets before connecting a copied app.
+
+> Honest warning: the spreadsheet columns were added gradually as new event needs appeared. The system works, but looking back, a new version could be organized much better by separating guests, invitation parties, RSVPs, delivery, check-in, and seating into their own tables. Compatibility with the working event took priority over a clean data model.
+
+## What it includes
+
+- Private invitation links at `/i/<token>`
+- RSVP and transfer responses
+- Email invitation delivery through Resend
+- PIN/password-protected host, check-in, and seating pages
+- Google Sheets as the live guest database
+- Individual guest check-in
+- Fifteen editable ten-seat tables with drag/drop seating
+- A local mock data fallback for development
 
 ## Stack
 
 - Next.js 15 App Router
-- TypeScript + Tailwind CSS
-- Drizzle schema for Supabase/Postgres
-- Optional Google Sheets guest and RSVP store
-- Resend email delivery with sandbox fallback
-- File-backed local mock store for development
+- React 19 and TypeScript
+- Google Sheets API
+- Resend
+- Optional Supabase/Postgres schema through Drizzle
+- Vitest and Playwright
 
-## Local Development
+## Quick start
 
 ```bash
+git clone https://github.com/Alessandro-Maniscalco/collazzi_invitation.git
+cd collazzi_invitation
 npm install
 cp .env.example .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000/host/login`.
+
+Without Google Sheets credentials, development uses the local mock store. Set a strong `HOST_PASSWORD` and `CHECKIN_PIN` in `.env.local` before testing protected pages.
+
+## Use the Sheets template
+
+1. [Download the blank template](docs/Collazzi-Sheets-Template.xlsx).
+2. Upload it to Google Drive and choose **Open with Google Sheets**.
+3. Share the new spreadsheet with your Google Cloud service-account email as an editor.
+4. Keep the tabs named `Lista`, `Seating Tables`, and `Activity`.
+5. Keep the machine-readable `Lista` headers on row 3 and add invitations from row 4.
+6. Put the spreadsheet ID and the `Lista` tab name or gid in the environment variables below.
+
+The workbook also contains a `Setup Notes` tab. `Lista` stores one invitation party per row; an optional second named guest stays on the same row. The application can generate missing `guest_id`, `token`, and `invite_url` values.
+
+Boolean fields use `TRUE`/`FALSE`. Google Sheets checkboxes are optional because their stored values are also booleans.
+
+## Environment
+
+Copy `.env.example` to `.env.local`. The main production variables are:
+
+```dotenv
+APP_URL=https://your-domain.example
+HOST_PASSWORD=<strong host password>
+CHECKIN_PIN=<door staff pin>
+CHECKIN_SESSION_SECRET=<long random secret>
+
+GOOGLE_SHEETS_ID=<spreadsheet id>
+GOOGLE_SHEETS_TAB=Lista
+GOOGLE_SERVICE_ACCOUNT_EMAIL=<service account email>
+GOOGLE_PRIVATE_KEY=<private key with preserved newline escapes>
+
+RESEND_API_KEY=<optional resend key>
+RESEND_FROM_EMAIL=Your Event <invites@your-verified-domain.example>
+RESEND_REPLY_TO_EMAIL=<reply-to address>
+```
+
+Never commit `.env.local`, a service-account JSON key, private invitation exports, or a populated guest workbook. The repository ignores these local files.
+
+## Sheet structure
+
+The exact current `Lista` header order is included in the template and in `GUEST_SHEET_HEADERS` in `src/lib/sheets/guest-sheet.ts`. The fields fall into these groups:
+
+- Identity: primary and second guest names, email, display name, source, and inviter flags.
+- Invitation access: `guest_id`, `token`, `token_active`, `invite_url`, sent/opened timestamps.
+- RSVP: dinner, party attendance per person, transfer, decline, note, and updated timestamp.
+- Delivery: last status, provider message id, and last error.
+- Door and seating: per-person check-in, table, seat position, and transfer time.
+- Administration: counted flag, planning fields, and internal notes.
+
+`Seating Tables` contains `table_id` and `table_name`. `Activity` contains `id`, `type`, `created_at`, `actor`, and `message` and is written by the application.
 
 ## Routes
 
 - `/` redirects to `/host/login`.
-- Guest invitations are available only at private `/i/<token>` links.
-- Host login: `/host/login`
+- `/host/login` opens the host dashboard.
+- `/host/seating` opens the seating planner.
+- `/check-in` opens the phone-friendly check-in workflow.
+- `/i/<token>` opens one private guest invitation.
 
-Local host email:
+## Customize before using it
 
-- `bona18ale20@gmail.com`
+At minimum, replace:
 
-## Google Sheets RSVP Store
+- Event names, dates, itinerary, seed guests, and host identity in `src/lib/seed-data.ts`.
+- Invitation copy and visuals in `src/components/invitation/` and `public/assets/`.
+- The seating source and table assumptions in `src/lib/seating.ts`.
+- Email content in `src/lib/providers/email-template.ts`.
+- Domain, secrets, Sheet ID, and email provider settings in the deployment environment.
 
-When `GOOGLE_SHEETS_ID`, either `GOOGLE_SHEETS_GID` or `GOOGLE_SHEETS_TAB`, and either
-`GOOGLE_SERVICE_ACCOUNT_KEY_PATH` or `GOOGLE_SERVICE_ACCOUNT_EMAIL` plus `GOOGLE_PRIVATE_KEY` are
-configured, guest and RSVP data are read from Google Sheets instead of `.data/mock-state.json`.
+The scripts in `local_automation_send/` were one-off browser automations for this event. Review every filter, target, message, credential path, and dry-run setting before considering them for another event. They are not part of the web application deployment.
 
-Share the spreadsheet with the service account email. The app normalizes the guest header row,
-generates missing `guest_id`, `token`, and `invite_url` values, writes RSVP columns from `/api/rsvp`,
-applies checkbox validation to boolean columns when Google Sheets allows it, and appends operational
-events to an `Activity` tab.
-
-The guest tab supports the existing Collazzi headings and normalizes them to machine-readable
-columns. Guest phone numbers are intentionally not part of guest management or delivery; delivery is
-email-only from the host dashboard. Accommodation phone numbers are still accommodation content.
-
-Recommended guest column order keeps host-editable fields on the left:
-
-1. `last_name` - primary guest surname. For a couple invite, put the email recipient here.
-2. `first_name` - primary guest given name. For example, `Monica`.
-3. `email` - optional email recipient for invitation and reminder delivery. For a couple, use the
-   woman's email if she is the recipient.
-4. `guest_2_last_name` - optional second guest surname, for example `Signori`.
-5. `guest_2_first_name` - optional second guest given name, for example `Saverio`.
-6. `display_name` - optional invitation label override. If blank, shared-surname couples display as
-   `Monica e Saverio Signori`.
-7. `invited_by_ale` - boolean host/source flag; surfaced as metadata in dashboard data.
-8. `invited_by_bona` - boolean host/source flag; surfaced as metadata in dashboard data.
-9. `invited_by_mum` - boolean host/source flag; surfaced as metadata in dashboard data.
-10. `counted` - invitation gate. `TRUE`, `1`, or blank means the row is an invited guest in the app;
-   `FALSE`, `0`, or `No` means the row is excluded from guest lookup, host stats, and token creation.
-11. `source` - free-text provenance, for example `AleAI`, `Bona list`, `Mum table`, or
-   `Instagram DM`.
-12. `will_invite_to_Florence_dinner` - boolean; controls whether the guest sees the Thursday dinner
-   section and Florence dinner RSVP question. The host dashboard add-party form writes this field.
-13. `sent_whatsapp_save_the_date` - boolean tracking marker only; it does not send WhatsApp messages.
-14. `sent_instagram_save_the_date` - boolean tracking marker only; it does not send Instagram
-    messages.
-15. `spazio` - optional planning/admin field retained from the source sheet.
-16. `guest_id` - app-generated stable row identifier used as the party id and primary guest id.
-17. `token` - app-generated private invitation token.
-18. `token_active` - boolean; `FALSE` disables the private invitation link.
-19. `invite_url` - app-generated URL from `APP_URL` and `token`.
-20. `sent_invite_at` - timestamp written when the app sends the email invitation. A boolean `TRUE`
-    is also treated as a sent marker, but timestamps are preferred.
-21. `invite_opened_at` - timestamp written when the guest first opens the invitation link.
-22. `Florence_dinner` - RSVP boolean for Thursday dinner.
-23. `coming_to_party` - RSVP boolean for the primary guest attending the Friday party.
-24. `guest_2_coming_to_party` - RSVP boolean for the second guest attending the Friday party.
-25. `transfer_needed` - RSVP boolean for shuttle/transfer need.
-26. `not_coming` - RSVP boolean for a decline; when `TRUE`, neither guest is attending.
-27. `rsvp_note` - free-text note submitted by the guest.
-28. `rsvp_updated_at` - timestamp written when the RSVP is submitted.
-29. `last_delivery_status` - last email delivery status: `sandbox`, `queued`, `sent`,
-    `delivered`, `opened`, or `failed`.
-30. `provider_message_id` - provider id used to match delivery webhook updates.
-31. `last_error` - last delivery or RSVP-related error message; cleared on successful RSVP writes.
-32. `admin_notes` - internal host notes shown in dashboard data, not guest-facing.
-
-Boolean columns are values, not labels. The API reads and writes `TRUE`/`FALSE`; Google Sheets
-checkbox formatting is recommended because it is easier for humans to edit the same boolean values.
-Existing `will_invite_to_walking_dinner` and `coming_to_walking_dinner` headers are still accepted
-as aliases and normalized to the current header names.
-
-## Deployment
-
-1. Create a Google Cloud service account, enable Google Sheets API access, and create a JSON key.
-2. Share the RSVP spreadsheet with the service account `client_email` as an editor.
-3. In Vercel, import this repository as a Next.js project.
-4. Add production environment variables:
-   - `APP_URL=https://your-domain.example`
-   - `HOST_PASSWORD=<strong host dashboard password>`
-   - `GOOGLE_SHEETS_ID=1nwMdtzs0VdhjJOSHdm45tyoHKuvh3_Md4Zw1hUArPnY`
-   - `GOOGLE_SHEETS_GID=1950973940` or `GOOGLE_SHEETS_TAB=<tab name>`
-   - `GOOGLE_SERVICE_ACCOUNT_EMAIL=<client_email from JSON key>`
-   - `GOOGLE_PRIVATE_KEY=<private_key from JSON key, preserving newline escapes>`
-   - Optional delivery variables: `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (for example
-     `Bona and Alessandro <invites@your-verified-domain.com>`), and
-     `RESEND_REPLY_TO_EMAIL=bona18ale20@gmail.com`
-5. Deploy, then set `APP_URL` to the final production URL or custom domain and redeploy.
-6. Open `/host/login`, confirm the guest list loads from Sheets, then open one `/i/<token>` link and
-   submit a test RSVP before sending real invitations.
-
-## Scripts
+## Checks
 
 ```bash
 npm run lint
-npm run test
-npm run test:e2e
-npm run db:generate
+npm test
+npx tsc --noEmit
+npm run build
 ```
+
+Run `npm run test:e2e` when the local browser test environment is available.
+
+## Deployment
+
+1. Create a Google Cloud service account and enable the Google Sheets API.
+2. Share the copied RSVP spreadsheet with the service account as an editor.
+3. Import this repository into Vercel.
+4. Add the production environment variables.
+5. Deploy and set `APP_URL` to the final domain.
+6. Verify `/host/login`, `/host`, `/host/seating`, `/check-in`, and one disposable test invitation before sending links.
+
+## Reuse
+
+The source code is available under the MIT License. Original photographs and event artwork under `public/assets/collazzi/` and `local_automation_send/Invito.jpg` are excluded from that license and should be replaced for another event.

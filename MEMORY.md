@@ -241,6 +241,11 @@
 **Why:** None of the supplied people already existed in `Lista`, and recent comparable Ale additions use a blank source; separate rows preserve one private invitation per person.
 **What was rejected:** Blindly appending without duplicate checks, assigning an unprovided source, grouping people into shared rows, or marking dinner and second-guest attendance were rejected because the request only confirmed each named person for the party.
 
+## 2026-08-29, Public Repository Handoff
+**What was decided:** Keep the working event-specific architecture, add a sanitized four-tab Sheets template and an LLM-focused adaptation guide, explicitly document the organically grown column model, and keep private guest exports and credentials out of Git.
+**Why:** The event is over and the user wants a friend and their LLM to be able to copy the proven implementation without receiving real guest data or mistaking it for a clean generic framework.
+**What was rejected:** Refactoring the live data model before sharing was rejected because the user values the working implementation over cleanup; committing post-event RSVP exports was rejected because they contain private guest data.
+
 ## 2026-08-27, Seating Check-In Summary and Sidebar Toggle
 **What was decided:** Show a collapsible right-hand guest list controlled by a red arrow, and display check-in fractions in Seating as Adults for exact source Diana and Others for every other named guest.
 **Why:** The seating workspace needs more horizontal room on demand while showing live door-arrival progress for the adult group and everyone else.
